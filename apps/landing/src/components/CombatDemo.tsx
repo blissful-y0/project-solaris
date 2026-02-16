@@ -54,44 +54,50 @@ interface SpeakerConfig {
   icon: string;
   /** 프로필 아이콘 배경색 */
   iconBg: string;
+  /** 아바타 표시 여부 */
+  hasAvatar?: boolean;
 }
 
 const SPEAKERS: Record<Speaker, SpeakerConfig> = {
   system: {
     align: "center",
-    bg: "transparent",
-    textColor: "#6b7280",
+    bg: "rgba(55, 65, 81, 0.4)",
+    textColor: "#9ca3af",
     font: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
     fontSize: "0.75rem",
-    icon: "SYS",
+    icon: "",
     iconBg: "#374151",
+    hasAvatar: false,
   },
   mirror: {
     align: "start",
     bg: "#93c5fd",
-    textColor: "#ffffff",
+    textColor: "rgba(0, 0, 0, 0.8)",
     font: "var(--font-sans)",
     fontSize: "0.85rem",
-    icon: "거",
+    icon: "",
     iconBg: "#93c5fd",
+    hasAvatar: true,
   },
   ash: {
     align: "end",
     bg: "#dc2626",
-    textColor: "#ffffff",
+    textColor: "rgba(255, 255, 255, 0.9)",
     font: "var(--font-sans)",
     fontSize: "0.85rem",
-    icon: "재",
+    icon: "",
     iconBg: "#dc2626",
+    hasAvatar: true,
   },
   helios: {
     align: "center",
     bg: "#00d4ff",
-    textColor: "#ffffff",
+    textColor: "rgba(0, 0, 0, 0.8)",
     font: "var(--font-sans)",
     fontSize: "0.85rem",
-    icon: "GM",
+    icon: "",
     iconBg: "#00d4ff",
+    hasAvatar: false,
   },
 };
 
@@ -132,7 +138,7 @@ function TypingIndicator({ speaker }: { speaker: Speaker }) {
   return (
     <div className={`flex ${justify}`}>
       <div className="flex items-end gap-2">
-        {cfg.align === "start" && <Avatar speaker={speaker} />}
+        {cfg.align === "start" && cfg.hasAvatar && <Avatar speaker={speaker} />}
         <div
           className="inline-flex gap-1 px-4 py-2.5 rounded-2xl"
           style={{
@@ -151,7 +157,7 @@ function TypingIndicator({ speaker }: { speaker: Speaker }) {
             />
           ))}
         </div>
-        {cfg.align === "end" && <Avatar speaker={speaker} />}
+        {cfg.align === "end" && cfg.hasAvatar && <Avatar speaker={speaker} />}
       </div>
     </div>
   );
@@ -174,8 +180,8 @@ function ChatBubble({ message }: { message: ChatMessage }) {
         className="flex items-start gap-2.5"
         style={{ maxWidth: "min(480px, 85vw)" }}
       >
-        {/* 좌측 아바타 (mirror, helios) */}
-        {(cfg.align === "start" || cfg.align === "center") && !isSystem && (
+        {/* 좌측 아바타 */}
+        {cfg.hasAvatar && cfg.align === "start" && (
           <div className="pt-5">
             <Avatar speaker={message.speaker} />
           </div>
@@ -204,7 +210,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
           <div
             className="px-4 py-3 rounded-2xl whitespace-pre-line leading-relaxed"
             style={{
-              backgroundColor: isSystem ? "transparent" : cfg.bg,
+              backgroundColor: cfg.bg,
               color: cfg.textColor,
               fontFamily: cfg.font,
               fontSize: cfg.fontSize,
@@ -229,8 +235,8 @@ function ChatBubble({ message }: { message: ChatMessage }) {
           </div>
         </div>
 
-        {/* 우측 아바타 (ash) */}
-        {cfg.align === "end" && (
+        {/* 우측 아바타 */}
+        {cfg.hasAvatar && cfg.align === "end" && (
           <div className="pt-5">
             <Avatar speaker={message.speaker} />
           </div>
