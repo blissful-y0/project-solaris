@@ -575,6 +575,23 @@ body::after {
   30% { opacity: 1; transform: translateY(-3px); }
 }
 
+/* 공명율 게이지 경계선 글리치 */
+@keyframes gauge-glitch-1 {
+  0%, 100% { transform: translateX(0); opacity: 0.6; }
+  20% { transform: translateX(-3px); opacity: 1; }
+  40% { transform: translateX(2px); opacity: 0.3; }
+  60% { transform: translateX(-1px); opacity: 0.8; }
+  80% { transform: translateX(1px); opacity: 0.5; }
+}
+
+@keyframes gauge-glitch-2 {
+  0%, 100% { transform: translateX(0); opacity: 0.4; }
+  15% { transform: translateX(2px); opacity: 0.7; }
+  35% { transform: translateX(-4px); opacity: 0.2; }
+  55% { transform: translateX(1px); opacity: 0.6; }
+  75% { transform: translateX(-2px); opacity: 0.3; }
+}
+
 .h-scanline {
   position: absolute;
   left: 0;

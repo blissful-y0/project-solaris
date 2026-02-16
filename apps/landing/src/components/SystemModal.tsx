@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SystemInfo } from "./systemData";
 import CombatDemo from "./CombatDemo";
+import ResonanceGauge from "./ResonanceGauge";
 
 interface Props {
   system: SystemInfo;
@@ -183,26 +184,32 @@ export default function SystemModal({ system, onClose }: Props) {
             }}
           />
 
-          {/* 콘텐츠 섹션들 */}
-          {system.sections.map((section, i) => (
-            <div
-              key={section.heading}
-              className="mb-5 last:mb-0"
-              style={{
-                opacity: isClosing ? 0 : isContent ? 1 : 0,
-                transform: isContent ? "translateY(0)" : "translateY(8px)",
-                transition: "opacity 300ms ease-out, transform 300ms ease-out",
-                transitionDelay: isContent ? `${(i + 1) * 100}ms` : "0ms",
-              }}
-            >
-              <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
-                {section.heading}
-              </h3>
-              <p className="text-text/70 text-sm md:text-base leading-relaxed">
-                {section.body}
-              </p>
-            </div>
-          ))}
+          {/* SYNC 모달 — 공명율 전용 비주얼 */}
+          {system.code === "SYNC" && isContent && (
+            <ResonanceGauge />
+          )}
+
+          {/* 기본 콘텐츠 섹션들 (SYNC 제외) */}
+          {system.code !== "SYNC" &&
+            system.sections.map((section, i) => (
+              <div
+                key={section.heading}
+                className="mb-5 last:mb-0"
+                style={{
+                  opacity: isClosing ? 0 : isContent ? 1 : 0,
+                  transform: isContent ? "translateY(0)" : "translateY(8px)",
+                  transition: "opacity 300ms ease-out, transform 300ms ease-out",
+                  transitionDelay: isContent ? `${(i + 1) * 100}ms` : "0ms",
+                }}
+              >
+                <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
+                  {section.heading}
+                </h3>
+                <p className="text-text/70 text-sm md:text-base leading-relaxed">
+                  {section.body}
+                </p>
+              </div>
+            ))}
 
           {/* GM 전투 판정 데모 — 섹션 아래 */}
           {system.code === "GM" && isContent && (
