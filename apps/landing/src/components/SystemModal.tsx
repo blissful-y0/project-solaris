@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SystemInfo } from "./systemData";
+import CombatDemo from "./CombatDemo";
 
 interface Props {
   system: SystemInfo;
@@ -180,6 +181,13 @@ export default function SystemModal({ system, onClose }: Props) {
               opacity: 0.4,
             }}
           />
+
+          {/* GM 전투 판정 데모 */}
+          {system.code === "GM" && isContent && (
+            <div className="mb-6">
+              <CombatDemo />
+            </div>
+          )}
 
           {/* 콘텐츠 섹션들 */}
           {system.sections.map((section, i) => (
