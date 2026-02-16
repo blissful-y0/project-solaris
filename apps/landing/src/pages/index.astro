@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Hero from "../components/Hero";
+import Hero from "../components/hero";
 import World from "../components/World";
 import Factions from "../components/Factions";
 import System from "../components/System";
@@ -14,10 +14,10 @@ import "../styles/global.css";
     <Hero client:load />
     <section id="after-hero" class="after-hero-locked">
       <div id="after-hero-start">
-        <World client:visible />
+        <World client:load />
       </div>
-      <Factions client:visible />
-      <System client:visible />
+      <Factions client:load />
+      <System client:load />
       <Join />
     </section>
   </main>
@@ -38,5 +38,5 @@ import "../styles/global.css";
     }
   };
 
-  window.addEventListener("solaris:hero-selected", unlockAfterHero, { once: true });
+  window.addEventListener("solaris:hero-done", unlockAfterHero, { once: true });
 </script>
