@@ -226,7 +226,7 @@ function ClassifiedBlock({
 
 export default function World() {
   return (
-    <section className="section-shell section-divider">
+    <section id="section-world" className="section-shell section-divider">
       <div className="section-inner">
         <div
           className="flex flex-col gap-6 md:gap-8 w-full max-w-3xl"

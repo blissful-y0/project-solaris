@@ -818,6 +818,161 @@ body::after {
 }
 
 /* ========================================
+   사이트 헤더 — 고정 네비게이션
+   ======================================== */
+.header-hidden {
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+.header-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(10, 10, 15, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 15%, transparent);
+  box-shadow: 0 1px 20px rgba(0, 212, 255, 0.06);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1100px;
+  margin-inline: auto;
+  padding: 0.75rem 1.25rem;
+}
+
+/* 로고 */
+.header-logo {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  text-decoration: none;
+  gap: 1px;
+}
+
+.header-logo-sub {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-primary) 50%, transparent);
+}
+
+.header-logo-main {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+  text-shadow:
+    0 0 10px rgba(0, 212, 255, 0.5),
+    0 0 40px rgba(0, 212, 255, 0.2);
+}
+
+/* 네비게이션 */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header-link {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-text) 50%, transparent);
+  text-decoration: none;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.header-link:hover {
+  color: var(--color-primary);
+  text-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+}
+
+/* Discord 버튼 */
+.header-discord {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.header-discord:hover {
+  transform: scale(1.08);
+  background: rgba(0, 212, 255, 0.18);
+  border-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
+  box-shadow:
+    0 0 8px rgba(0, 212, 255, 0.4),
+    0 0 24px rgba(0, 212, 255, 0.15);
+}
+
+/* 헤더 반응형 — 태블릿 */
+@media (max-width: 768px) {
+  .header-inner {
+    padding: 0.625rem 1rem;
+  }
+
+  .header-nav {
+    gap: 1.25rem;
+  }
+
+  .header-link {
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+  }
+
+  .header-logo-main {
+    font-size: 0.85rem;
+  }
+
+  .header-logo-sub {
+    font-size: 0.45rem;
+  }
+
+  .header-discord {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .header-discord svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* 헤더 반응형 — 모바일 */
+@media (max-width: 480px) {
+  .header-nav {
+    display: none;
+  }
+
+  .header-inner {
+    padding: 0.5rem 0.875rem;
+  }
+}
+
+/* ========================================
    접근성 — 모션 감소 대응
    ======================================== */
 @media (prefers-reduced-motion: reduce) {
@@ -842,6 +997,18 @@ body::after {
   .classified-line {
     opacity: 1;
     transform: none;
+    transition: none;
+  }
+
+  #site-header {
+    transition: none;
+  }
+
+  .header-link {
+    transition: none;
+  }
+
+  .header-discord {
     transition: none;
   }
 }

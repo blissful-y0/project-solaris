@@ -1,15 +1,16 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
 import Hero from "../components/hero";
 import World from "../components/World";
 import Factions from "../components/Factions";
 import System from "../components/System";
-import Join from "../components/Join.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 ---
 
 <BaseLayout>
+  <Header />
   <main>
     <Hero client:load />
     <section id="after-hero" class="after-hero-locked">
@@ -18,7 +19,6 @@ import "../styles/global.css";
       </div>
       <Factions client:load />
       <System client:load />
-      <Join />
     </section>
   </main>
   <Footer />
