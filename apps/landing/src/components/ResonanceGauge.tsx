@@ -13,37 +13,33 @@ export default function ResonanceGauge() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* ── 서브 타이틀 ── */}
-      <div className="text-center">
-        <p
-          className="text-xs uppercase tracking-[0.25em] mb-1"
-          style={{
-            color: "#6b7280",
-            fontFamily:
-              "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
-          }}
-        >
-          RESONANCE RATE
+    <div className="flex flex-col gap-5">
+      {/* ── 공명율이란 ── */}
+      <div>
+        <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
+          공명율이란
+        </h3>
+        <p className="text-text/70 text-sm leading-relaxed">
+          헬리오스 코어와 정신이 얼마나 깊이 연결되어 있는지를 나타내는 수치.
+          15번째 생일, 하얀 방에서 확정된다. 이후로는 바뀌지 않는다.
         </p>
       </div>
 
-      {/* ── 설명 ── */}
-      <p className="text-text/70 text-sm leading-relaxed text-center">
-        헬리오스 코어와 정신이 얼마나 깊이 연결되어 있는지를 나타내는 수치.
-        <br />
-        15번째 생일, 하얀 방에서 확정된다. 이후로는 바뀌지 않는다.
-      </p>
+      {/* ── 각성 조건 ── */}
+      <div>
+        <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
+          각성 조건
+        </h3>
+        <p
+          className="text-sm font-semibold"
+          style={{ color: "#f59e0b", textShadow: "0 0 12px rgba(245,158,11,0.4)" }}
+        >
+          80을 넘는 순간, 능력이 깨어난다.
+        </p>
+      </div>
 
-      <p
-        className="text-center text-sm font-semibold"
-        style={{ color: "#f59e0b", textShadow: "0 0 12px rgba(245,158,11,0.4)" }}
-      >
-        80을 넘는 순간, 능력이 깨어난다.
-      </p>
-
-      {/* ── 수직 게이지 ── */}
-      <div className="flex justify-center">
+      {/* ── 수직 게이지 (중앙 정렬) ── */}
+      <div className="flex justify-center py-2">
         <div className="relative flex gap-4 items-stretch" style={{ height: 280 }}>
           {/* 게이지 바 */}
           <div className="relative w-12 rounded-sm overflow-hidden" style={{ backgroundColor: "rgba(31,41,55,0.5)" }}>
@@ -70,7 +66,6 @@ export default function ResonanceGauge() {
                 zIndex: 2,
               }}
             >
-              {/* 메인 라인 */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -78,7 +73,6 @@ export default function ResonanceGauge() {
                   boxShadow: "0 0 8px #f59e0b, 0 0 20px rgba(245,158,11,0.5)",
                 }}
               />
-              {/* 글리치 레이어 */}
               {animate && (
                 <>
                   <div
@@ -124,7 +118,6 @@ export default function ResonanceGauge() {
               width: 200,
             }}
           >
-            {/* 80+ 라벨 */}
             <div
               style={{
                 opacity: animate ? 1 : 0,
@@ -146,7 +139,6 @@ export default function ResonanceGauge() {
               </p>
             </div>
 
-            {/* 80 경계 라벨 */}
             <div
               className="absolute"
               style={{
@@ -162,9 +154,8 @@ export default function ResonanceGauge() {
               />
             </div>
 
-            {/* 80 미만 라벨 */}
             <div
-              className="flex flex-col justify-center flex-1 pl-0"
+              className="flex flex-col justify-center flex-1"
               style={{
                 paddingTop: "30%",
                 opacity: animate ? 1 : 0,
@@ -179,7 +170,6 @@ export default function ResonanceGauge() {
               </p>
             </div>
 
-            {/* 0 라벨 */}
             <div
               style={{
                 opacity: animate ? 1 : 0,
@@ -192,20 +182,22 @@ export default function ResonanceGauge() {
         </div>
       </div>
 
-      {/* ── 하단 설명 ── */}
-      <div className="text-text/50 text-sm leading-relaxed space-y-3">
-        <p>
-          공명율이 높을수록 강력하다. 하지만 헬리오스에 깊이 연결된다는 건
-          <br />
-          그만큼 시스템에 의존한다는 뜻이기도 하다.
-        </p>
-        <p>
-          반대로, 공명율이 극도로 낮은 자들은 감지망에서 사라진다.
-          <br />
-          시스템이 모르는 존재. 통제할 수 없는 변수.
-          <br />
-          그들의 능력은 불안정하지만 — 예측 불가능하다.
-        </p>
+      {/* ── 의미 ── */}
+      <div>
+        <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
+          의미
+        </h3>
+        <div className="text-text/70 text-sm leading-relaxed space-y-3">
+          <p>
+            공명율이 높을수록 강력하다. 하지만 헬리오스에 깊이 연결된다는 건
+            그만큼 시스템에 의존한다는 뜻이기도 하다.
+          </p>
+          <p>
+            반대로, 공명율이 극도로 낮은 자들은 감지망에서 사라진다.
+            시스템이 모르는 존재. 통제할 수 없는 변수.
+            그들의 능력은 불안정하지만 — 예측 불가능하다.
+          </p>
+        </div>
       </div>
     </div>
   );
