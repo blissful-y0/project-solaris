@@ -101,7 +101,7 @@ export default function SystemModal({ system, onClose }: Props) {
       <div
         className="relative w-full max-w-[640px] flex flex-col"
         style={{
-          height: "min(85vh, 720px)",
+          height: "92vh",
           backgroundColor: "rgba(10, 10, 15, 0.95)",
           opacity: isClosing ? 0 : isVisible ? 1 : 0,
           transform: isVisible ? "scaleY(1)" : "scaleY(0.95)",
