@@ -48,6 +48,7 @@ export default function SeasonTeaser() {
   const [showTyping, setShowTyping] = useState(false);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const observedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const el = bubbleRef.current;
@@ -58,18 +59,22 @@ export default function SeasonTeaser() {
         if (entry.isIntersecting && !observedRef.current) {
           observedRef.current = true;
           setShowTyping(true);
-          const t = setTimeout(() => {
+          timerRef.current = setTimeout(() => {
             setShowTyping(false);
             setShowBubble(true);
           }, 1000);
-          return () => clearTimeout(t);
         }
       },
       { threshold: 0.1 },
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
   }, []);
 
   return (

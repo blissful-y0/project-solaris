@@ -80,7 +80,9 @@ function FeatureCard({
         {feature.title}
       </h3>
 
-      <p className="text-text/70 text-sm md:text-lg">{feature.description}</p>
+      {feature.description && (
+        <p className="text-text/70 text-sm md:text-lg">{feature.description}</p>
+      )}
     </div>
   );
 }
