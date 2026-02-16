@@ -18,15 +18,26 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 }
 
+:root {
+  --header-anchor-offset: 4.5rem;
+}
+
 /* ========================================
    기본 리셋 & 바디
    (Tailwind v4 preflight이 *, ::before, ::after 리셋 처리)
    ======================================== */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--header-anchor-offset);
   font-size: 16px;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 212, 255, 0.15) transparent;
+}
+
+#section-world,
+#section-factions,
+#section-system {
+  scroll-margin-top: var(--header-anchor-offset);
 }
 
 html::-webkit-scrollbar {
@@ -929,6 +940,10 @@ body::after {
 
 /* 헤더 반응형 — 태블릿 */
 @media (max-width: 768px) {
+  :root {
+    --header-anchor-offset: 4rem;
+  }
+
   .header-inner {
     padding: 0.625rem 1rem;
   }
@@ -963,6 +978,10 @@ body::after {
 
 /* 헤더 반응형 — 모바일 */
 @media (max-width: 480px) {
+  :root {
+    --header-anchor-offset: 3.5rem;
+  }
+
   .header-nav {
     display: none;
   }
