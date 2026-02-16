@@ -170,7 +170,9 @@ export default function SystemModal({ system, onClose }: Props) {
               <h2 className="text-xl md:text-2xl font-bold text-primary text-glow-cyan">
                 {system.title}
               </h2>
-              <p className="text-text/50 text-sm mt-1">{system.description}</p>
+              {system.description && (
+                <p className="text-text/50 text-sm mt-1">{system.description}</p>
+              )}
             </div>
           </div>
 
