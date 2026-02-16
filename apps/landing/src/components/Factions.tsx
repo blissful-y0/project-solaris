@@ -45,11 +45,11 @@ function FactionCard({
   return (
     <div
       ref={ref}
-      className={`reveal group flex-1 border ${borderColor} rounded-lg p-8 md:p-12 bg-bg/80 backdrop-blur-sm
+      className={`reveal group flex-1 border ${borderColor} rounded-lg p-5 md:p-12 bg-bg/80 backdrop-blur-sm
                   transition-all duration-700 ${hoverBorder} ${hoverGlow} cursor-default`}
     >
       {/* 진영 이름 */}
-      <h3 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center ${textColor} ${textGlow} mb-2`}>
+      <h3 className={`text-xl md:text-3xl lg:text-4xl font-bold text-center ${textColor} ${textGlow} mb-2`}>
         {faction.name}
       </h3>
       <p className="text-text/40 text-sm font-mono tracking-widest uppercase text-center mb-6 md:mb-8">
@@ -57,7 +57,7 @@ function FactionCard({
       </p>
 
       {/* 대표 문구 */}
-      <blockquote className="text-lg md:text-xl text-text/80 leading-relaxed text-center mb-8 md:mb-10 italic">
+      <blockquote className="text-base md:text-xl text-text/80 leading-relaxed text-center mb-6 md:mb-10 italic">
         &ldquo;{faction.quote}&rdquo;
       </blockquote>
 
@@ -106,7 +106,7 @@ export default function Factions() {
 
         {/* 하단 CTA */}
         <div className="text-center mt-14 md:mt-16">
-          <p className="text-xl md:text-2xl text-text/70 font-light text-glow-cyan">
+          <p className="text-lg md:text-2xl text-text/70 font-light text-glow-cyan">
             당신의 운명을 선택하시겠습니까?
           </p>
         </div>

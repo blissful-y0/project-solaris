@@ -51,18 +51,18 @@ export default function World() {
       <div className="section-inner">
         {/* 섹션 제목 — 앰버 글로우 (거짓 태양 테마) */}
         <RevealBlock delay={0}>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-secondary text-glow-amber text-center mb-14 md:mb-20">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-secondary text-glow-amber text-center mb-10 md:mb-20">
             거짓된 태양의 시대
           </h2>
         </RevealBlock>
 
         {/* 스토리 블록 — 스크롤 순차 등장 */}
-        <div className="space-y-8 md:space-y-10 max-w-3xl mx-auto">
+        <div className="space-y-6 md:space-y-10 max-w-3xl mx-auto">
           {STORY_BLOCKS.map((text, i) => (
             <RevealBlock key={i} delay={i * 150}>
-              <div className="relative text-center border border-primary/15 rounded-lg p-6 md:p-8 bg-bg/60 backdrop-blur-sm">
+              <div className="relative text-center border border-primary/15 rounded-lg p-4 md:p-8 bg-bg/60 backdrop-blur-sm">
                 <div className="absolute left-1/2 top-0 w-2 h-2 bg-primary rounded-full -translate-x-1/2 -translate-y-1/2" />
-                <p className="text-lg md:text-xl lg:text-2xl text-text/90 leading-relaxed font-light">
+                <p className="text-base md:text-xl lg:text-2xl text-text/90 leading-relaxed font-light">
                   {text}
                 </p>
               </div>

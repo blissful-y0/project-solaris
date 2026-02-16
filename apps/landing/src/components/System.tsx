@@ -55,7 +55,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
   return (
     <div
       ref={ref}
-      className="reveal group border border-subtle rounded-lg p-6 md:p-8 bg-bg/80 backdrop-blur-sm
+      className="reveal group border border-subtle rounded-lg p-5 md:p-8 bg-bg/80 backdrop-blur-sm
                  transition-all duration-500 hover:border-primary/50 hover-glow-cyan cursor-default text-center"
     >
       {/* HUD 글리프 */}
@@ -64,12 +64,12 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
       </div>
 
       {/* 피처 제목 — 시안 글로우 */}
-      <h3 className="text-xl md:text-2xl font-bold text-primary text-glow-cyan mb-3">
+      <h3 className="text-lg md:text-2xl font-bold text-primary text-glow-cyan mb-3">
         {feature.title}
       </h3>
 
       {/* 피처 설명 */}
-      <p className="text-text/70 text-base md:text-lg">
+      <p className="text-text/70 text-sm md:text-lg">
         {feature.description}
       </p>
     </div>
@@ -82,7 +82,7 @@ export default function System() {
       <div className="section-inner">
         {/* 섹션 제목 + 회로 디바이더 */}
         <div className="text-center mb-12 md:mb-14">
-          <h2 className="text-3xl md:text-4xl font-bold text-text mb-4">
+          <h2 className="text-2xl md:text-4xl font-bold text-text mb-4">
             게임 시스템
           </h2>
           <div className="circuit-divider max-w-md mx-auto" />

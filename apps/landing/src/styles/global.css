@@ -243,6 +243,8 @@ body::after {
 
 .glitch {
   position: relative;
+  display: inline-block;
+  line-height: 1.1;
 }
 
 .glitch::before,
@@ -425,8 +427,14 @@ body::after {
     padding-block: 5.25rem;
   }
 
+  .section-shell::before {
+    background:
+      linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 100%),
+      radial-gradient(circle at 50% -20%, rgba(0, 212, 255, 0.06), transparent 65%);
+  }
+
   body::before {
-    opacity: 0.02;
+    opacity: 0.015;
   }
 
   .glow-cyan-strong {
@@ -445,6 +453,37 @@ body::after {
     box-shadow:
       0 0 5px rgba(255, 45, 149, 0.4),
       0 0 20px rgba(255, 45, 149, 0.15);
+  }
+
+  .glow-cyan,
+  .glow-amber,
+  .glow-magenta {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+  }
+
+  .hover-glow-cyan:hover,
+  .hover-glow-amber:hover,
+  .hover-glow-magenta:hover {
+    box-shadow:
+      0 0 4px rgba(255, 255, 255, 0.12),
+      0 0 14px rgba(0, 212, 255, 0.12);
+  }
+
+  .system-glyph {
+    width: 3rem;
+    height: 3rem;
+    font-size: 0.56rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-shell {
+    padding-inline: 0.875rem;
+    padding-block: 4.75rem;
+  }
+
+  .section-divider::after {
+    width: calc(100% - 1.75rem);
   }
 }
 
