@@ -6,8 +6,8 @@
 @theme {
   --color-bg: #0a0a0f;
   --color-primary: #00d4ff;
-  --color-secondary: #f59e0b;
-  --color-accent: #ff2d95;
+  --color-secondary: #93c5fd;
+  --color-accent: #dc2626;
   --color-text: #e5e7eb;
   --color-subtle: #1f2937;
   --color-discord: #5865F2;
@@ -20,26 +20,38 @@
 
 /* ========================================
    기본 리셋 & 바디
+   (Tailwind v4 preflight이 *, ::before, ::after 리셋 처리)
    ======================================== */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 255, 0.15) transparent;
+}
+
+html::-webkit-scrollbar {
+  width: 6px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.15);
+  border-radius: 3px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.3);
 }
 
 body {
   background-color: var(--color-bg);
   background-image:
     radial-gradient(circle at 15% 20%, rgba(0, 212, 255, 0.08), transparent 40%),
-    radial-gradient(circle at 85% 10%, rgba(255, 45, 149, 0.06), transparent 35%),
-    radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.05), transparent 45%);
+    radial-gradient(circle at 85% 10%, rgba(220, 38, 38, 0.06), transparent 35%),
+    radial-gradient(circle at 50% 100%, rgba(147, 197, 253, 0.05), transparent 45%);
   color: var(--color-text);
   font-family: var(--font-sans);
   line-height: 1.6;
@@ -50,12 +62,13 @@ body {
 
 /* ========================================
    노이즈/그레인 텍스처 오버레이
+   (z-index: 100 — 기존 9999 버그 수정)
    ======================================== */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 100;
   pointer-events: none;
   opacity: 0.03;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
@@ -65,12 +78,13 @@ body::before {
 
 /* ========================================
    스캔라인 오버레이
+   (z-index: 99 — 기존 9998 버그 수정)
    ======================================== */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 9998;
+  z-index: 99;
   pointer-events: none;
   background: repeating-linear-gradient(
     0deg,
@@ -151,6 +165,14 @@ body::after {
     0 0 100px rgba(0, 212, 255, 0.05);
 }
 
+.glow-cyan-intense {
+  box-shadow:
+    0 0 8px rgba(0, 212, 255, 0.6),
+    0 0 30px rgba(0, 212, 255, 0.4),
+    0 0 80px rgba(0, 212, 255, 0.2),
+    0 0 120px rgba(0, 212, 255, 0.1);
+}
+
 .text-glow-cyan {
   text-shadow:
     0 0 10px rgba(0, 212, 255, 0.5),
@@ -158,51 +180,67 @@ body::after {
 }
 
 /* ========================================
-   네온 글로우 유틸리티 — 앰버 (거짓 태양/SDF)
+   네온 글로우 유틸리티 — 냉백색 (SDF/질서)
    ======================================== */
 .glow-amber {
   box-shadow:
-    0 0 5px rgba(245, 158, 11, 0.3),
-    0 0 20px rgba(245, 158, 11, 0.15),
-    0 0 40px rgba(245, 158, 11, 0.05);
+    0 0 5px rgba(147, 197, 253, 0.3),
+    0 0 20px rgba(147, 197, 253, 0.15),
+    0 0 40px rgba(147, 197, 253, 0.05);
 }
 
 .glow-amber-strong {
   box-shadow:
-    0 0 5px rgba(245, 158, 11, 0.5),
-    0 0 20px rgba(245, 158, 11, 0.3),
-    0 0 60px rgba(245, 158, 11, 0.15),
-    0 0 100px rgba(245, 158, 11, 0.05);
+    0 0 5px rgba(147, 197, 253, 0.5),
+    0 0 20px rgba(147, 197, 253, 0.3),
+    0 0 60px rgba(147, 197, 253, 0.15),
+    0 0 100px rgba(147, 197, 253, 0.05);
+}
+
+.glow-amber-intense {
+  box-shadow:
+    0 0 8px rgba(147, 197, 253, 0.6),
+    0 0 30px rgba(147, 197, 253, 0.4),
+    0 0 80px rgba(147, 197, 253, 0.2),
+    0 0 120px rgba(147, 197, 253, 0.1);
 }
 
 .text-glow-amber {
   text-shadow:
-    0 0 10px rgba(245, 158, 11, 0.5),
-    0 0 40px rgba(245, 158, 11, 0.2);
+    0 0 10px rgba(147, 197, 253, 0.5),
+    0 0 40px rgba(147, 197, 253, 0.2);
 }
 
 /* ========================================
-   네온 글로우 유틸리티 — 마젠타 (레지스탕스)
+   네온 글로우 유틸리티 — 바이올렛 (레지스탕스)
    ======================================== */
 .glow-magenta {
   box-shadow:
-    0 0 5px rgba(255, 45, 149, 0.3),
-    0 0 20px rgba(255, 45, 149, 0.15),
-    0 0 40px rgba(255, 45, 149, 0.05);
+    0 0 5px rgba(220, 38, 38, 0.3),
+    0 0 20px rgba(220, 38, 38, 0.15),
+    0 0 40px rgba(220, 38, 38, 0.05);
 }
 
 .glow-magenta-strong {
   box-shadow:
-    0 0 5px rgba(255, 45, 149, 0.5),
-    0 0 20px rgba(255, 45, 149, 0.3),
-    0 0 60px rgba(255, 45, 149, 0.15),
-    0 0 100px rgba(255, 45, 149, 0.05);
+    0 0 5px rgba(220, 38, 38, 0.5),
+    0 0 20px rgba(220, 38, 38, 0.3),
+    0 0 60px rgba(220, 38, 38, 0.15),
+    0 0 100px rgba(220, 38, 38, 0.05);
+}
+
+.glow-magenta-intense {
+  box-shadow:
+    0 0 8px rgba(220, 38, 38, 0.6),
+    0 0 30px rgba(220, 38, 38, 0.4),
+    0 0 80px rgba(220, 38, 38, 0.2),
+    0 0 120px rgba(220, 38, 38, 0.1);
 }
 
 .text-glow-magenta {
   text-shadow:
-    0 0 10px rgba(255, 45, 149, 0.5),
-    0 0 40px rgba(255, 45, 149, 0.2);
+    0 0 10px rgba(220, 38, 38, 0.5),
+    0 0 40px rgba(220, 38, 38, 0.2);
 }
 
 .hover-glow-cyan:hover {
@@ -215,18 +253,18 @@ body::after {
 
 .hover-glow-amber:hover {
   box-shadow:
-    0 0 5px rgba(245, 158, 11, 0.5),
-    0 0 20px rgba(245, 158, 11, 0.3),
-    0 0 60px rgba(245, 158, 11, 0.15),
-    0 0 100px rgba(245, 158, 11, 0.05);
+    0 0 5px rgba(147, 197, 253, 0.5),
+    0 0 20px rgba(147, 197, 253, 0.3),
+    0 0 60px rgba(147, 197, 253, 0.15),
+    0 0 100px rgba(147, 197, 253, 0.05);
 }
 
 .hover-glow-magenta:hover {
   box-shadow:
-    0 0 5px rgba(255, 45, 149, 0.5),
-    0 0 20px rgba(255, 45, 149, 0.3),
-    0 0 60px rgba(255, 45, 149, 0.15),
-    0 0 100px rgba(255, 45, 149, 0.05);
+    0 0 5px rgba(220, 38, 38, 0.5),
+    0 0 20px rgba(220, 38, 38, 0.3),
+    0 0 60px rgba(220, 38, 38, 0.15),
+    0 0 100px rgba(220, 38, 38, 0.05);
 }
 
 /* ========================================
@@ -419,6 +457,277 @@ body::after {
 }
 
 /* ========================================
+   HUD 코너 브라켓 장식
+   ======================================== */
+.hud-corner-tl,
+.hud-corner-tr,
+.hud-corner-bl,
+.hud-corner-br {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.hud-corner-tl {
+  top: 0; left: 0;
+  border-top: 1px solid var(--color-primary);
+  border-left: 1px solid var(--color-primary);
+}
+
+.hud-corner-tr {
+  top: 0; right: 0;
+  border-top: 1px solid var(--color-primary);
+  border-right: 1px solid var(--color-primary);
+}
+
+.hud-corner-bl {
+  bottom: 0; left: 0;
+  border-bottom: 1px solid var(--color-primary);
+  border-left: 1px solid var(--color-primary);
+}
+
+.hud-corner-br {
+  bottom: 0; right: 0;
+  border-bottom: 1px solid var(--color-primary);
+  border-right: 1px solid var(--color-primary);
+}
+
+/* ========================================
+   HUD 모노 데이터 레이블
+   ======================================== */
+.hud-label {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-primary) 60%, transparent);
+  line-height: 1;
+}
+
+/* ========================================
+   HUD 키프레임 — 레이더 스윕
+   ======================================== */
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   HUD 키프레임 — 소나 펄스 링
+   ======================================== */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   HUD 키프레임 — 숫자 글리치
+   ======================================== */
+@keyframes number-glitch {
+  0%, 90%, 100% { opacity: 1; transform: none; }
+  92% { opacity: 0.6; transform: translateX(2px); }
+  94% { opacity: 1; transform: translateX(-1px); }
+  96% { opacity: 0.4; transform: translateY(1px); }
+  98% { opacity: 1; transform: none; }
+}
+
+/* ========================================
+   HUD 키프레임 — 수평 스캔라인
+   ======================================== */
+@keyframes h-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.h-scanline {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 212, 255, 0.4),
+    rgba(0, 212, 255, 0.6),
+    rgba(0, 212, 255, 0.4),
+    transparent
+  );
+  animation: h-scan 3s linear infinite;
+  pointer-events: none;
+}
+
+/* ========================================
+   HUD 키프레임 — 보더 호흡
+   ======================================== */
+@keyframes border-breathe {
+  0%, 100% { border-color: color-mix(in oklab, var(--color-primary) 30%, transparent); }
+  50% { border-color: color-mix(in oklab, var(--color-primary) 60%, transparent); }
+}
+
+.border-breathe {
+  animation: border-breathe 3s ease-in-out infinite;
+}
+
+/* ========================================
+   기밀 문서 블록 (World)
+   ======================================== */
+.classified-block {
+  position: relative;
+  background: rgba(10, 10, 15, 0.7);
+  overflow: hidden;
+}
+
+/* 블록 내부 스캔라인 텍스처 */
+.classified-block::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 212, 255, 0.015) 3px,
+    rgba(0, 212, 255, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 수평 스캔 라인 — 블록 진입 시 한 번 스윕 */
+.classified-block::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -2px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 212, 255, 0.6) 30%,
+    rgba(0, 212, 255, 0.9) 50%,
+    rgba(0, 212, 255, 0.6) 70%,
+    transparent 100%
+  );
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.classified-block.revealed::after {
+  animation: classified-scan 0.8s ease-out forwards;
+}
+
+@keyframes classified-scan {
+  0% { top: -2px; opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* 문서 헤더 */
+.classified-header {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.6;
+  color: color-mix(in oklab, var(--color-primary) 50%, transparent);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 12%, transparent);
+}
+
+@media (min-width: 768px) {
+  .classified-header {
+    font-size: 0.65rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.classified-header .access-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-left: 0.5rem;
+  font-size: 0.5rem;
+  border: 1px solid;
+  vertical-align: middle;
+}
+
+.access-restricted {
+  color: var(--color-accent);
+  border-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
+}
+
+.access-classified {
+  color: var(--color-secondary);
+  border-color: color-mix(in oklab, var(--color-secondary) 40%, transparent);
+}
+
+/* 라인별 등장 애니메이션 */
+.classified-line {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.classified-line.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 문서 종료 마크 */
+.classified-end {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-primary) 25%, transparent);
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in oklab, var(--color-primary) 8%, transparent);
+}
+
+/* 키워드 하이라이트 */
+.kw-primary {
+  color: var(--color-primary);
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}
+
+.kw-secondary {
+  color: var(--color-secondary);
+  text-shadow: 0 0 8px rgba(147, 197, 253, 0.3);
+}
+
+.kw-accent {
+  color: var(--color-accent);
+  text-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+}
+
+/* ========================================
+   아코디언 트랜지션 (Factions)
+   ======================================== */
+.accordion-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s ease;
+}
+
+.accordion-body.open {
+  grid-template-rows: 1fr;
+}
+
+.accordion-body > div {
+  overflow: hidden;
+}
+
+/* ========================================
    반응형 — 모바일 성능 최적화
    ======================================== */
 @media (max-width: 768px) {
@@ -437,22 +746,25 @@ body::after {
     opacity: 0.015;
   }
 
-  .glow-cyan-strong {
+  .glow-cyan-strong,
+  .glow-cyan-intense {
     box-shadow:
       0 0 5px rgba(0, 212, 255, 0.4),
       0 0 20px rgba(0, 212, 255, 0.15);
   }
 
-  .glow-amber-strong {
+  .glow-amber-strong,
+  .glow-amber-intense {
     box-shadow:
-      0 0 5px rgba(245, 158, 11, 0.4),
-      0 0 20px rgba(245, 158, 11, 0.15);
+      0 0 5px rgba(147, 197, 253, 0.4),
+      0 0 20px rgba(147, 197, 253, 0.15);
   }
 
-  .glow-magenta-strong {
+  .glow-magenta-strong,
+  .glow-magenta-intense {
     box-shadow:
-      0 0 5px rgba(255, 45, 149, 0.4),
-      0 0 20px rgba(255, 45, 149, 0.15);
+      0 0 5px rgba(220, 38, 38, 0.4),
+      0 0 20px rgba(220, 38, 38, 0.15);
   }
 
   .glow-cyan,
@@ -473,6 +785,14 @@ body::after {
     width: 3rem;
     height: 3rem;
     font-size: 0.56rem;
+  }
+
+  .hud-corner-tl,
+  .hud-corner-tr,
+  .hud-corner-bl,
+  .hud-corner-br {
+    width: 8px;
+    height: 8px;
   }
 }
 
@@ -515,4 +835,13 @@ body::after {
   .flicker { animation: none; }
   .pulse { animation: none; }
   .scroll-arrow { animation: none; }
+  .h-scanline { animation: none; }
+  .border-breathe { animation: none; }
+
+  .classified-block::after { animation: none; }
+  .classified-line {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
