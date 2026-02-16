@@ -4,43 +4,43 @@ import BootPhase from "./BootPhase";
 import MeasurePhase from "./MeasurePhase";
 import ChoosePhase from "./ChoosePhase";
 import SelectedPhase from "./SelectedPhase";
+import { resolveHeroSkipMode, HERO_STORAGE_KEY } from "./skipState.js";
 
-function useDevSkip() {
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).has("skip");
-}
-
-const HERO_STORAGE_KEY = "solaris:hero-completed";
-const HERO_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7일
-
-function useReturningVisitor(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    const stored = localStorage.getItem(HERO_STORAGE_KEY);
-    if (!stored) return false;
-    const timestamp = parseInt(stored, 10);
-    return Date.now() - timestamp < HERO_EXPIRY_MS;
-  } catch {
-    return false;
-  }
-}
+type SkipMode = "none" | "dev" | "returning";
 
 export default function Hero() {
-  const devSkip = useDevSkip();
-  const returning = useReturningVisitor();
-  const skip = devSkip || returning;
-  const [phase, setPhase] = useState<HeroPhase>(skip ? "done" : "boot");
-  const [choice, setChoice] = useState<CardChoice | null>(skip ? "unknown" : null);
+  const [skipMode, setSkipMode] = useState<SkipMode>("none");
+  const [phase, setPhase] = useState<HeroPhase>("boot");
+  const [choice, setChoice] = useState<CardChoice | null>(null);
+  const returning = skipMode === "returning";
+  const skip = skipMode !== "none";
+
+  // 클라이언트 마운트 후 skip 모드 판정 (SSR 초기 렌더와 일치)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const nextMode = resolveHeroSkipMode({
+        search: window.location.search,
+        storedTimestamp: localStorage.getItem(HERO_STORAGE_KEY),
+      });
+      if (nextMode === "none") return;
+      setSkipMode(nextMode);
+      setChoice("unknown");
+      setPhase("done");
+    } catch {
+      // localStorage 접근 불가 환경에서는 일반 시퀀스를 사용
+    }
+  }, []);
 
   // skip 시 즉시 이벤트 발사
   useEffect(() => {
     if (!skip) return;
     window.dispatchEvent(new CustomEvent("solaris:hero-selected", { detail: { choice: "unknown" } }));
     window.dispatchEvent(new CustomEvent("solaris:hero-done"));
-    if (returning && !devSkip) {
+    if (returning) {
       window.dispatchEvent(new CustomEvent("solaris:hero-skipped"));
     }
-  }, [skip, returning, devSkip]);
+  }, [skip, returning]);
 
   // 히어로 시퀀스 정상 완료 시 localStorage에 타임스탬프 저장
   useEffect(() => {
