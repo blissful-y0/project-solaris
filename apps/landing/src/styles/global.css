@@ -989,7 +989,12 @@ body::after {
   }
 
   .header-nav {
-    display: none;
+    gap: 0.75rem;
+  }
+
+  .header-link {
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
   }
 
   .header-inner {

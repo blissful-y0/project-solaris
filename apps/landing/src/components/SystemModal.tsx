@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { SystemInfo } from "./systemData";
 
 interface Props {
@@ -62,7 +63,7 @@ export default function SystemModal({ system, onClose }: Props) {
   const isContent = phase === "content";
   const isClosing = phase === "closing";
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -233,6 +234,7 @@ export default function SystemModal({ system, onClose }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
