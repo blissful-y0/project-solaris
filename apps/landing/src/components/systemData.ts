@@ -7,7 +7,7 @@ export interface SystemInfo {
   code: string;
   title: string;
   glyph: string;
-  description: string;
+  description?: string;
   sections: SystemSection[];
   notionUrl?: string;
 }
@@ -16,8 +16,7 @@ export const SYSTEMS: SystemInfo[] = [
   {
     code: "GM",
     glyph: "GM",
-    title: "헬리오스 전투 관제 시스템",
-    description: "서술 논리를 기반으로 AI가 전투 결과를 판단합니다",
+    title: "전투 관제 시스템",
     sections: [
       {
         heading: "판정 방식",
@@ -33,33 +32,14 @@ export const SYSTEMS: SystemInfo[] = [
     code: "SYNC",
     glyph: "SYNC",
     title: "공명율",
-    description: "Resonance Rate",
-    sections: [
-      {
-        heading: "공명율 등급",
-        body: "0-39 일반 | 40-59 감응 | 60-79 각성 | 80+ 초월. 공명율이 높을수록 강력한 능력을 사용할 수 있지만, 인간성을 잃어갈 위험이 따릅니다.",
-      },
-      {
-        heading: "스킬 체계",
-        body: "공명율 등급에 따라 해금되는 스킬이 결정됩니다. 각 진영별 고유 스킬 트리가 존재하며, 선택에 따라 캐릭터의 전투 스타일이 달라집니다.",
-      },
-    ],
+    sections: [],
   },
   {
     code: "ARC",
     glyph: "ARC",
-    title: "시즌제 스토리",
-    description: "당신의 선택이 도시의 운명을 바꾼다",
-    sections: [
-      {
-        heading: "시즌 구조",
-        body: "시즌마다 메인 스토리 아크가 진행됩니다. 주요 이벤트와 분기점에서 플레이어들의 선택이 스토리의 방향을 결정합니다.",
-      },
-      {
-        heading: "참여 방식",
-        body: "캐릭터의 행동이 세계에 반영됩니다. 진영 선택, 임무 수행, 다른 캐릭터와의 관계가 시즌 스토리에 영향을 미칩니다.",
-      },
-    ],
+    title: "사건 발생 시스템",
+
+    sections: [],
   },
   {
     code: "OC",

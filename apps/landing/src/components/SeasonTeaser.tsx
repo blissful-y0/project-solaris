@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-const BRIEFING_HEADER = "시즌 아크 브리핑";
-const BRIEFING_SUBTITLE = "시즌 0 — 균열의 서막.";
+const BRIEFING_HEADER = "2249년 2월 17일 오후 9시 23분";
+const BRIEFING_SUBTITLE = "헬리오스 시스템이 알려드립니다.";
 
 const BRIEFING_LINES = [
   "지난 72시간 기록 종합.",
@@ -33,7 +33,7 @@ const CLOSING_LINES = [
   "돔 외곽 감시탑 3기, 지난 48시간 간헐적 통신 두절 보고 접수.",
   "",
   "양측 동시 움직임 포착.",
-  "시즌 0 메인 아크 — 개시.",
+  "선셋 프로토콜 활성화.",
 ];
 
 const mono =
@@ -81,24 +81,23 @@ export default function SeasonTeaser() {
         </h3>
         <div className="text-text/70 text-sm leading-relaxed space-y-3">
           <p>
-            시즌이 시작되면 메인 스토리가 개시됩니다.
+            러닝 기간 동안 메인 스토리가 진행됩니다.
             <br />
             그 주변으로 다수의 서브 스토리가 동시에 진행되며,
             <br />
-            모든 서브 스토리에 참여할 필요는 없습니다.
+            유저는 모든 서브 스토리에 참여할 필요는 없습니다.
           </p>
           <p>
-            시즌의 분기점에서 헬리오스 시스템(AI)이 양 진영의 행동을
+            스토리의 분기점에서 헬리오스 시스템(AI)이 양 진영의 행동을
             종합합니다.
             <br />
             누가 어떤 임무를 수행했는지. 어떤 전투에서 이기고 졌는지.
             <br />
             어떤 정보를 손에 넣었고, 어떤 선택을 내렸는지.
-            <br />
-            그 총합이 다음 스토리의 방향을 결정합니다.
+            <br />그 총합이 다음 스토리의 방향을 결정합니다.
           </p>
-          <p className="text-text/50">
-            필요할 시 운영자 판단에 따라 투표 또는 다수결이 적용될 수 있습니다.
+          <p className="text-text/30 text-xs">
+            * 운영자 판단에 따라 투표 또는 다수결이 적용될 수 있습니다.
           </p>
         </div>
       </div>
@@ -125,17 +124,13 @@ export default function SeasonTeaser() {
             비공개로 두면 당사자들만의 이야기가 됩니다.
           </p>
           <p className="text-text/50">
-            무엇을 드러내고 무엇을 감출지 당신이 정할 수 있습니다.
+            무엇을 드러내고 무엇을 감출지는 당신이 정할 수 있습니다.
           </p>
         </div>
       </div>
 
       {/* ── 시즌 0 티저 — AI 브리핑 ── */}
       <div>
-        <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-3 font-semibold">
-          시즌 0 티저
-        </h3>
-
         <div ref={bubbleRef} className="flex justify-center">
           {/* 타이핑 인디케이터 */}
           {showTyping && !showBubble && (
@@ -176,7 +171,7 @@ export default function SeasonTeaser() {
                     textShadow: "0 0 8px rgba(6,182,212,0.4)",
                   }}
                 >
-                  HELIOS GM
+                  HELIOS SYSTEM
                 </span>
               </div>
 
@@ -237,10 +232,7 @@ export default function SeasonTeaser() {
                 </div>
 
                 {/* 후반부 */}
-                <div
-                  className="mt-3 space-y-0.5"
-                  style={{ lineHeight: 1.7 }}
-                >
+                <div className="mt-3 space-y-0.5" style={{ lineHeight: 1.7 }}>
                   {CLOSING_LINES.map((line, i) =>
                     line === "" ? (
                       <div key={i} className="h-2" />
@@ -248,8 +240,7 @@ export default function SeasonTeaser() {
                       <div
                         key={i}
                         style={{
-                          fontWeight:
-                            i >= CLOSING_LINES.length - 2 ? 700 : 400,
+                          fontWeight: i >= CLOSING_LINES.length - 2 ? 700 : 400,
                         }}
                       >
                         {line}
@@ -261,21 +252,6 @@ export default function SeasonTeaser() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── 시즌 0 Coming Soon ── */}
-      <div className="flex justify-center pt-2">
-        <p
-          style={{
-            fontSize: "0.85rem",
-            color: "#6b7280",
-            fontFamily: mono,
-            letterSpacing: "0.05em",
-            animation: "season-tease-pulse 3s ease-in-out infinite",
-          }}
-        >
-          시즌 0: 균열의 서막 — Coming Soon
-        </p>
       </div>
     </div>
   );
