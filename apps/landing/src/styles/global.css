@@ -608,6 +608,12 @@ body::after {
   80% { transform: translateX(2px); opacity: 0.4; }
 }
 
+/* 시즌 티저 Coming Soon 펄스 */
+@keyframes season-tease-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 /* 공명율 레드 구간 펄스 */
 @keyframes gauge-red-pulse {
   0%, 100% {

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { SystemInfo } from "./systemData";
 import CombatDemo from "./CombatDemo";
 import ResonanceGauge from "./ResonanceGauge";
+import SeasonTeaser from "./SeasonTeaser";
 
 interface Props {
   system: SystemInfo;
@@ -189,8 +190,13 @@ export default function SystemModal({ system, onClose }: Props) {
             <ResonanceGauge />
           )}
 
-          {/* 기본 콘텐츠 섹션들 (SYNC 제외) */}
-          {system.code !== "SYNC" &&
+          {/* ARC 모달 — 시즌제 스토리 전용 비주얼 */}
+          {system.code === "ARC" && isContent && (
+            <SeasonTeaser />
+          )}
+
+          {/* 기본 콘텐츠 섹션들 (SYNC, ARC 제외) */}
+          {system.code !== "SYNC" && system.code !== "ARC" &&
             system.sections.map((section, i) => (
               <div
                 key={section.heading}
