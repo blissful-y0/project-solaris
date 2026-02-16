@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 
-// 게임 시스템 피처 데이터
 interface Feature {
   glyph: string;
   title: string;
@@ -30,7 +29,6 @@ const FEATURES: Feature[] = [
   },
 ];
 
-// 피처 카드 — 순차 등장 + 호버 시안 글로우
 function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -45,7 +43,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
           observer.unobserve(el);
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     );
 
     observer.observe(el);
@@ -55,23 +53,52 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
   return (
     <div
       ref={ref}
-      className="reveal group border border-subtle rounded-lg p-5 md:p-8 bg-bg/80 backdrop-blur-sm
-                 transition-all duration-500 hover:border-primary/50 hover-glow-cyan cursor-default text-center"
+      className="reveal group relative p-7 md:p-10 bg-bg/60
+                 transition-all duration-500 hover-glow-cyan cursor-default text-center"
     >
-      {/* HUD 글리프 */}
+      {/* HUD 코너 브라켓 */}
+      <span
+        className="absolute top-0 left-0 w-3 h-3 md:w-4 md:h-4 transition-opacity duration-500 group-hover:opacity-100"
+        style={{
+          borderTop: "1px solid var(--color-primary)",
+          borderLeft: "1px solid var(--color-primary)",
+          opacity: 0.3,
+        }}
+      />
+      <span
+        className="absolute top-0 right-0 w-3 h-3 md:w-4 md:h-4 transition-opacity duration-500 group-hover:opacity-100"
+        style={{
+          borderTop: "1px solid var(--color-primary)",
+          borderRight: "1px solid var(--color-primary)",
+          opacity: 0.3,
+        }}
+      />
+      <span
+        className="absolute bottom-0 left-0 w-3 h-3 md:w-4 md:h-4 transition-opacity duration-500 group-hover:opacity-100"
+        style={{
+          borderBottom: "1px solid var(--color-primary)",
+          borderLeft: "1px solid var(--color-primary)",
+          opacity: 0.3,
+        }}
+      />
+      <span
+        className="absolute bottom-0 right-0 w-3 h-3 md:w-4 md:h-4 transition-opacity duration-500 group-hover:opacity-100"
+        style={{
+          borderBottom: "1px solid var(--color-primary)",
+          borderRight: "1px solid var(--color-primary)",
+          opacity: 0.3,
+        }}
+      />
+
       <div className="system-glyph pulse mb-4 md:mb-6 mx-auto">
         {feature.glyph}
       </div>
 
-      {/* 피처 제목 — 시안 글로우 */}
       <h3 className="text-lg md:text-2xl font-bold text-primary text-glow-cyan mb-3">
         {feature.title}
       </h3>
 
-      {/* 피처 설명 */}
-      <p className="text-text/70 text-sm md:text-lg">
-        {feature.description}
-      </p>
+      <p className="text-text/70 text-sm md:text-lg">{feature.description}</p>
     </div>
   );
 }
@@ -80,15 +107,6 @@ export default function System() {
   return (
     <section className="section-shell section-divider">
       <div className="section-inner">
-        {/* 섹션 제목 + 회로 디바이더 */}
-        <div className="text-center mb-12 md:mb-14">
-          <h2 className="text-2xl md:text-4xl font-bold text-text mb-4">
-            게임 시스템
-          </h2>
-          <div className="circuit-divider max-w-md mx-auto" />
-        </div>
-
-        {/* 2x2 그리드 — 모바일 1열 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           {FEATURES.map((feature, i) => (
             <FeatureCard key={feature.title} feature={feature} index={i} />
