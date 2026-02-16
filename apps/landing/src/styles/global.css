@@ -1,0 +1,348 @@
+@import "tailwindcss";
+
+/* ========================================
+   SOLARIS 디자인 토큰 — 사이버펑크 네온
+   ======================================== */
+@theme {
+  --color-bg: #0a0a0f;
+  --color-primary: #00d4ff;
+  --color-secondary: #f59e0b;
+  --color-accent: #ff2d95;
+  --color-text: #e5e7eb;
+  --color-subtle: #1f2937;
+  --color-discord: #5865F2;
+
+  --font-sans: "Pretendard Variable", "Pretendard", -apple-system,
+    BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI",
+    "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+/* ========================================
+   기본 리셋 & 바디
+   ======================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================
+   노이즈/그레인 텍스처 오버레이
+   ======================================== */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ========================================
+   스캔라인 오버레이
+   ======================================== */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+/* ========================================
+   네온 글로우 유틸리티 — 시안 (시스템 UI)
+   ======================================== */
+.glow-cyan {
+  box-shadow:
+    0 0 5px rgba(0, 212, 255, 0.3),
+    0 0 20px rgba(0, 212, 255, 0.15),
+    0 0 40px rgba(0, 212, 255, 0.05);
+}
+
+.glow-cyan-strong {
+  box-shadow:
+    0 0 5px rgba(0, 212, 255, 0.5),
+    0 0 20px rgba(0, 212, 255, 0.3),
+    0 0 60px rgba(0, 212, 255, 0.15),
+    0 0 100px rgba(0, 212, 255, 0.05);
+}
+
+.text-glow-cyan {
+  text-shadow:
+    0 0 10px rgba(0, 212, 255, 0.5),
+    0 0 40px rgba(0, 212, 255, 0.2);
+}
+
+/* ========================================
+   네온 글로우 유틸리티 — 앰버 (거짓 태양/SDF)
+   ======================================== */
+.glow-amber {
+  box-shadow:
+    0 0 5px rgba(245, 158, 11, 0.3),
+    0 0 20px rgba(245, 158, 11, 0.15),
+    0 0 40px rgba(245, 158, 11, 0.05);
+}
+
+.glow-amber-strong {
+  box-shadow:
+    0 0 5px rgba(245, 158, 11, 0.5),
+    0 0 20px rgba(245, 158, 11, 0.3),
+    0 0 60px rgba(245, 158, 11, 0.15),
+    0 0 100px rgba(245, 158, 11, 0.05);
+}
+
+.text-glow-amber {
+  text-shadow:
+    0 0 10px rgba(245, 158, 11, 0.5),
+    0 0 40px rgba(245, 158, 11, 0.2);
+}
+
+/* ========================================
+   네온 글로우 유틸리티 — 마젠타 (레지스탕스)
+   ======================================== */
+.glow-magenta {
+  box-shadow:
+    0 0 5px rgba(255, 45, 149, 0.3),
+    0 0 20px rgba(255, 45, 149, 0.15),
+    0 0 40px rgba(255, 45, 149, 0.05);
+}
+
+.glow-magenta-strong {
+  box-shadow:
+    0 0 5px rgba(255, 45, 149, 0.5),
+    0 0 20px rgba(255, 45, 149, 0.3),
+    0 0 60px rgba(255, 45, 149, 0.15),
+    0 0 100px rgba(255, 45, 149, 0.05);
+}
+
+.text-glow-magenta {
+  text-shadow:
+    0 0 10px rgba(255, 45, 149, 0.5),
+    0 0 40px rgba(255, 45, 149, 0.2);
+}
+
+/* ========================================
+   글리치 효과 — 시안 + 마젠타 RGB 분리
+   ======================================== */
+@keyframes glitch {
+  0% { clip-path: inset(40% 0 61% 0); transform: translate(-2px, 2px); }
+  20% { clip-path: inset(92% 0 1% 0); transform: translate(1px, -1px); }
+  40% { clip-path: inset(43% 0 1% 0); transform: translate(-1px, 3px); }
+  60% { clip-path: inset(25% 0 58% 0); transform: translate(3px, 1px); }
+  80% { clip-path: inset(54% 0 7% 0); transform: translate(-3px, -2px); }
+  100% { clip-path: inset(58% 0 43% 0); transform: translate(2px, -3px); }
+}
+
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch::before {
+  color: var(--color-accent);
+  animation: glitch 2s infinite linear alternate-reverse;
+  z-index: -1;
+}
+
+.glitch::after {
+  color: var(--color-primary);
+  animation: glitch 3s infinite linear alternate;
+  z-index: -1;
+}
+
+/* ========================================
+   플리커 애니메이션
+   ======================================== */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  41% { opacity: 1; }
+  42% { opacity: 0.8; }
+  43% { opacity: 1; }
+  45% { opacity: 0.3; }
+  46% { opacity: 1; }
+  49% { opacity: 1; }
+  50% { opacity: 0.5; }
+  51% { opacity: 1; }
+}
+
+.flicker {
+  animation: flicker 4s infinite;
+}
+
+/* ========================================
+   펄스 글로우
+   ======================================== */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ========================================
+   스크롤 등장 애니메이션
+   ======================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================
+   타이핑 커서 깜빡임
+   ======================================== */
+@keyframes blink-caret {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: var(--color-primary); }
+}
+
+/* ========================================
+   회로 패턴 디바이더
+   ======================================== */
+.circuit-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-subtle) 15%,
+    var(--color-primary) 50%,
+    var(--color-subtle) 85%,
+    transparent
+  );
+  position: relative;
+}
+
+.circuit-divider::before,
+.circuit-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--color-primary);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.circuit-divider::before { left: 15%; }
+.circuit-divider::after { right: 15%; }
+
+/* ========================================
+   그리드 라인 배경 — 시안 기반
+   ======================================== */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ========================================
+   스크롤 다운 화살표
+   ======================================== */
+@keyframes bounce-down {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(10px); opacity: 1; }
+}
+
+.scroll-arrow {
+  animation: bounce-down 2s ease-in-out infinite;
+}
+
+/* ========================================
+   페이드인 애니메이션
+   ======================================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================
+   반응형 — 모바일 성능 최적화
+   ======================================== */
+@media (max-width: 768px) {
+  body::before {
+    opacity: 0.02;
+  }
+
+  .glow-cyan-strong {
+    box-shadow:
+      0 0 5px rgba(0, 212, 255, 0.4),
+      0 0 20px rgba(0, 212, 255, 0.15);
+  }
+
+  .glow-amber-strong {
+    box-shadow:
+      0 0 5px rgba(245, 158, 11, 0.4),
+      0 0 20px rgba(245, 158, 11, 0.15);
+  }
+
+  .glow-magenta-strong {
+    box-shadow:
+      0 0 5px rgba(255, 45, 149, 0.4),
+      0 0 20px rgba(255, 45, 149, 0.15);
+  }
+}
+
+/* ========================================
+   접근성 — 모션 감소 대응
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .glitch::before,
+  .glitch::after {
+    animation: none;
+  }
+
+  .flicker { animation: none; }
+  .pulse { animation: none; }
+  .scroll-arrow { animation: none; }
+}

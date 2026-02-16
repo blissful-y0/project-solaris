@@ -1,0 +1,5 @@
+{
+  "extends": "@solaris/config/tsconfig/astro.json",
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

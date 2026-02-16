@@ -1,0 +1,19 @@
+{
+  "name": "@solaris/dashboard",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "echo 'no lint configured'"
+  },
+  "dependencies": {
+    "next": "^15",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@solaris/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

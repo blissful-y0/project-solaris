@@ -1,0 +1,25 @@
+{
+  "name": "@solaris/landing",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "lint": "echo 'no lint configured'"
+  },
+  "dependencies": {
+    "astro": "^5",
+    "@astrojs/react": "^4",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@solaris/config": "workspace:*",
+    "@tailwindcss/vite": "^4",
+    "tailwindcss": "^4",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}
