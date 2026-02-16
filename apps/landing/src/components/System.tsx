@@ -105,7 +105,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
 
 export default function System() {
   return (
-    <section className="section-shell section-divider">
+    <section id="section-system" className="section-shell section-divider">
       <div className="section-inner">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           {FEATURES.map((feature, i) => (

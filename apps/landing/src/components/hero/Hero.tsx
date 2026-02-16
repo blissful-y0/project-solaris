@@ -10,17 +10,46 @@ function useDevSkip() {
   return new URLSearchParams(window.location.search).has("skip");
 }
 
+const HERO_STORAGE_KEY = "solaris:hero-completed";
+const HERO_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7일
+
+function useReturningVisitor(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const stored = localStorage.getItem(HERO_STORAGE_KEY);
+    if (!stored) return false;
+    const timestamp = parseInt(stored, 10);
+    return Date.now() - timestamp < HERO_EXPIRY_MS;
+  } catch {
+    return false;
+  }
+}
+
 export default function Hero() {
-  const skip = useDevSkip();
+  const devSkip = useDevSkip();
+  const returning = useReturningVisitor();
+  const skip = devSkip || returning;
   const [phase, setPhase] = useState<HeroPhase>(skip ? "done" : "boot");
   const [choice, setChoice] = useState<CardChoice | null>(skip ? "unknown" : null);
 
-  // ?skip 시 즉시 이벤트 발사
+  // skip 시 즉시 이벤트 발사
   useEffect(() => {
     if (!skip) return;
     window.dispatchEvent(new CustomEvent("solaris:hero-selected", { detail: { choice: "unknown" } }));
     window.dispatchEvent(new CustomEvent("solaris:hero-done"));
-  }, [skip]);
+    if (returning && !devSkip) {
+      window.dispatchEvent(new CustomEvent("solaris:hero-skipped"));
+    }
+  }, [skip, returning, devSkip]);
+
+  // 히어로 시퀀스 정상 완료 시 localStorage에 타임스탬프 저장
+  useEffect(() => {
+    if (phase === "done" && !skip) {
+      try {
+        localStorage.setItem(HERO_STORAGE_KEY, String(Date.now()));
+      } catch { /* localStorage 사용 불가 시 무시 */ }
+    }
+  }, [phase, skip]);
 
   const handleBootComplete = useCallback(() => setPhase("measure"), []);
   const handleMeasureComplete = useCallback(() => setPhase("choose"), []);
@@ -68,25 +97,26 @@ export default function Hero() {
           <SelectedPhase choice={choice} onComplete={handleSelectedComplete} />
         )}
 
-        {phase === "done" && choice && (
+        {phase === "done" && (
           <div className="text-center animate-[fadeIn_0.8s_ease]">
-            <p className="hud-label mb-2">SYSTEM READY</p>
-            <div className="scroll-arrow mt-4">
-              <svg
-                className="w-6 h-6 mx-auto text-primary/50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                />
-              </svg>
-              {/* <p className="text-text/30 text-xs mt-2 font-mono">스크롤</p> */}
-            </div>
+            <p className="hud-label mb-2">{returning ? "SYSTEM CONNECTED" : "SYSTEM READY"}</p>
+            {!returning && (
+              <div className="scroll-arrow mt-4">
+                <svg
+                  className="w-6 h-6 mx-auto text-primary/50"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  />
+                </svg>
+              </div>
+            )}
           </div>
         )}
       </div>

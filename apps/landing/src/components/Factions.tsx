@@ -219,7 +219,7 @@ export default function Factions() {
   };
 
   return (
-    <section className="section-shell section-divider">
+    <section id="section-factions" className="section-shell section-divider">
       <div className="section-inner">
         <div className="flex flex-col gap-8 md:gap-12">
           {FACTIONS.map((faction) => (

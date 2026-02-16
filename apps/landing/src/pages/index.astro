@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
 import Hero from "../components/hero";
 import World from "../components/World";
 import Factions from "../components/Factions";
@@ -10,6 +11,7 @@ import "../styles/global.css";
 ---
 
 <BaseLayout>
+  <Header />
   <main>
     <Hero client:load />
     <section id="after-hero" class="after-hero-locked">
