@@ -557,6 +557,12 @@ body::after {
   100% { transform: translateY(100vh); }
 }
 
+/* 모달 열림 스캔라인 */
+@keyframes modal-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
 .h-scanline {
   position: absolute;
   left: 0;
