@@ -422,7 +422,7 @@ body::after {
 @media (max-width: 768px) {
   .section-shell {
     padding-inline: 1rem;
-    padding-block: 4.5rem;
+    padding-block: 5.25rem;
   }
 
   body::before {

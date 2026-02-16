@@ -105,20 +105,20 @@ export default function Hero() {
   const result = selected ? CARD_RESULTS[selected] : null;
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-5 md:px-8 overflow-hidden section-divider">
+    <section className="relative min-h-[100svh] md:min-h-screen flex flex-col items-center justify-center px-4 md:px-8 py-14 md:py-0 overflow-x-hidden section-divider">
       {/* 그리드 라인 배경 강화 */}
       <div className="absolute inset-0 grid-bg opacity-50" />
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(0,212,255,0.18),transparent_55%)]" />
 
       {/* 타이핑 영역 */}
-      <div className="relative z-10 text-center mb-12 border border-primary/25 rounded-xl px-6 py-5 md:px-10 md:py-7 bg-bg/60 backdrop-blur-sm glow-cyan">
+      <div className="relative z-10 w-full max-w-3xl text-center mb-10 md:mb-12 border border-primary/25 rounded-xl px-4 py-6 md:px-10 md:py-7 bg-bg/60 backdrop-blur-sm glow-cyan">
         <p className="text-[10px] md:text-xs uppercase tracking-[0.24em] text-primary/70 font-mono mb-3">
           HELIOS CORE // RESONANCE CALIBRATION
         </p>
         {displayedLines.map((line, i) => (
           <div
             key={i}
-            className="font-mono text-lg sm:text-xl md:text-2xl text-primary mb-3 text-glow-cyan"
+            className="font-mono text-base sm:text-xl md:text-2xl leading-relaxed text-primary mb-2 md:mb-3 text-glow-cyan"
           >
             {line}
             {/* 현재 타이핑 중인 줄에만 커서 표시 */}
@@ -134,16 +134,16 @@ export default function Hero() {
 
       {/* 3개 진영 선택 카드 */}
       {showCards && !selected && (
-        <div className="relative z-10 flex flex-col md:flex-row gap-4 md:gap-6 w-full max-w-5xl">
+        <div className="relative z-10 flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-4xl">
           {/* 질서 — SDF (앰버) */}
           <button
             onClick={() => handleSelect("order")}
-            className="group flex-1 border border-secondary/30 rounded-lg p-6 md:p-8 bg-bg/80 backdrop-blur-sm
-                       min-h-[168px]
+            className="group flex-1 border border-secondary/30 rounded-lg p-5 md:p-8 bg-bg/80 backdrop-blur-sm
+                       min-h-[132px] md:min-h-[168px]
                        transition-all duration-500 hover:border-secondary hover-glow-amber
                        opacity-0 animate-[fadeIn_0.6s_ease_forwards]"
           >
-            <p className="text-secondary text-lg md:text-xl font-bold mb-2 text-glow-amber">
+            <p className="text-secondary text-base md:text-xl font-bold mb-2 text-glow-amber">
               "나는 질서를 지킨다"
             </p>
             <p className="text-text/50 text-sm">당신의 선택이 운명을 결정합니다</p>
@@ -152,12 +152,12 @@ export default function Hero() {
           {/* 진실 — 레지스탕스 (마젠타) */}
           <button
             onClick={() => handleSelect("truth")}
-            className="group flex-1 border border-accent/30 rounded-lg p-6 md:p-8 bg-bg/80 backdrop-blur-sm
-                       min-h-[168px]
+            className="group flex-1 border border-accent/30 rounded-lg p-5 md:p-8 bg-bg/80 backdrop-blur-sm
+                       min-h-[132px] md:min-h-[168px]
                        transition-all duration-500 hover:border-accent hover-glow-magenta
                        opacity-0 animate-[fadeIn_0.6s_0.2s_ease_forwards]"
           >
-            <p className="text-accent text-lg md:text-xl font-bold mb-2 text-glow-magenta">
+            <p className="text-accent text-base md:text-xl font-bold mb-2 text-glow-magenta">
               "나는 진실을 찾는다"
             </p>
             <p className="text-text/50 text-sm">당신의 선택이 운명을 결정합니다</p>
@@ -166,12 +166,12 @@ export default function Hero() {
           {/* 미정 — 관찰 대상 (회색) */}
           <button
             onClick={() => handleSelect("unknown")}
-            className="group flex-1 border border-subtle rounded-lg p-6 md:p-8 bg-bg/80 backdrop-blur-sm
-                       min-h-[168px]
+            className="group flex-1 border border-subtle rounded-lg p-5 md:p-8 bg-bg/80 backdrop-blur-sm
+                       min-h-[132px] md:min-h-[168px]
                        transition-all duration-500 hover:border-text/50
                        opacity-0 animate-[fadeIn_0.6s_0.4s_ease_forwards]"
           >
-            <p className="text-text text-lg md:text-xl font-bold mb-2">
+            <p className="text-text text-base md:text-xl font-bold mb-2">
               "나는 아직 모른다"
             </p>
             <p className="text-text/50 text-sm">당신의 선택이 운명을 결정합니다</p>
@@ -183,7 +183,7 @@ export default function Hero() {
       {showResult && result && (
         <div className="relative z-10 text-center mt-8 animate-[fadeIn_0.8s_ease]">
           <div
-            className={`inline-block border rounded-lg p-6 md:p-8 bg-bg/90 backdrop-blur-sm ${
+            className={`inline-block border rounded-lg p-5 md:p-8 bg-bg/90 backdrop-blur-sm ${
               selected === "order"
                 ? "border-secondary/50 glow-amber"
                 : selected === "truth"
@@ -194,16 +194,16 @@ export default function Hero() {
             <p className="font-mono text-sm text-text/60 mb-2">
               동조율 측정 완료
             </p>
-            <p className={`text-2xl md:text-3xl font-bold ${result.colorClass} mb-1`}>
+            <p className={`text-xl md:text-3xl font-bold ${result.colorClass} mb-1`}>
               동조율: {result.syncRate}
             </p>
-            <p className={`text-lg ${result.colorClass}`}>
+            <p className={`text-base md:text-lg ${result.colorClass}`}>
               — {result.label}
             </p>
           </div>
 
           {/* 스크롤 유도 화살표 */}
-          <div className="mt-12 scroll-arrow">
+          <div className="mt-8 md:mt-12 scroll-arrow">
             <svg
               className="w-6 h-6 mx-auto text-text/40"
               fill="none"
