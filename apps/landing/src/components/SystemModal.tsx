@@ -98,7 +98,7 @@ export default function SystemModal({ system, onClose }: Props) {
 
       {/* 모달 프레임 */}
       <div
-        className="relative w-full max-w-[640px] max-h-[80vh] overflow-y-auto"
+        className="relative w-full max-w-[640px] max-h-[90vh] overflow-y-auto"
         style={{
           backgroundColor: "rgba(10, 10, 15, 0.95)",
           opacity: isClosing ? 0 : isVisible ? 1 : 0,
