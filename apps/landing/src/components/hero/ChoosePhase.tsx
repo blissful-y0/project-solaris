@@ -25,7 +25,7 @@ const CARDS: {
   },
   {
     choice: "truth",
-    text: '"나는 진실을 찾는다"',
+    text: '"나는 진실을 추구한다"',
     sub: "THE STATIC",
     bracketColor: "--color-accent",
     hoverGlow: "hover-glow-magenta",
