@@ -575,7 +575,7 @@ body::after {
   30% { opacity: 1; transform: translateY(-3px); }
 }
 
-/* 공명율 게이지 경계선 글리치 */
+/* 공명율 게이지 경계선 글리치 — 앰버(80) */
 @keyframes gauge-glitch-1 {
   0%, 100% { transform: translateX(0); opacity: 0.6; }
   20% { transform: translateX(-3px); opacity: 1; }
@@ -590,6 +590,32 @@ body::after {
   35% { transform: translateX(-4px); opacity: 0.2; }
   55% { transform: translateX(1px); opacity: 0.6; }
   75% { transform: translateX(-2px); opacity: 0.3; }
+}
+
+/* 공명율 게이지 경계선 글리치 — 레드(15) */
+@keyframes gauge-glitch-red-1 {
+  0%, 100% { transform: translateX(0); opacity: 0.5; }
+  25% { transform: translateX(3px); opacity: 0.9; }
+  50% { transform: translateX(-2px); opacity: 0.3; }
+  75% { transform: translateX(1px); opacity: 0.7; }
+}
+
+@keyframes gauge-glitch-red-2 {
+  0%, 100% { transform: translateX(0); opacity: 0.3; }
+  20% { transform: translateX(-3px); opacity: 0.6; }
+  40% { transform: translateX(4px); opacity: 0.2; }
+  60% { transform: translateX(-1px); opacity: 0.5; }
+  80% { transform: translateX(2px); opacity: 0.4; }
+}
+
+/* 공명율 레드 구간 펄스 */
+@keyframes gauge-red-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.5), 0 0 35px rgba(239, 68, 68, 0.25);
+  }
 }
 
 .h-scanline {
