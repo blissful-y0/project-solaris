@@ -97,19 +97,20 @@ export default function SystemModal({ system, onClose }: Props) {
         </div>
       )}
 
-      {/* 모달 프레임 */}
+      {/* 모달 프레임 — 고정 높이, 내부 스크롤 */}
       <div
-        className="relative w-full max-w-[640px] max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-[640px] flex flex-col"
         style={{
+          height: "min(85vh, 720px)",
           backgroundColor: "rgba(10, 10, 15, 0.95)",
           opacity: isClosing ? 0 : isVisible ? 1 : 0,
           transform: isVisible ? "scaleY(1)" : "scaleY(0.95)",
           transition: "opacity 300ms ease-out, transform 300ms ease-out",
         }}
       >
-        {/* HUD 코너 브라켓 */}
+        {/* HUD 코너 브래킷 */}
         <span
-          className="absolute top-0 left-0 w-5 h-5"
+          className="absolute top-0 left-0 w-5 h-5 z-10"
           style={{
             borderTop: "1px solid var(--color-primary)",
             borderLeft: "1px solid var(--color-primary)",
@@ -117,7 +118,7 @@ export default function SystemModal({ system, onClose }: Props) {
           }}
         />
         <span
-          className="absolute top-0 right-0 w-5 h-5"
+          className="absolute top-0 right-0 w-5 h-5 z-10"
           style={{
             borderTop: "1px solid var(--color-primary)",
             borderRight: "1px solid var(--color-primary)",
@@ -125,7 +126,7 @@ export default function SystemModal({ system, onClose }: Props) {
           }}
         />
         <span
-          className="absolute bottom-0 left-0 w-5 h-5"
+          className="absolute bottom-0 left-0 w-5 h-5 z-10"
           style={{
             borderBottom: "1px solid var(--color-primary)",
             borderLeft: "1px solid var(--color-primary)",
@@ -133,7 +134,7 @@ export default function SystemModal({ system, onClose }: Props) {
           }}
         />
         <span
-          className="absolute bottom-0 right-0 w-5 h-5"
+          className="absolute bottom-0 right-0 w-5 h-5 z-10"
           style={{
             borderBottom: "1px solid var(--color-primary)",
             borderRight: "1px solid var(--color-primary)",
@@ -151,8 +152,8 @@ export default function SystemModal({ system, onClose }: Props) {
           &#x2715;
         </button>
 
-        {/* 내부 콘텐츠 */}
-        <div className="p-6 md:p-8">
+        {/* 스크롤 가능한 내부 콘텐츠 */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8">
           {/* 헤더 — 글리프 + 타이틀 */}
           <div
             className="flex items-center gap-4 mb-5"
