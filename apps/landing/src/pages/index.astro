@@ -1,15 +1,21 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero";
+import World from "../components/World";
+import Factions from "../components/Factions";
+import System from "../components/System";
+import Join from "../components/Join.astro";
+import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 ---
 
 <BaseLayout>
   <main>
-    <!-- 섹션 컴포넌트는 Phase 2에서 추가 -->
-    <section class="min-h-screen flex items-center justify-center">
-      <h1 class="text-4xl font-bold text-glow-cyan text-primary">
-        SOLARIS 접속 대기 중...
-      </h1>
-    </section>
+    <Hero client:load />
+    <World client:visible />
+    <Factions client:visible />
+    <System client:visible />
+    <Join />
   </main>
+  <Footer />
 </BaseLayout>
