@@ -8,7 +8,6 @@ interface CardResult {
   syncRate: string;
   label: string;
   colorClass: string;
-  glowClass: string;
 }
 
 // 각 선택지별 동조율 측정 결과
@@ -17,19 +16,16 @@ const CARD_RESULTS: Record<Exclude<CardChoice, null>, CardResult> = {
     syncRate: "87%",
     label: "보안국 적합 판정",
     colorClass: "text-secondary",
-    glowClass: "glow-amber-strong",
   },
   truth: {
     syncRate: "12%",
     label: "추방 대상",
     colorClass: "text-accent",
-    glowClass: "glow-magenta-strong",
   },
   unknown: {
     syncRate: "측정 불가",
     label: "관찰 대상",
     colorClass: "text-text",
-    glowClass: "",
   },
 };
 
@@ -96,18 +92,29 @@ export default function Hero() {
   // 카드 선택 핸들러
   const handleSelect = useCallback((choice: Exclude<CardChoice, null>) => {
     setSelected(choice);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("solaris:hero-selected", {
+          detail: { choice },
+        })
+      );
+    }
     setTimeout(() => setShowResult(true), 300);
   }, []);
 
   const result = selected ? CARD_RESULTS[selected] : null;
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-5 md:px-8 overflow-hidden section-divider">
       {/* 그리드 라인 배경 강화 */}
       <div className="absolute inset-0 grid-bg opacity-50" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(0,212,255,0.18),transparent_55%)]" />
 
       {/* 타이핑 영역 */}
-      <div className="relative z-10 text-center mb-12">
+      <div className="relative z-10 text-center mb-12 border border-primary/25 rounded-xl px-6 py-5 md:px-10 md:py-7 bg-bg/60 backdrop-blur-sm glow-cyan">
+        <p className="text-[10px] md:text-xs uppercase tracking-[0.24em] text-primary/70 font-mono mb-3">
+          HELIOS CORE // RESONANCE CALIBRATION
+        </p>
         {displayedLines.map((line, i) => (
           <div
             key={i}
@@ -127,12 +134,13 @@ export default function Hero() {
 
       {/* 3개 진영 선택 카드 */}
       {showCards && !selected && (
-        <div className="relative z-10 flex flex-col md:flex-row gap-4 md:gap-6 w-full max-w-4xl px-4">
+        <div className="relative z-10 flex flex-col md:flex-row gap-4 md:gap-6 w-full max-w-5xl">
           {/* 질서 — SDF (앰버) */}
           <button
             onClick={() => handleSelect("order")}
             className="group flex-1 border border-secondary/30 rounded-lg p-6 md:p-8 bg-bg/80 backdrop-blur-sm
-                       transition-all duration-500 hover:border-secondary hover:glow-amber-strong
+                       min-h-[168px]
+                       transition-all duration-500 hover:border-secondary hover-glow-amber
                        opacity-0 animate-[fadeIn_0.6s_ease_forwards]"
           >
             <p className="text-secondary text-lg md:text-xl font-bold mb-2 text-glow-amber">
@@ -145,7 +153,8 @@ export default function Hero() {
           <button
             onClick={() => handleSelect("truth")}
             className="group flex-1 border border-accent/30 rounded-lg p-6 md:p-8 bg-bg/80 backdrop-blur-sm
-                       transition-all duration-500 hover:border-accent hover:glow-magenta-strong
+                       min-h-[168px]
+                       transition-all duration-500 hover:border-accent hover-glow-magenta
                        opacity-0 animate-[fadeIn_0.6s_0.2s_ease_forwards]"
           >
             <p className="text-accent text-lg md:text-xl font-bold mb-2 text-glow-magenta">
@@ -158,6 +167,7 @@ export default function Hero() {
           <button
             onClick={() => handleSelect("unknown")}
             className="group flex-1 border border-subtle rounded-lg p-6 md:p-8 bg-bg/80 backdrop-blur-sm
+                       min-h-[168px]
                        transition-all duration-500 hover:border-text/50
                        opacity-0 animate-[fadeIn_0.6s_0.4s_ease_forwards]"
           >
@@ -207,7 +217,7 @@ export default function Hero() {
                 d="M19 14l-7 7m0 0l-7-7m7 7V3"
               />
             </svg>
-            <p className="text-text/30 text-xs mt-2 font-mono">SCROLL</p>
+            <p className="text-text/30 text-xs mt-2 font-mono">스크롤</p>
           </div>
         </div>
       )}

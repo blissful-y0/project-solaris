@@ -36,6 +36,10 @@ html {
 
 body {
   background-color: var(--color-bg);
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(0, 212, 255, 0.08), transparent 40%),
+    radial-gradient(circle at 85% 10%, rgba(255, 45, 149, 0.06), transparent 35%),
+    radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.05), transparent 45%);
   color: var(--color-text);
   font-family: var(--font-sans);
   line-height: 1.6;
@@ -74,6 +78,58 @@ body::after {
     transparent 2px,
     rgba(0, 0, 0, 0.03) 2px,
     rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+.section-shell {
+  position: relative;
+  overflow: hidden;
+  padding-inline: 1.25rem;
+  padding-block: 5.5rem;
+}
+
+.section-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.24) 100%),
+    radial-gradient(circle at 50% -20%, rgba(0, 212, 255, 0.09), transparent 60%);
+  z-index: 0;
+}
+
+.section-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.section-inner {
+  width: min(1100px, 100%);
+  margin-inline: auto;
+}
+
+.footer-shell {
+  padding-block: 2.75rem;
+}
+
+.section-divider {
+  position: relative;
+}
+
+.section-divider::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  transform: translateX(-50%);
+  width: min(980px, calc(100% - 2.5rem));
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-primary) 45%, transparent),
+    transparent
   );
 }
 
@@ -149,6 +205,30 @@ body::after {
     0 0 40px rgba(255, 45, 149, 0.2);
 }
 
+.hover-glow-cyan:hover {
+  box-shadow:
+    0 0 5px rgba(0, 212, 255, 0.5),
+    0 0 20px rgba(0, 212, 255, 0.3),
+    0 0 60px rgba(0, 212, 255, 0.15),
+    0 0 100px rgba(0, 212, 255, 0.05);
+}
+
+.hover-glow-amber:hover {
+  box-shadow:
+    0 0 5px rgba(245, 158, 11, 0.5),
+    0 0 20px rgba(245, 158, 11, 0.3),
+    0 0 60px rgba(245, 158, 11, 0.15),
+    0 0 100px rgba(245, 158, 11, 0.05);
+}
+
+.hover-glow-magenta:hover {
+  box-shadow:
+    0 0 5px rgba(255, 45, 149, 0.5),
+    0 0 20px rgba(255, 45, 149, 0.3),
+    0 0 60px rgba(255, 45, 149, 0.15),
+    0 0 100px rgba(255, 45, 149, 0.05);
+}
+
 /* ========================================
    글리치 효과 — 시안 + 마젠타 RGB 분리
    ======================================== */
@@ -216,6 +296,33 @@ body::after {
 
 .pulse {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.system-glyph {
+  position: relative;
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 40%, transparent);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.12), transparent 60%),
+    rgba(10, 10, 15, 0.75);
+}
+
+.system-glyph::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: inherit;
+  border: 1px dashed color-mix(in oklab, var(--color-primary) 45%, transparent);
+  opacity: 0.45;
 }
 
 /* ========================================
@@ -292,6 +399,15 @@ body::after {
   animation: bounce-down 2s ease-in-out infinite;
 }
 
+.after-hero-locked {
+  display: none;
+}
+
+.after-hero-unlocked {
+  display: block;
+  animation: fadeIn 0.8s ease;
+}
+
 /* ========================================
    페이드인 애니메이션
    ======================================== */
@@ -304,6 +420,11 @@ body::after {
    반응형 — 모바일 성능 최적화
    ======================================== */
 @media (max-width: 768px) {
+  .section-shell {
+    padding-inline: 1rem;
+    padding-block: 4.5rem;
+  }
+
   body::before {
     opacity: 0.02;
   }
@@ -324,6 +445,16 @@ body::after {
     box-shadow:
       0 0 5px rgba(255, 45, 149, 0.4),
       0 0 20px rgba(255, 45, 149, 0.15);
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-shell {
+    padding-block: 7rem;
+  }
+
+  .footer-shell {
+    padding-block: 3.25rem;
   }
 }
 

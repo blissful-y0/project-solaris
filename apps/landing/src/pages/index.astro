@@ -12,10 +12,31 @@ import "../styles/global.css";
 <BaseLayout>
   <main>
     <Hero client:load />
-    <World client:visible />
-    <Factions client:visible />
-    <System client:visible />
-    <Join />
+    <section id="after-hero" class="after-hero-locked">
+      <div id="after-hero-start">
+        <World client:visible />
+      </div>
+      <Factions client:visible />
+      <System client:visible />
+      <Join />
+    </section>
   </main>
   <Footer />
 </BaseLayout>
+
+<script is:inline>
+  const unlockAfterHero = () => {
+    const afterHero = document.getElementById("after-hero");
+    const anchor = document.getElementById("after-hero-start");
+    if (!afterHero) return;
+    afterHero.classList.remove("after-hero-locked");
+    afterHero.classList.add("after-hero-unlocked");
+    if (anchor) {
+      requestAnimationFrame(() => {
+        anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  };
+
+  window.addEventListener("solaris:hero-selected", unlockAfterHero, { once: true });
+</script>
