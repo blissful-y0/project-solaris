@@ -18,8 +18,12 @@ export default function ResonanceGauge() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── 본문 도입부 ── */}
-      <div className="text-text/70 text-sm leading-relaxed space-y-3">
+      {/* ── 기원 ── */}
+      <div>
+        <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
+          기원
+        </h3>
+        <div className="text-text/70 text-sm leading-relaxed space-y-3">
         <p>
           핵전쟁이 끝난 뒤, 인류의 유전자에는 방사선이 남긴 상흔이 새겨졌다.
         </p>
@@ -41,10 +45,15 @@ export default function ResonanceGauge() {
         >
           이 숫자가 극단에 도달한 자만이, 침묵하던 변이를 깨운다.
         </p>
+        </div>
       </div>
 
-      {/* ── 수직 게이지 (중앙 정렬) ── */}
-      <div className="flex justify-center py-3">
+      {/* ── 등급 분류 ── */}
+      <div>
+        <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-3 font-semibold">
+          등급 분류
+        </h3>
+      <div className="flex justify-center py-1">
         <div
           className="relative flex gap-4 items-stretch"
           style={{ height: 320 }}
@@ -78,8 +87,7 @@ export default function ResonanceGauge() {
                 className="absolute inset-0"
                 style={{
                   backgroundColor: "#f59e0b",
-                  boxShadow:
-                    "0 0 8px #f59e0b, 0 0 20px rgba(245,158,11,0.5)",
+                  boxShadow: "0 0 8px #f59e0b, 0 0 20px rgba(245,158,11,0.5)",
                 }}
               />
               {animate && (
@@ -126,8 +134,7 @@ export default function ResonanceGauge() {
                 className="absolute inset-0"
                 style={{
                   backgroundColor: "#ef4444",
-                  boxShadow:
-                    "0 0 8px #ef4444, 0 0 20px rgba(239,68,68,0.5)",
+                  boxShadow: "0 0 8px #ef4444, 0 0 20px rgba(239,68,68,0.5)",
                 }}
               />
               {animate && (
@@ -138,8 +145,7 @@ export default function ResonanceGauge() {
                       top: -2,
                       height: 1,
                       backgroundColor: "rgba(239,68,68,0.6)",
-                      animation:
-                        "gauge-glitch-red-1 2.2s ease-in-out infinite",
+                      animation: "gauge-glitch-red-1 2.2s ease-in-out infinite",
                     }}
                   />
                   <div
@@ -148,8 +154,7 @@ export default function ResonanceGauge() {
                       top: 3,
                       height: 1,
                       backgroundColor: "rgba(239,68,68,0.4)",
-                      animation:
-                        "gauge-glitch-red-2 2.8s ease-in-out infinite",
+                      animation: "gauge-glitch-red-2 2.8s ease-in-out infinite",
                     }}
                   />
                 </>
@@ -279,26 +284,34 @@ export default function ResonanceGauge() {
           </div>
         </div>
       </div>
+      </div>
 
-      {/* ── 하단 결론 ── */}
-      <div className="text-sm leading-relaxed space-y-3">
-        <p
-          className="font-semibold"
-          style={{
-            color: "var(--color-primary)",
-            textShadow: "0 0 10px rgba(0,212,255,0.3)",
-          }}
-        >
-          같은 변이, 다른 각성.
-        </p>
-        <div className="text-text/60 space-y-2">
-          <p>
-            높으면 시스템 위에서 깨어난다. 강력하지만 시스템에 묶인다.
+      {/* ── 의미 ── */}
+      <div>
+        <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
+          의미
+        </h3>
+        <div className="text-sm leading-relaxed space-y-3">
+          <p
+            className="font-semibold"
+            style={{
+              color: "var(--color-primary)",
+              textShadow: "0 0 10px rgba(0,212,255,0.3)",
+            }}
+          >
+            같은 변이, 다른 각성.
           </p>
-          <p>
-            낮으면 시스템 밖에서 깨어난다. 불안정하지만 시스템이 잡을 수 없다.
-          </p>
-          <p className="text-text/40">어느 쪽이 더 강한지는 — 싸워봐야 안다.</p>
+          <div className="text-text/60 space-y-2">
+            <p>
+              높으면 시스템 위에서 깨어난다. 강력하지만 시스템에 묶인다.
+            </p>
+            <p>
+              낮으면 시스템 밖에서 깨어난다. 불안정하지만 시스템이 잡을 수 없다.
+            </p>
+            <p className="text-text/40">
+              어느 쪽이 더 강한지는 — 싸워봐야 안다.
+            </p>
+          </div>
         </div>
       </div>
     </div>
