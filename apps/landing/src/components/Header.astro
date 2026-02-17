@@ -26,9 +26,30 @@ import AuthButton from "./AuthButton";
 <script>
   const header = document.getElementById('site-header');
   if (header) {
+    const HERO_STORAGE_KEY = "solaris:hero-completed";
+    const HERO_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+    function shouldForceHeroDone() {
+      if (window.__SOLARIS_HERO_DONE) return true;
+      if (new URLSearchParams(window.location.search).has("skip")) return true;
+
+      try {
+        const raw = localStorage.getItem(HERO_STORAGE_KEY);
+        if (!raw) return false;
+        const timestamp = Number.parseInt(raw, 10);
+        return Number.isFinite(timestamp) && Date.now() - timestamp < HERO_EXPIRY_MS;
+      } catch {
+        return false;
+      }
+    }
+
     function showHeader() {
       header.classList.remove('header-hidden');
       header.classList.add('header-visible');
+    }
+
+    if (shouldForceHeroDone()) {
+      showHeader();
     }
 
     window.addEventListener('solaris:hero-done', showHeader);

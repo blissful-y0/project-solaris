@@ -25,6 +25,23 @@ import "../styles/global.css";
 </BaseLayout>
 
 <script is:inline>
+  const HERO_STORAGE_KEY = "solaris:hero-completed";
+  const HERO_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+  const shouldForceHeroDone = () => {
+    if (window.__SOLARIS_HERO_DONE) return true;
+    if (new URLSearchParams(window.location.search).has("skip")) return true;
+
+    try {
+      const raw = localStorage.getItem(HERO_STORAGE_KEY);
+      if (!raw) return false;
+      const timestamp = Number.parseInt(raw, 10);
+      return Number.isFinite(timestamp) && Date.now() - timestamp < HERO_EXPIRY_MS;
+    } catch {
+      return false;
+    }
+  };
+
   const unlockAfterHero = () => {
     const afterHero = document.getElementById("after-hero");
     const anchor = document.getElementById("after-hero-start");
@@ -37,6 +54,10 @@ import "../styles/global.css";
       });
     }
   };
+
+  if (shouldForceHeroDone()) {
+    unlockAfterHero();
+  }
 
   window.addEventListener("solaris:hero-done", unlockAfterHero, { once: true });
 </script>
