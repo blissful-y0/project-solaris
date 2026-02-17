@@ -8,7 +8,7 @@ PROJECT SOLARIS는 도시 배경의 롤플레이 전투 시스템을 제공하�
 - **Frontend/Backend**: Next.js 15 App Router
 - **Database & Auth**: Supabase (PostgreSQL + Auth + Realtime)
 - **Batch Server**: Supabase Edge Functions
-- **AI**: Google Gemini Flash (전투 GM, 뉴스 생성, 서사 반영 분석)
+- **AI**: 기능별 고정 라우팅 (예: 메인 스토리=Claude Opus, 전투 판정=Gemini Pro)
 - **Notification**: Discord Bot
 
 ### API 설계 원칙
@@ -18,6 +18,7 @@ PROJECT SOLARIS는 도시 배경의 롤플레이 전투 시스템을 제공하�
 - **삭제 방식**: Soft delete (`deleted_at` 필드 업데이트)
 - **관리자 API**: `/api/admin/*` 경로
 - **에러 응답**: 일관된 JSON 형식
+- **AI 모델 선택 단위**: 기능 단위 고정 (`main_story`, `battle_judgment`, `lore_reflection`, `news_generation`)
 
 ### 공통 헤더
 ```
@@ -2269,6 +2270,57 @@ limit?: number (default: 20)
   }
 }
 ```
+
+---
+
+### GET /api/admin/settings/ai-model-routing
+기능별 고정 AI 모델 라우팅 조회
+
+**인증**: 필수 (관리자만)
+
+**Response 200**
+```json
+{
+  "routing": {
+    "version": 1,
+    "routes": {
+      "main_story": { "primary": "claude-opus", "fallback": ["claude-sonnet"] },
+      "battle_judgment": { "primary": "gemini-pro", "fallback": ["gemini-flash"] },
+      "lore_reflection": { "primary": "gemini-flash", "fallback": ["claude-sonnet"] },
+      "news_generation": { "primary": "gemini-flash", "fallback": [] }
+    }
+  },
+  "allowed_models": ["claude-opus", "claude-sonnet", "gemini-pro", "gemini-flash"],
+  "updated_at": "2026-02-17T21:30:00Z"
+}
+```
+
+---
+
+### PUT /api/admin/settings/ai-model-routing
+기능별 고정 AI 모델 라우팅 전체 교체
+
+**인증**: 필수 (관리자만)
+
+**Request Body**
+```json
+{
+  "version": 1,
+  "routes": {
+    "main_story": { "primary": "claude-opus", "fallback": ["claude-sonnet"] },
+    "battle_judgment": { "primary": "gemini-pro", "fallback": ["gemini-flash"] },
+    "lore_reflection": { "primary": "gemini-flash", "fallback": ["claude-sonnet"] },
+    "news_generation": { "primary": "gemini-flash", "fallback": [] }
+  },
+  "reason": "시즌 후반 전투 판정 톤 유지"
+}
+```
+
+**검증 규칙**
+- 기능 키는 `main_story`, `battle_judgment`, `lore_reflection`, `news_generation`만 허용
+- 모델은 allowlist 내 값만 허용
+- `fallback`에 `primary` 중복 금지
+- `version` 불일치 시 409 반환
 
 **Response 200**
 ```json

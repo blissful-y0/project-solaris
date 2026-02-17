@@ -28,7 +28,7 @@
   └─ 알림 전용 (임베드 + 웹 딥링크). 유저 행위는 전부 웹에서.
 
 [AI GM]
-  └─ Gemini Flash (전투 판정 전용). 품질 부족 시 Sonnet 계층 상승.
+└─ 기능별 고정 라우팅 (메인 스토리=Opus, 전투 판정=Gemini Pro, 기타 기능은 운영 정책 기준)
 ```
 
 ### 기술 스택
@@ -36,7 +36,7 @@
 - **모노레포:** Turborepo + pnpm
 - **인증:** Supabase Auth + Discord OAuth
 - **DB:** Supabase PostgreSQL + Realtime
-- **AI:** Gemini Flash (전투 GM, 뉴스 생성, 서사 반영)
+- **AI:** 기능별 고정 라우팅 (`main_story`, `battle_judgment`, `lore_reflection`, `news_generation`)
 - **알림:** Discord Bot (임베드 + 딥링크)
 - **배포:** Vercel
 - **디자인:** Tailwind CSS v4, 모바일 퍼스트
