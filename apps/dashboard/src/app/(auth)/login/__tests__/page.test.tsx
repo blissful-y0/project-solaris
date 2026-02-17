@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Supabase 클라이언트 모킹
 const mockSignInWithOAuth = vi.fn().mockResolvedValue({ error: null });
@@ -16,6 +16,11 @@ vi.mock("@/lib/supabase/client", () => ({
 import LoginPage from "../page";
 
 describe("LoginPage", () => {
+  beforeEach(() => {
+    mockSignInWithOAuth.mockReset();
+    mockSignInWithOAuth.mockResolvedValue({ error: null });
+  });
+
   it("redirect 쿼리가 있으면 callback next에 포함한다", async () => {
     window.history.pushState({}, "", "/login?redirect=%2Fbattle%3Ftab%3Dlive");
 
@@ -85,6 +90,55 @@ describe("LoginPage", () => {
       options: {
         redirectTo: expect.stringContaining("/api/auth/callback"),
       },
+    });
+  });
+
+  it("OAuth 응답에 에러가 있으면 실패 메시지를 표시한다", async () => {
+    mockSignInWithOAuth.mockResolvedValueOnce({
+      error: { message: "oauth failed" },
+    });
+
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    await user.click(screen.getByRole("button", { name: /통신 채널로 인증/i }));
+
+    expect(screen.getByText("인증 요청에 실패했습니다")).toBeInTheDocument();
+  });
+
+  it("OAuth 호출 중 예외가 나면 네트워크 오류 메시지를 표시한다", async () => {
+    mockSignInWithOAuth.mockRejectedValueOnce(new Error("network"));
+
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    await user.click(screen.getByRole("button", { name: /통신 채널로 인증/i }));
+
+    expect(screen.getByText("네트워크 오류가 발생했습니다")).toBeInTheDocument();
+  });
+
+  it("OAuth 요청 중에는 로딩 문구를 표시한다", async () => {
+    let resolveAuth!: (value: { error: null }) => void;
+    const pending = new Promise<{ error: null }>((resolve) => {
+      resolveAuth = resolve;
+    });
+    mockSignInWithOAuth.mockReturnValueOnce(pending);
+
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    await user.click(screen.getByRole("button", { name: /통신 채널로 인증/i }));
+
+    expect(screen.getByText("인증 채널 연결 중...")).toBeInTheDocument();
+
+    await act(async () => {
+      resolveAuth({ error: null });
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /통신 채널로 인증/i }),
+      ).toBeInTheDocument();
     });
   });
 

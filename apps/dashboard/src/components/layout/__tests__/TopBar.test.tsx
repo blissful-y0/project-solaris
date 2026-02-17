@@ -1,6 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { TopBar } from "../TopBar";
+
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 describe("TopBar", () => {
   it("renders SOLARIS text", () => {
@@ -32,5 +40,12 @@ describe("TopBar", () => {
   it("has header role", () => {
     render(<TopBar />);
     expect(screen.getByRole("banner")).toBeInTheDocument();
+  });
+
+  it("renders MY profile link to /my", () => {
+    render(<TopBar />);
+    const myLink = screen.getByRole("link", { name: /마이페이지/i });
+    expect(myLink).toBeInTheDocument();
+    expect(myLink).toHaveAttribute("href", "/my");
   });
 });

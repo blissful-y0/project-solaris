@@ -118,4 +118,30 @@ describe("Modal", () => {
     await user.click(screen.getByLabelText("닫기"));
     expect(onClose).toHaveBeenCalledOnce();
   });
+
+  it("open=true일 때 body overflow를 hidden으로 잠근다", () => {
+    document.body.style.overflow = "";
+
+    render(
+      <Modal open onClose={() => {}}>
+        Content
+      </Modal>,
+    );
+
+    expect(document.body.style.overflow).toBe("hidden");
+  });
+
+  it("모달이 닫히면 body overflow를 복원한다", () => {
+    document.body.style.overflow = "";
+
+    const { unmount } = render(
+      <Modal open onClose={() => {}}>
+        Content
+      </Modal>,
+    );
+
+    unmount();
+
+    expect(document.body.style.overflow).toBe("");
+  });
 });

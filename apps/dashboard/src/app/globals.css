@@ -179,6 +179,28 @@
       opacity: 0.15;
     }
   }
+
+  @keyframes ticker-marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@layer utilities {
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    gap: 2.5rem;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    animation: ticker-marquee 28s linear infinite;
+  }
 }
 
 /* ─── 접근성: 모션 축소 대응 (@layer 안에서 선언하여 Tailwind 유틸리티 보존) ─── */

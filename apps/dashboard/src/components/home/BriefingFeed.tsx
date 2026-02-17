@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Briefing } from "./mock-briefings";
 import { BriefingCard } from "./BriefingCard";
 import { BriefingDetailModal } from "./BriefingDetailModal";
@@ -13,8 +13,12 @@ export function BriefingFeed({ briefings }: BriefingFeedProps) {
   const [selected, setSelected] = useState<Briefing | null>(null);
 
   /* 최신순 정렬 */
-  const sorted = [...briefings].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  const sorted = useMemo(
+    () =>
+      [...briefings].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      ),
+    [briefings],
   );
 
   return (

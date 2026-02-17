@@ -1,4 +1,4 @@
-import { BookOpen, Home, MessageCircle, Swords, User } from "lucide-react";
+import { BookOpen, Home, Radio, Swords, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -8,9 +8,9 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { href: "/", label: "홈", icon: Home },
-  { href: "/battle", label: "전투", icon: Swords },
-  { href: "/room", label: "RP", icon: MessageCircle },
-  { href: "/characters", label: "도감", icon: BookOpen },
-  { href: "/my", label: "MY", icon: User },
+  { href: "/", label: "Home", icon: Home },
+  { href: "/world", label: "Lore", icon: BookOpen },
+  { href: "/operation", label: "Operation", icon: Swords },
+  { href: "/characters", label: "Registry", icon: Users },
+  { href: "/core", label: "Helios Core", icon: Radio },
 ] as const;

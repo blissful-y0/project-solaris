@@ -11,25 +11,34 @@ vi.mock("next/link", () => ({
 }));
 
 describe("MobileTabBar", () => {
-  it("renders all 5 navigation items", () => {
+  it("renders all 5 navigation items with IA v2 labels", () => {
     render(<MobileTabBar currentPath="/" />);
-    expect(screen.getByText("홈")).toBeInTheDocument();
-    expect(screen.getByText("전투")).toBeInTheDocument();
-    expect(screen.getByText("RP")).toBeInTheDocument();
-    expect(screen.getByText("도감")).toBeInTheDocument();
-    expect(screen.getByText("MY")).toBeInTheDocument();
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Lore")).toBeInTheDocument();
+    expect(screen.getByText("Operation")).toBeInTheDocument();
+    expect(screen.getByText("Registry")).toBeInTheDocument();
+    expect(screen.getByText("Helios Core")).toBeInTheDocument();
   });
 
   it("highlights active item based on currentPath", () => {
-    render(<MobileTabBar currentPath="/battle" />);
-    const battleLink = screen.getByRole("link", { name: /전투/i });
-    expect(battleLink).toHaveClass("text-primary");
+    render(<MobileTabBar currentPath="/operation" />);
+    const operationLink = screen.getByRole("link", { name: /operation/i });
+    expect(operationLink).toHaveClass("text-primary");
   });
 
   it("does not highlight inactive items", () => {
-    render(<MobileTabBar currentPath="/battle" />);
-    const homeLink = screen.getByRole("link", { name: /홈/i });
+    render(<MobileTabBar currentPath="/operation" />);
+    const homeLink = screen.getByRole("link", { name: /home/i });
     expect(homeLink).not.toHaveClass("text-primary");
+  });
+
+  it("활성 탭에 aria-current=page를 설정한다", () => {
+    render(<MobileTabBar currentPath="/operation" />);
+    const operationLink = screen.getByRole("link", { name: /operation/i });
+    const homeLink = screen.getByRole("link", { name: /home/i });
+
+    expect(operationLink).toHaveAttribute("aria-current", "page");
+    expect(homeLink).not.toHaveAttribute("aria-current");
   });
 
   it("has navigation role", () => {
@@ -47,5 +56,14 @@ describe("MobileTabBar", () => {
     const { container } = render(<MobileTabBar currentPath="/" />);
     const nav = container.querySelector("nav");
     expect(nav?.className).toContain("md:hidden");
+  });
+
+  it("links to correct routes", () => {
+    render(<MobileTabBar currentPath="/" />);
+    expect(screen.getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: /lore/i })).toHaveAttribute("href", "/world");
+    expect(screen.getByRole("link", { name: /operation/i })).toHaveAttribute("href", "/operation");
+    expect(screen.getByRole("link", { name: /registry/i })).toHaveAttribute("href", "/characters");
+    expect(screen.getByRole("link", { name: /helios core/i })).toHaveAttribute("href", "/core");
   });
 });
