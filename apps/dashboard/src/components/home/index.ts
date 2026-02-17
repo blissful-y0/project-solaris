@@ -1,5 +1,12 @@
 export { BriefingCard } from "./BriefingCard";
 export { BriefingFeed } from "./BriefingFeed";
 export { BriefingDetailModal } from "./BriefingDetailModal";
-export type { Briefing } from "./mock-briefings";
-export { mockBriefings, categoryVariant } from "./mock-briefings";
+export { PomiAd } from "./PomiAd";
+export type { Briefing, PomiAdData } from "./mock-briefings";
+export { mockBriefings, categoryVariant, pomiAds } from "./mock-briefings";
+export { ResonanceTasks } from "./ResonanceTasks";
+export type { ResonanceTask } from "./mock-tasks";
+export { mockTasks, taskTypeVariant } from "./mock-tasks";
+export { CitizenIDCard } from "./CitizenIDCard";
+export type { CitizenData } from "./mock-citizen";
+export { mockCitizen } from "./mock-citizen";

@@ -4,9 +4,15 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui";
-import { BriefingFeed, mockBriefings } from "@/components/home";
+import {
+  BriefingFeed,
+  mockBriefings,
+  CitizenIDCard,
+  mockCitizen,
+  ResonanceTasks,
+  mockTasks,
+} from "@/components/home";
 import type { User } from "@supabase/supabase-js";
-import Image from "next/image";
 
 /** Discord 아바타 URL 추출 */
 function getAvatarUrl(user: User): string | null {
@@ -85,10 +91,15 @@ export default function HomePage() {
   const avatarUrl = user ? getAvatarUrl(user) : null;
   const displayName = user ? getDisplayName(user) : "...";
 
+  /* 목 시민 데이터에 실제 유저 아바타 반영 */
+  const citizenData = hasCharacter
+    ? { ...mockCitizen, avatarUrl }
+    : null;
+
   return (
-    <div className="py-6">
+    <div className="py-6 space-y-8">
       {/* 환영 메시지 */}
-      <div className="mb-6">
+      <div>
         <p className="hud-label mb-2">OPERATOR STATUS</p>
         <h1 className="text-xl font-bold text-text">
           환영합니다, <span className="text-primary">{displayName}</span>님
@@ -101,7 +112,7 @@ export default function HomePage() {
       </div>
 
       {loadError && (
-        <Card hud className="mb-4 max-w-md border border-red-500/40">
+        <Card hud className="max-w-md border border-red-500/40">
           <p className="text-sm text-text">사용자 정보를 불러오지 못했습니다.</p>
           <button
             type="button"
@@ -115,50 +126,35 @@ export default function HomePage() {
         </Card>
       )}
 
-      {/* 프로필 카드 */}
-      <Card hud className="max-w-md">
-        <div className="flex items-center gap-4">
-          {avatarUrl ? (
-            <Image
-              src={avatarUrl}
-              alt="프로필"
-              width={56}
-              height={56}
-              className="h-14 w-14 rounded-lg border border-border"
-            />
-          ) : (
-            <div className="h-14 w-14 rounded-lg border border-border bg-bg-tertiary" />
-          )}
-          <div className="flex-1">
-            <p className="font-semibold text-text">{displayName}</p>
-            <p className="text-xs text-text-secondary">
-              {user?.email ?? "Discord 연동 계정"}
-            </p>
-          </div>
-        </div>
-
-        {/* 캐릭터 미등록 시 생성 유도 */}
-        {!hasCharacter && (
-          <Link href="/character/create" className="block mt-4">
-            <div className="group relative overflow-hidden rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 transition-all hover:border-primary/60 hover:glow-cyan cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="hud-label mb-1 group-hover:text-primary transition-colors">NEW OPERATIVE REQUIRED</p>
-                  <p className="text-sm font-semibold text-text">캐릭터 등록</p>
-                </div>
-                <span className="text-primary text-lg group-hover:translate-x-1 transition-transform">&rarr;</span>
-              </div>
-              {/* 장식 스캔라인 */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,212,255,0.03)_50%)] bg-[length:100%_4px]" />
-            </div>
-          </Link>
-        )}
-      </Card>
-
-      {/* 브리핑 타임라인 */}
-      <div className="mt-8">
-        <BriefingFeed briefings={mockBriefings} />
+      {/* 상단: ID 카드 + Tasks (데스크탑에서 나란히) */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <CitizenIDCard citizen={citizenData} />
+        <ResonanceTasks tasks={mockTasks} />
       </div>
+
+      {/* 캐릭터 미등록 시 생성 유도 */}
+      {!hasCharacter && (
+        <Link href="/character/create" className="block">
+          <div className="group relative overflow-hidden rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 transition-all hover:border-primary/60 hover:glow-cyan cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="hud-label mb-1 group-hover:text-primary transition-colors">
+                  NEW OPERATIVE REQUIRED
+                </p>
+                <p className="text-sm font-semibold text-text">캐릭터 등록</p>
+              </div>
+              <span className="text-primary text-lg group-hover:translate-x-1 transition-transform">
+                &rarr;
+              </span>
+            </div>
+            {/* 장식 스캔라인 */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,212,255,0.03)_50%)] bg-[length:100%_4px]" />
+          </div>
+        </Link>
+      )}
+
+      {/* 하단: 뉴스 피드 */}
+      <BriefingFeed briefings={mockBriefings} />
     </div>
   );
 }

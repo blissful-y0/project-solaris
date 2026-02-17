@@ -1,3 +1,17 @@
+/** Pomi 프로파간다 광고 데이터 */
+export interface PomiAdData {
+  id: string;
+  text: string;
+  label?: string;
+}
+
+/** HELIOS 시민 통제 프로파간다 광고 목 데이터 */
+export const pomiAds: PomiAdData[] = [
+  { id: "pomi-1", text: "우울하신가요? 공명판 가까이 오세요!" },
+  { id: "pomi-2", text: "높은 공명율은 건강한 시민의 증거입니다." },
+  { id: "pomi-3", text: "HELIOS는 당신의 안녕을 기원합니다." },
+];
+
 /** 브리핑 데이터 타입 */
 export interface Briefing {
   id: string;
