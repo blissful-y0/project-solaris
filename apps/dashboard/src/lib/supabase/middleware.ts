@@ -1,13 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { env } from "@/lib/env";
 
 /** 미들웨어에서 세션 갱신 + 인증 리다이렉트 처리 */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -42,6 +43,7 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     const redirectPath = `${pathname}${request.nextUrl.search}`;
     url.pathname = "/login";
+    url.search = "";
     url.searchParams.set("redirect", redirectPath);
     return NextResponse.redirect(url);
   }
