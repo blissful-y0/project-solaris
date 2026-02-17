@@ -7,6 +7,7 @@ import SelectedPhase from "./SelectedPhase";
 import { resolveHeroSkipMode, HERO_STORAGE_KEY } from "./skipState.js";
 
 type SkipMode = "none" | "dev" | "returning";
+type HeroWindow = Window & { __SOLARIS_HERO_DONE?: boolean };
 
 export default function Hero() {
   const [skipMode, setSkipMode] = useState<SkipMode>("none");
@@ -35,6 +36,7 @@ export default function Hero() {
   // skip 시 즉시 이벤트 발사
   useEffect(() => {
     if (!skip) return;
+    (window as HeroWindow).__SOLARIS_HERO_DONE = true;
     window.dispatchEvent(new CustomEvent("solaris:hero-selected", { detail: { choice: "unknown" } }));
     window.dispatchEvent(new CustomEvent("solaris:hero-done"));
     if (returning) {
@@ -69,6 +71,7 @@ export default function Hero() {
     setPhase("done");
 
     if (typeof window !== "undefined") {
+      (window as HeroWindow).__SOLARIS_HERO_DONE = true;
       window.dispatchEvent(new CustomEvent("solaris:hero-done"));
     }
   }, []);
