@@ -233,32 +233,20 @@ function EmptyCard() {
       className="group block"
       aria-label="캐릭터 생성하기"
     >
-      <div className="relative overflow-hidden rounded-lg border border-border bg-bg-secondary/80 p-4 w-full cursor-pointer transition-all hover:border-primary/40 hover:glow-cyan">
-        {/* HUD 코너 브래킷 */}
-        <div className="hud-corners" />
-
-        {/* 배경 장식: 스캔라인 */}
-        <div className="absolute inset-0 pointer-events-none opacity-30 group-hover:opacity-50 transition-opacity bg-[linear-gradient(transparent_50%,rgba(0,212,255,0.04)_50%)] bg-[length:100%_4px]" />
-
-        {/* 배경 장식: 대각선 패턴 */}
-        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition-colors" />
-
+      <div className="rounded-lg border border-border bg-bg-secondary/80 p-4 w-full cursor-pointer transition-all hover:border-primary/40 hover:glow-cyan hud-corners">
         {/* 상단 라벨 */}
-        <div className="relative">
+        <div>
           <div className="hud-label mb-1">SOLARIS CITIZEN ID</div>
-          <div className="hud-label text-accent/60">
-            UNREGISTERED
-          </div>
+          <div className="hud-label text-accent/60">UNREGISTERED</div>
         </div>
 
         {/* 중앙: ? 아바타 + 미등록 정보 */}
-        <div className="relative flex gap-4 mt-3">
-          {/* 글리치 ? 아바타 */}
-          <div className="relative w-16 h-20 rounded bg-bg-tertiary/80 border border-primary/15 flex-shrink-0 flex items-center justify-center overflow-hidden">
+        <div className="flex gap-4 mt-3">
+          {/* ? 아바타 */}
+          <div className="w-16 h-20 rounded bg-bg-tertiary border border-border flex-shrink-0 flex items-center justify-center">
             <span className="text-3xl font-bold text-primary/40 group-hover:text-primary/70 transition-colors">
               ?
             </span>
-            <div className="absolute inset-0 pointer-events-none opacity-20 bg-gradient-to-b from-transparent via-primary/10 to-transparent" />
           </div>
 
           <div className="flex flex-col flex-1 min-w-0">
@@ -294,7 +282,7 @@ function EmptyCard() {
         </div>
 
         {/* 하단 CTA */}
-        <div className="relative mt-4 pt-3 border-t border-primary/10 flex items-center justify-between">
+        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-primary group-hover:text-glow-cyan transition-colors">
               NEW OPERATIVE REQUIRED

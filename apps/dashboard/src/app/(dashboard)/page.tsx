@@ -56,7 +56,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   // TODO: 실제 캐릭터 데이터는 API 연동 후 교체
-  const hasCharacter = false;
+  const [debugHasCharacter, setDebugHasCharacter] = useState(false);
 
   const fetchUser = useCallback(async (isCancelled?: () => boolean) => {
     const supabase = createClient();
@@ -91,7 +91,7 @@ export default function HomePage() {
   const displayName = user ? getDisplayName(user) : "...";
 
   /* 목 시민 데이터에 실제 유저 아바타 반영 */
-  const citizenData = hasCharacter
+  const citizenData = debugHasCharacter
     ? { ...mockCitizen, avatarUrl }
     : null;
 
@@ -109,6 +109,17 @@ export default function HomePage() {
           </p>
         )}
       </div>
+
+      {/* DEV: 등록 유저 미리보기 토글 — 배포 전 제거 */}
+      {process.env.NODE_ENV === "development" && (
+        <button
+          type="button"
+          onClick={() => setDebugHasCharacter((prev) => !prev)}
+          className="rounded border border-border px-2 py-1 text-[0.625rem] text-text-secondary hover:border-primary hover:text-primary transition-colors"
+        >
+          [DEV] {debugHasCharacter ? "미등록 상태로 전환" : "등록 유저로 전환"}
+        </button>
+      )}
 
       {loadError && (
         <Card hud className="max-w-md border border-red-500/40">
