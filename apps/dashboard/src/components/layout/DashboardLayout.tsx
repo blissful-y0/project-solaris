@@ -26,7 +26,7 @@ export function DashboardLayout({
       <main
         className={cn(
           "pt-14 px-4 pb-16",
-          "md:pl-[220px] md:pb-0 md:px-6",
+          "md:pb-0 md:pl-[244px] md:pr-6",
         )}
       >
         {children}

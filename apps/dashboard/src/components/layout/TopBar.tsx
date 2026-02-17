@@ -17,7 +17,7 @@ export function TopBar({ notificationCount }: TopBarProps) {
         "flex items-center justify-between px-4",
         "bg-bg/90 backdrop-blur-md",
         "border-b border-border",
-        "md:pl-[220px]",
+        "md:pl-[244px] md:pr-6",
       )}
     >
       <span className="text-sm font-bold uppercase tracking-widest text-primary text-glow-cyan">
