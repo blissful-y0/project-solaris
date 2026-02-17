@@ -19,6 +19,14 @@ PROJECT SOLARIS는 도시 배경의 롤플레이 전투 시스템을 제공하�
 - **관리자 API**: `/api/admin/*` 경로
 - **에러 응답**: 일관된 JSON 형식
 - **AI 모델 선택 단위**: 기능 단위 고정 (`main_story`, `battle_judgment`, `lore_reflection`, `news_generation`)
+- **제품 IA v2**: `Home/Lore/Session/REGISTRY/Helios Core/MY` 라벨을 사용한다.
+
+### IA v2 전환 메모 (플래닝 기준)
+- `Battle API` + `Rooms API`는 사용자 관점에서 `Sessions API`로 통합 노출한다.
+- `World API`(Lore 문서 조회)와 `Core API`(Helios Core 브리핑/타임라인)를 Phase 1 스펙 그룹에 추가한다.
+- `Home API`는 개인 상태 + 커뮤니티 요약 제공을 우선한다.
+- 기존 `도감` 관련 조회 API는 사용자 노출 이름을 `REGISTRY`로 통일한다.
+- 기존 엔드포인트 경로는 하위 호환을 위해 유지 가능하며, 프론트 라우팅/네이밍을 우선 통합한다.
 
 ### 공통 헤더
 ```
