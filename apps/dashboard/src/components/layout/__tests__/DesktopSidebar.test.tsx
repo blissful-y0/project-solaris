@@ -15,7 +15,7 @@ describe("DesktopSidebar", () => {
     render(<DesktopSidebar currentPath="/" />);
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Lore")).toBeInTheDocument();
-    expect(screen.getByText("Session")).toBeInTheDocument();
+    expect(screen.getByText("Operation")).toBeInTheDocument();
     expect(screen.getByText("REGISTRY")).toBeInTheDocument();
     expect(screen.getByText("Helios Core")).toBeInTheDocument();
   });
@@ -58,7 +58,7 @@ describe("DesktopSidebar", () => {
     render(<DesktopSidebar currentPath="/" />);
     expect(screen.getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: /lore/i })).toHaveAttribute("href", "/world");
-    expect(screen.getByRole("link", { name: /session/i })).toHaveAttribute("href", "/session");
+    expect(screen.getByRole("link", { name: /operation/i })).toHaveAttribute("href", "/operation");
     expect(screen.getByRole("link", { name: /registry/i })).toHaveAttribute("href", "/characters");
     expect(screen.getByRole("link", { name: /helios core/i })).toHaveAttribute("href", "/core");
   });

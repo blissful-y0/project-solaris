@@ -15,19 +15,19 @@ describe("MobileTabBar", () => {
     render(<MobileTabBar currentPath="/" />);
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Lore")).toBeInTheDocument();
-    expect(screen.getByText("Session")).toBeInTheDocument();
+    expect(screen.getByText("Operation")).toBeInTheDocument();
     expect(screen.getByText("REGISTRY")).toBeInTheDocument();
     expect(screen.getByText("Helios Core")).toBeInTheDocument();
   });
 
   it("highlights active item based on currentPath", () => {
-    render(<MobileTabBar currentPath="/session" />);
-    const sessionLink = screen.getByRole("link", { name: /session/i });
+    render(<MobileTabBar currentPath="/operation" />);
+    const sessionLink = screen.getByRole("link", { name: /operation/i });
     expect(sessionLink).toHaveClass("text-primary");
   });
 
   it("does not highlight inactive items", () => {
-    render(<MobileTabBar currentPath="/session" />);
+    render(<MobileTabBar currentPath="/operation" />);
     const homeLink = screen.getByRole("link", { name: /home/i });
     expect(homeLink).not.toHaveClass("text-primary");
   });
@@ -53,7 +53,7 @@ describe("MobileTabBar", () => {
     render(<MobileTabBar currentPath="/" />);
     expect(screen.getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: /lore/i })).toHaveAttribute("href", "/world");
-    expect(screen.getByRole("link", { name: /session/i })).toHaveAttribute("href", "/session");
+    expect(screen.getByRole("link", { name: /operation/i })).toHaveAttribute("href", "/operation");
     expect(screen.getByRole("link", { name: /registry/i })).toHaveAttribute("href", "/characters");
     expect(screen.getByRole("link", { name: /helios core/i })).toHaveAttribute("href", "/core");
   });
