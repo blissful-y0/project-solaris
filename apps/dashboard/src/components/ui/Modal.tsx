@@ -9,11 +9,12 @@ type ModalProps = {
   open: boolean;
   onClose: () => void;
   title?: string;
+  ariaLabel?: string;
   children: ReactNode;
   className?: string;
 };
 
-export function Modal({ open, onClose, title, children, className }: ModalProps) {
+export function Modal({ open, onClose, title, ariaLabel, children, className }: ModalProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -41,26 +42,31 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={ariaLabel ?? title ?? "상세 보기"}
         className={cn(
           "relative max-w-lg w-full mx-4 bg-bg-secondary border border-border rounded-lg max-h-[85dvh] overflow-y-auto",
           className,
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          {title && (
-            <h2 className="text-sm uppercase tracking-widest text-primary font-semibold">
+        {/* 닫기 버튼 — 항상 우상단 */}
+        <button
+          onClick={onClose}
+          aria-label="닫기"
+          className="absolute top-2 right-2 z-10 text-text-secondary hover:text-text transition-colors p-1"
+        >
+          &#x2715;
+        </button>
+
+        {/* 타이틀 헤더 — 있을 때만 표시 */}
+        {title && (
+          <div className="px-4 pt-3 pb-2 border-b border-border">
+            <h2 className="text-xs uppercase tracking-widest text-primary font-semibold pr-6">
               {title}
             </h2>
-          )}
-          <button
-            onClick={onClose}
-            aria-label="닫기"
-            className="ml-auto text-text-secondary hover:text-text transition-colors p-1"
-          >
-            &#x2715;
-          </button>
-        </div>
+          </div>
+        )}
+
         <div className="p-4">{children}</div>
       </div>
     </div>,
