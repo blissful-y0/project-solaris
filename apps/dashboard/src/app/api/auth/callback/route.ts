@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+function isSafeInternalPath(path: string) {
+  return path.startsWith("/") && !path.startsWith("//");
+}
+
 /** Discord OAuth 콜백 — code를 세션으로 교환 */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const rawNext = searchParams.get("next") ?? "/";
+  const next = isSafeInternalPath(rawNext) ? rawNext : "/";
 
   if (code) {
     const cookieStore = await cookies();

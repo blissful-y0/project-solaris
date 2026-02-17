@@ -181,14 +181,15 @@
   }
 }
 
-/* ─── 접근성: 모션 축소 대응 ─── */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+/* ─── 접근성: 모션 축소 대응 (@layer 안에서 선언하여 Tailwind 유틸리티 보존) ─── */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms;
+      animation-iteration-count: 1;
+      scroll-behavior: auto;
+    }
   }
 }

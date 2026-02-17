@@ -30,19 +30,38 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
+      const callbackUrl = new URL(
+        "/api/auth/callback",
+        window.location.origin,
+      );
+
+      const requestedRedirect = new URL(window.location.href).searchParams.get(
+        "redirect",
+      );
+      const safeRedirectPath =
+        requestedRedirect &&
+        requestedRedirect.startsWith("/") &&
+        !requestedRedirect.startsWith("//")
+          ? requestedRedirect
+          : "/";
+
+      if (safeRedirectPath !== "/") {
+        callbackUrl.searchParams.set("next", safeRedirectPath);
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "discord",
         options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       });
 
       if (error) {
         setError("인증 요청에 실패했습니다");
-        setLoading(false);
       }
     } catch {
       setError("네트워크 오류가 발생했습니다");
+    } finally {
       setLoading(false);
     }
   };

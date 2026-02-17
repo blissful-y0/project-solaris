@@ -4,6 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 
 // Supabase 클라이언트 모킹
 const mockSignInWithOAuth = vi.fn().mockResolvedValue({ error: null });
+const mockSearchParamGet = vi.fn(() => null);
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => ({
+    get: mockSearchParamGet,
+  }),
+}));
+
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     auth: {
@@ -15,7 +23,38 @@ vi.mock("@/lib/supabase/client", () => ({
 import LoginPage from "../page";
 
 describe("LoginPage", () => {
+  it("redirect 쿼리가 있으면 callback next에 포함한다", async () => {
+    mockSearchParamGet.mockImplementation((key: string) =>
+      key === "redirect" ? "/battle?tab=live" : null,
+    );
+
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    await user.click(screen.getByRole("button", { name: /통신 채널로 인증/i }));
+
+    const oauthCall = mockSignInWithOAuth.mock.calls.at(-1)?.[0];
+    expect(oauthCall.options.redirectTo).toContain("/api/auth/callback");
+    expect(oauthCall.options.redirectTo).toContain("next=%2Fbattle%3Ftab%3Dlive");
+  });
+
+  it("외부 URL redirect는 next 파라미터로 전달하지 않는다", async () => {
+    mockSearchParamGet.mockImplementation((key: string) =>
+      key === "redirect" ? "https://evil.example" : null,
+    );
+
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    await user.click(screen.getByRole("button", { name: /통신 채널로 인증/i }));
+
+    const oauthCall = mockSignInWithOAuth.mock.calls.at(-1)?.[0];
+    expect(oauthCall.options.redirectTo).toContain("/api/auth/callback");
+    expect(oauthCall.options.redirectTo).not.toContain("next=");
+  });
+
   it("SOLARIS 타이틀을 렌더링한다", () => {
+    mockSearchParamGet.mockImplementation(() => null);
     render(<LoginPage />);
     expect(screen.getByText("SOLARIS")).toBeInTheDocument();
   });
