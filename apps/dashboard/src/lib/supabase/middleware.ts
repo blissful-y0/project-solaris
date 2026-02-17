@@ -40,7 +40,9 @@ export async function updateSession(request: NextRequest) {
   // 미인증 + 비공개 경로 → 로그인으로
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
+    const redirectPath = `${pathname}${request.nextUrl.search}`;
     url.pathname = "/login";
+    url.searchParams.set("redirect", redirectPath);
     return NextResponse.redirect(url);
   }
 
