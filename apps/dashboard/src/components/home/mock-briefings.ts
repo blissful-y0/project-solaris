@@ -7,9 +7,9 @@ export interface PomiAdData {
 
 /** HELIOS 시민 통제 프로파간다 광고 목 데이터 */
 export const pomiAds: PomiAdData[] = [
-  { id: "pomi-1", text: "우울하신가요? 공명판 가까이 오세요!" },
-  { id: "pomi-2", text: "높은 공명율은 건강한 시민의 증거입니다." },
-  { id: "pomi-3", text: "HELIOS는 당신의 안녕을 기원합니다." },
+  { id: "pomi-1", text: "기분이 안 좋으세요? 가까운 공명판에서 힐링 받으세요! 공명율이 쑥쑥 올라가요!" },
+  { id: "pomi-2", text: "오늘도 공명율 체크 하셨나요? 높은 공명율은 행복한 시민의 비결이에요!" },
+  { id: "pomi-3", text: "HELIOS가 오늘도 당신을 응원해요! 공명판과 함께 활기찬 하루 보내세요!" },
 ];
 
 /** 브리핑 데이터 타입 */

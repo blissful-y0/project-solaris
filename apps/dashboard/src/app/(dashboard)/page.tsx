@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui";
 import {
@@ -131,27 +130,6 @@ export default function HomePage() {
         <CitizenIDCard citizen={citizenData} />
         <ResonanceTasks tasks={mockTasks} />
       </div>
-
-      {/* 캐릭터 미등록 시 생성 유도 */}
-      {!hasCharacter && (
-        <Link href="/character/create" className="block">
-          <div className="group relative overflow-hidden rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 transition-all hover:border-primary/60 hover:glow-cyan cursor-pointer">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="hud-label mb-1 group-hover:text-primary transition-colors">
-                  NEW OPERATIVE REQUIRED
-                </p>
-                <p className="text-sm font-semibold text-text">캐릭터 등록</p>
-              </div>
-              <span className="text-primary text-lg group-hover:translate-x-1 transition-transform">
-                &rarr;
-              </span>
-            </div>
-            {/* 장식 스캔라인 */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,212,255,0.03)_50%)] bg-[length:100%_4px]" />
-          </div>
-        </Link>
-      )}
 
       {/* 하단: 뉴스 피드 */}
       <BriefingFeed briefings={mockBriefings} />

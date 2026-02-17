@@ -22,10 +22,10 @@ describe("PomiAd", () => {
     expect(screen.queryByText("POMI WELLNESS")).not.toBeInTheDocument();
   });
 
-  it("Card 컴포넌트로 렌더링되며 프로파간다 스타일을 갖는다", () => {
+  it("프로파간다 스타일로 렌더링된다", () => {
     const { container } = render(<PomiAd text="테스트" />);
     const card = container.firstElementChild;
-    expect(card?.className).toContain("bg-primary/5");
-    expect(card?.className).toContain("border-primary/20");
+    expect(card?.className).toContain("rounded-xl");
+    expect(card?.className).toContain("border-primary/15");
   });
 });

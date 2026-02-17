@@ -228,7 +228,7 @@ describe("CitizenIDCard", () => {
   describe("빈 카드 (미등록)", () => {
     it("citizen이 null이면 빈 카드를 렌더링한다", () => {
       render(<CitizenIDCard citizen={null} />);
-      expect(screen.getByText("미등록 시민")).toBeInTheDocument();
+      expect(screen.getByText("미확인 시민")).toBeInTheDocument();
     });
 
     it("아바타 자리에 ? 표시", () => {
@@ -250,7 +250,7 @@ describe("CitizenIDCard", () => {
 
     it("CTA 텍스트를 표시한다", () => {
       render(<CitizenIDCard citizen={null} />);
-      expect(screen.getByText("탭하여 캐릭터 생성 →")).toBeInTheDocument();
+      expect(screen.getByText("NEW OPERATIVE REQUIRED")).toBeInTheDocument();
     });
   });
 });

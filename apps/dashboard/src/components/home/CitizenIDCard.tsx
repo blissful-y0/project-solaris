@@ -225,45 +225,87 @@ function ProfileRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-/* ─── 빈 카드 (캐릭터 미등록) ─── */
+/* ─── 빈 카드 (캐릭터 미등록) — 캐릭터 생성 유도 CTA ─── */
 function EmptyCard() {
   return (
     <Link
       href="/character/create"
-      className="block"
+      className="group block"
       aria-label="캐릭터 생성하기"
     >
-      <div className="bg-bg-secondary/80 border border-border border-dashed rounded-lg p-3 hud-corners aspect-[3/2] max-w-xs md:max-w-xl w-full flex flex-col cursor-pointer hover:border-primary/30 hover:glow-cyan transition-all">
-        <div className="hud-label mb-2">SOLARIS CITIZEN ID</div>
+      <div className="relative overflow-hidden rounded-lg border border-border bg-bg-secondary/80 p-4 w-full cursor-pointer transition-all hover:border-primary/40 hover:glow-cyan">
+        {/* HUD 코너 브래킷 */}
+        <div className="hud-corners" />
 
-        <div className="flex gap-3 flex-1 min-h-0">
-          {/* 빈 아바타 */}
-          <div className="w-16 h-20 rounded bg-bg-tertiary border border-border flex-shrink-0 flex items-center justify-center">
-            <span className="text-2xl text-text-secondary font-bold">?</span>
+        {/* 배경 장식: 스캔라인 */}
+        <div className="absolute inset-0 pointer-events-none opacity-30 group-hover:opacity-50 transition-opacity bg-[linear-gradient(transparent_50%,rgba(0,212,255,0.04)_50%)] bg-[length:100%_4px]" />
+
+        {/* 배경 장식: 대각선 패턴 */}
+        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition-colors" />
+
+        {/* 상단 라벨 */}
+        <div className="relative">
+          <div className="hud-label mb-1">SOLARIS CITIZEN ID</div>
+          <div className="hud-label text-accent/60">
+            UNREGISTERED
+          </div>
+        </div>
+
+        {/* 중앙: ? 아바타 + 미등록 정보 */}
+        <div className="relative flex gap-4 mt-3">
+          {/* 글리치 ? 아바타 */}
+          <div className="relative w-16 h-20 rounded bg-bg-tertiary/80 border border-primary/15 flex-shrink-0 flex items-center justify-center overflow-hidden">
+            <span className="text-3xl font-bold text-primary/40 group-hover:text-primary/70 transition-colors">
+              ?
+            </span>
+            <div className="absolute inset-0 pointer-events-none opacity-20 bg-gradient-to-b from-transparent via-primary/10 to-transparent" />
           </div>
 
-          <div className="flex flex-col flex-1">
-            <span className="text-sm text-text-secondary mb-1">
-              미등록 시민
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-sm font-semibold text-text/60 mb-2">
+              미확인 시민
             </span>
-            <div className="mb-1">
-              <span className="hud-label">RESONANCE RATE</span>
-              <div className="text-xl font-bold text-text-secondary">---</div>
-            </div>
-            <div className="flex items-center gap-1 mb-1">
-              <span className="hud-label mr-1">HP</span>
-              <span className="text-[0.6rem] text-text-secondary">---</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="hud-label mr-1">WILL</span>
-              <span className="text-[0.6rem] text-text-secondary">---</span>
+
+            {/* 빈 스탯 */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="hud-label w-8">RR</span>
+                <div className="flex-1 h-1.5 rounded-full bg-bg-tertiary overflow-hidden">
+                  <div className="h-full w-0 bg-primary/30 rounded-full" />
+                </div>
+                <span className="text-[0.6rem] text-text-secondary w-6 text-right">---</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="hud-label w-8">HP</span>
+                <div className="flex-1 h-1.5 rounded-full bg-bg-tertiary overflow-hidden">
+                  <div className="h-full w-0 bg-success/30 rounded-full" />
+                </div>
+                <span className="text-[0.6rem] text-text-secondary w-6 text-right">---</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="hud-label w-8">WILL</span>
+                <div className="flex-1 h-1.5 rounded-full bg-bg-tertiary overflow-hidden">
+                  <div className="h-full w-0 bg-primary/30 rounded-full" />
+                </div>
+                <span className="text-[0.6rem] text-text-secondary w-6 text-right">---</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* 하단 CTA */}
-        <div className="mt-auto pt-2 text-center text-xs text-primary">
-          탭하여 캐릭터 생성 →
+        <div className="relative mt-4 pt-3 border-t border-primary/10 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-primary group-hover:text-glow-cyan transition-colors">
+              NEW OPERATIVE REQUIRED
+            </p>
+            <p className="text-[0.625rem] text-text-secondary mt-0.5">
+              시민 등록을 완료하여 HELIOS 시스템에 접속하세요
+            </p>
+          </div>
+          <span className="text-primary text-lg group-hover:translate-x-1 transition-transform flex-shrink-0 ml-3">
+            &rarr;
+          </span>
         </div>
       </div>
     </Link>
@@ -296,14 +338,14 @@ export function CitizenIDCard({ citizen, className }: CitizenIDCardProps) {
   /* 캐릭터 미등록 시 빈 카드 */
   if (!citizen) {
     return (
-      <div className={cn("w-full max-w-xs md:max-w-xl", className)}>
+      <div className={cn("w-full", className)}>
         <EmptyCard />
       </div>
     );
   }
 
   return (
-    <div className={cn("w-full max-w-xs md:max-w-xl", className)}>
+    <div className={cn("w-full", className)}>
       <div
         role="button"
         tabIndex={0}
