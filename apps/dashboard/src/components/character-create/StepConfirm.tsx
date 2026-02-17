@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
 
-import type { CharacterDraft } from "./types";
+import type { CharacterDraft, CrossoverStyle } from "./types";
 
 type StepConfirmProps = {
   draft: CharacterDraft;
@@ -10,8 +9,13 @@ type StepConfirmProps = {
 };
 
 const FACTION_LABELS = { bureau: "Bureau", static: "Static" } as const;
-const CLASS_LABELS = { field: "Field", empathy: "Empathy", shift: "Shift", compute: "Compute" } as const;
-const COST_LABELS = { will: "Will", hp: "HP" } as const;
+const CLASS_LABELS = { field: "역장 (Field)", empathy: "감응 (Empathy)", shift: "변환 (Shift)", compute: "연산 (Compute)" } as const;
+const CROSSOVER_LABELS: Record<CrossoverStyle, string> = {
+  "limiter-override": "리미터 해제",
+  "hardware-bypass": "외장형 연산 장치",
+  "dead-reckoning": "정신적 오버클럭",
+  "defector": "전향자",
+};
 
 const sectionClass = "border border-border rounded-lg p-4 bg-bg-secondary/50 space-y-2";
 const headingClass = "text-xs uppercase tracking-widest text-primary/80 mb-3 font-semibold";
@@ -38,6 +42,9 @@ function EditButton({ onClick }: { onClick: () => void }) {
 }
 
 export function StepConfirm({ draft, onSubmit, onEditStep }: StepConfirmProps) {
+  const isBureau = draft.faction === "bureau";
+  const systemName = isBureau ? "하모닉스 프로토콜" : "오버드라이브";
+
   return (
     <div className="space-y-5">
       <p className="hud-label mb-6">// 입력 내용을 확인하세요</p>
@@ -56,6 +63,8 @@ export function StepConfirm({ draft, onSubmit, onEditStep }: StepConfirmProps) {
           label="계열"
           value={draft.abilityClass ? CLASS_LABELS[draft.abilityClass] : ""}
         />
+        <SummaryRow label="능력 체계" value={systemName} />
+        <SummaryRow label="비용 타입" value={isBureau ? "WILL" : "HP"} />
       </div>
 
       {/* 능력 상세 */}
@@ -67,13 +76,12 @@ export function StepConfirm({ draft, onSubmit, onEditStep }: StepConfirmProps) {
         <SummaryRow label="이름" value={draft.abilityName} />
         <SummaryRow label="설명" value={draft.abilityDescription} />
         <SummaryRow label="제약" value={draft.abilityConstraint} />
-        <SummaryRow label="Basic" value={draft.abilityTierBasic} />
-        <SummaryRow label="Mid" value={draft.abilityTierMid} />
-        <SummaryRow label="Advanced" value={draft.abilityTierAdvanced} />
-        <SummaryRow
-          label="비용"
-          value={draft.abilityCostType ? COST_LABELS[draft.abilityCostType] : ""}
-        />
+        <SummaryRow label="기본기" value={draft.abilityTierBasic} />
+        <SummaryRow label="중급기" value={draft.abilityTierMid} />
+        <SummaryRow label="상급기" value={draft.abilityTierAdvanced} />
+        {draft.crossoverStyle && (
+          <SummaryRow label="크로스오버" value={CROSSOVER_LABELS[draft.crossoverStyle]} />
+        )}
       </div>
 
       {/* 프로필 */}

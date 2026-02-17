@@ -6,7 +6,7 @@ const FACTIONS: { id: Faction; label: string; description: string; theme: string
   {
     id: "bureau",
     label: "Bureau",
-    description: "질서와 통제. 거짓 태양 아래 인류를 관리하는 관료제.",
+    description: "질서와 통제. 솔라리스를 관리하는 자들.",
     theme: "border-primary",
     glow: "glow-cyan-strong",
   },

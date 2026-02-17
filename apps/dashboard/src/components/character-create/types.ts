@@ -11,7 +11,8 @@ export interface CharacterDraft {
   abilityTierBasic: string;
   abilityTierMid: string;
   abilityTierAdvanced: string;
-  abilityCostType: "will" | "hp" | null;
+  // 크로스오버 전투 스타일 (선택사항)
+  crossoverStyle: CrossoverStyle | null;
   // Step 4: 프로필 입력
   name: string;
   gender: string;
@@ -20,6 +21,14 @@ export interface CharacterDraft {
   personality: string;
   backstory: string;
 }
+
+/** Bureau 크로스오버: 리미터 해제 */
+/** Static 크로스오버: 외장형 연산 / 정신적 오버클럭 / 전향자 */
+export type CrossoverStyle =
+  | "limiter-override"
+  | "hardware-bypass"
+  | "dead-reckoning"
+  | "defector";
 
 export const EMPTY_DRAFT: CharacterDraft = {
   faction: null,
@@ -30,7 +39,7 @@ export const EMPTY_DRAFT: CharacterDraft = {
   abilityTierBasic: "",
   abilityTierMid: "",
   abilityTierAdvanced: "",
-  abilityCostType: null,
+  crossoverStyle: null,
   name: "",
   gender: "",
   age: "",
@@ -41,4 +50,3 @@ export const EMPTY_DRAFT: CharacterDraft = {
 
 export type Faction = NonNullable<CharacterDraft["faction"]>;
 export type AbilityClass = NonNullable<CharacterDraft["abilityClass"]>;
-export type CostType = NonNullable<CharacterDraft["abilityCostType"]>;

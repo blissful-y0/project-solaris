@@ -87,7 +87,6 @@ describe("WizardShell", () => {
     await user.type(screen.getByLabelText(/능력 이름/), "테스트 능력");
     await user.type(screen.getByLabelText(/능력 설명/), "테스트 설명입니다");
     await user.type(screen.getByLabelText(/제약 사항/), "제약이 있다");
-    await user.click(screen.getByLabelText("Will"));
     await user.click(screen.getByRole("button", { name: /다음/ }));
 
     // Step 4: 프로필 입력 (필수 필드 입력)

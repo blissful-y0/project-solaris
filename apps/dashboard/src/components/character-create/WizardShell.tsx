@@ -34,8 +34,7 @@ function isStepValid(step: number, draft: CharacterDraft): boolean {
       return (
         draft.abilityName.trim() !== "" &&
         draft.abilityDescription.trim() !== "" &&
-        draft.abilityConstraint.trim() !== "" &&
-        draft.abilityCostType !== null
+        draft.abilityConstraint.trim() !== ""
       );
     case 3:
       return draft.name.trim() !== "" && draft.age.trim() !== "";

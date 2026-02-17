@@ -14,7 +14,7 @@ const FULL_DRAFT: CharacterDraft = {
   abilityTierBasic: "소형 물체 이동",
   abilityTierMid: "중형 물체 이동, 단거리 순간이동",
   abilityTierAdvanced: "공간 자체를 왜곡, 대규모 이동",
-  abilityCostType: "will",
+  crossoverStyle: null,
   name: "카이 리",
   gender: "남성",
   age: "24",
