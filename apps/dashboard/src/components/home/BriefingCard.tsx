@@ -27,9 +27,10 @@ const hoverGlowMap: Record<Briefing["category"], string> = {
 
 type BriefingCardProps = {
   briefing: Briefing;
+  onClick?: () => void;
 };
 
-export function BriefingCard({ briefing }: BriefingCardProps) {
+export function BriefingCard({ briefing, onClick }: BriefingCardProps) {
   const relativeTime = formatDistanceToNow(new Date(briefing.timestamp), {
     addSuffix: true,
     locale: ko,
@@ -37,8 +38,9 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
 
   return (
     <article
+      onClick={onClick}
       className={cn(
-        "border-l-2 pl-4 py-3 transition-all",
+        "border-l-2 pl-4 py-3 transition-all cursor-pointer",
         borderColorMap[briefing.category],
         hoverGlowMap[briefing.category],
       )}
@@ -61,8 +63,8 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
         {briefing.title}
       </h3>
 
-      {/* 본문 */}
-      <p className="text-sm text-text-secondary leading-relaxed">
+      {/* 본문 미리보기 (2줄 제한) */}
+      <p className="text-sm text-text-secondary leading-relaxed line-clamp-2">
         {briefing.content}
       </p>
 

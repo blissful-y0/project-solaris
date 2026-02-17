@@ -39,9 +39,9 @@ const briefings: Briefing[] = [
 ];
 
 describe("BriefingFeed", () => {
-  it("SOLARIS BRIEFING 헤더를 표시한다", () => {
+  it("HELIOS NEWS 헤더를 표시한다", () => {
     render(<BriefingFeed briefings={briefings} />);
-    expect(screen.getByText("SOLARIS BRIEFING")).toBeInTheDocument();
+    expect(screen.getByText("HELIOS NEWS")).toBeInTheDocument();
   });
 
   it("오늘의 브리핑 서브헤더를 표시한다", () => {
@@ -58,7 +58,7 @@ describe("BriefingFeed", () => {
 
   it("빈 배열일 때 빈 상태를 처리한다", () => {
     render(<BriefingFeed briefings={[]} />);
-    expect(screen.getByText("SOLARIS BRIEFING")).toBeInTheDocument();
+    expect(screen.getByText("HELIOS NEWS")).toBeInTheDocument();
     expect(screen.getByText("수신된 브리핑이 없습니다")).toBeInTheDocument();
   });
 });
