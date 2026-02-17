@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 
@@ -109,9 +110,11 @@ function RegisteredCard({ citizen }: { citizen: CitizenData }) {
         {/* 아바타 — 크게 */}
         <div className="w-24 h-28 rounded-md overflow-hidden bg-bg-tertiary border border-border flex-shrink-0">
           {citizen.avatarUrl ? (
-            <img
+            <Image
               src={citizen.avatarUrl}
               alt={`${citizen.name} 아바타`}
+              width={96}
+              height={112}
               className="w-full h-full object-cover"
             />
           ) : (

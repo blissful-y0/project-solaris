@@ -4,6 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { CitizenIDCard } from "../CitizenIDCard";
 import type { CitizenData } from "../mock-citizen";
 
+vi.mock("next/image", () => ({
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img {...props} />,
+}));
+
 /* ─── next/link 모킹 ─── */
 vi.mock("next/link", () => ({
   default: ({

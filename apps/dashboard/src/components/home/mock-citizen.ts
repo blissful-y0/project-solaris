@@ -1,4 +1,6 @@
 /** 시민 ID 카드 데이터 인터페이스 */
+type ISODateString = `${number}-${number}-${number}`;
+
 export interface CitizenData {
   name: string;
   faction: "Bureau" | "Static";
@@ -8,7 +10,7 @@ export interface CitizenData {
   citizenId: string; // "SCC-7291-0483" 형식
   avatarUrl: string | null;
   abilityClass: string; // 뒷면 표시용 — 역장/감응/변환/연산
-  joinDate: string; // 뒷면 표시용
+  joinDate: ISODateString; // YYYY-MM-DD
 }
 
 /** 개발/테스트용 목 시민 데이터 */

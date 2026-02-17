@@ -11,7 +11,9 @@ const publicEnvSchema = z.object({
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
 
-export function parsePublicEnv(source: NodeJS.ProcessEnv): PublicEnv {
+type PublicEnvSource = Record<string, string | undefined>;
+
+export function parsePublicEnv(source: PublicEnvSource): PublicEnv {
   const parsed = publicEnvSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: source.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: source.NEXT_PUBLIC_SUPABASE_ANON_KEY,
