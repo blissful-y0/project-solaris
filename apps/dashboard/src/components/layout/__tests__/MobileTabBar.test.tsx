@@ -32,6 +32,15 @@ describe("MobileTabBar", () => {
     expect(homeLink).not.toHaveClass("text-primary");
   });
 
+  it("활성 탭에 aria-current=page를 설정한다", () => {
+    render(<MobileTabBar currentPath="/battle" />);
+    const battleLink = screen.getByRole("link", { name: /전투/i });
+    const homeLink = screen.getByRole("link", { name: /홈/i });
+
+    expect(battleLink).toHaveAttribute("aria-current", "page");
+    expect(homeLink).not.toHaveAttribute("aria-current");
+  });
+
   it("has navigation role", () => {
     render(<MobileTabBar currentPath="/" />);
     expect(screen.getByRole("navigation")).toBeInTheDocument();

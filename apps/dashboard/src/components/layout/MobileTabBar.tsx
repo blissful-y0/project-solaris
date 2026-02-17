@@ -27,6 +27,7 @@ export function MobileTabBar({ currentPath }: MobileTabBarProps) {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex flex-1 flex-col items-center justify-center gap-1 py-2 transition-colors",
               isActive

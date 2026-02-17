@@ -32,6 +32,15 @@ describe("DesktopSidebar", () => {
     expect(homeLink).not.toHaveClass("text-primary");
   });
 
+  it("활성 메뉴에 aria-current=page를 설정한다", () => {
+    render(<DesktopSidebar currentPath="/characters" />);
+    const activeLink = screen.getByRole("link", { name: /도감/i });
+    const homeLink = screen.getByRole("link", { name: /홈/i });
+
+    expect(activeLink).toHaveAttribute("aria-current", "page");
+    expect(homeLink).not.toHaveAttribute("aria-current");
+  });
+
   it("renders logo/title text", () => {
     render(<DesktopSidebar currentPath="/" />);
     expect(screen.getByText("SOLARIS TERMINAL")).toBeInTheDocument();
