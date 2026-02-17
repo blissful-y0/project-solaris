@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { SystemInfo } from "./systemData";
+import type { SystemInfo, SystemSection } from "./systemData";
+import AbilitySystem from "./AbilitySystem";
 import CombatDemo from "./CombatDemo";
 import ResonanceGauge from "./ResonanceGauge";
 import SeasonTeaser from "./SeasonTeaser";
@@ -11,6 +12,66 @@ interface Props {
 }
 
 type Phase = "scan" | "expand" | "content" | "closing";
+
+/* ── 섹션 블록 렌더러 ── */
+function SectionBlock({
+  section,
+  index,
+  isContent,
+  isClosing,
+}: {
+  section: SystemSection;
+  index: number;
+  isContent: boolean;
+  isClosing: boolean;
+}) {
+  const bodyArray = Array.isArray(section.body)
+    ? section.body
+    : [section.body];
+
+  return (
+    <div
+      className="mb-5 last:mb-0"
+      style={{
+        opacity: isClosing ? 0 : isContent ? 1 : 0,
+        transform: isContent ? "translateY(0)" : "translateY(8px)",
+        transition: "opacity 300ms ease-out, transform 300ms ease-out",
+        transitionDelay: isContent ? `${(index + 1) * 100}ms` : "0ms",
+      }}
+    >
+      <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
+        {section.heading}
+      </h3>
+
+      {/* body 문단들 */}
+      <div className="text-text/70 text-sm md:text-base leading-relaxed space-y-3">
+        {bodyArray.map((paragraph, i) => (
+          <p key={i} style={{ whiteSpace: "pre-line" }}>
+            {paragraph}
+          </p>
+        ))}
+      </div>
+
+      {/* highlight (강조 마무리) */}
+      {section.highlight && (
+        <p
+          className="text-sm font-semibold mt-3"
+          style={{
+            color: "var(--color-primary)",
+            textShadow: "0 0 12px rgba(0,212,255,0.3)",
+          }}
+        >
+          {section.highlight}
+        </p>
+      )}
+
+      {/* note (작은 회색 주석) */}
+      {section.note && (
+        <p className="text-text/30 text-xs mt-3">{section.note}</p>
+      )}
+    </div>
+  );
+}
 
 export default function SystemModal({ system, onClose }: Props) {
   const [phase, setPhase] = useState<Phase>("scan");
@@ -171,7 +232,9 @@ export default function SystemModal({ system, onClose }: Props) {
                 {system.title}
               </h2>
               {system.description && (
-                <p className="text-text/50 text-sm mt-1">{system.description}</p>
+                <p className="text-text/50 text-sm mt-1">
+                  {system.description}
+                </p>
               )}
             </div>
           </div>
@@ -187,42 +250,36 @@ export default function SystemModal({ system, onClose }: Props) {
             }}
           />
 
-          {/* SYNC 모달 — 공명율 전용 비주얼 */}
-          {system.code === "SYNC" && isContent && (
-            <ResonanceGauge />
-          )}
+          {/* 콘텐츠 섹션들 (모든 시스템 공통) */}
+          {system.sections.map((section, i) => (
+            <SectionBlock
+              key={section.heading}
+              section={section}
+              index={i}
+              isContent={isContent}
+              isClosing={isClosing}
+            />
+          ))}
 
-          {/* ARC 모달 — 시즌제 스토리 전용 비주얼 */}
-          {system.code === "ARC" && isContent && (
-            <SeasonTeaser />
-          )}
-
-          {/* 기본 콘텐츠 섹션들 (SYNC, ARC 제외) */}
-          {system.code !== "SYNC" && system.code !== "ARC" &&
-            system.sections.map((section, i) => (
-              <div
-                key={section.heading}
-                className="mb-5 last:mb-0"
-                style={{
-                  opacity: isClosing ? 0 : isContent ? 1 : 0,
-                  transform: isContent ? "translateY(0)" : "translateY(8px)",
-                  transition: "opacity 300ms ease-out, transform 300ms ease-out",
-                  transitionDelay: isContent ? `${(i + 1) * 100}ms` : "0ms",
-                }}
-              >
-                <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
-                  {section.heading}
-                </h3>
-                <p className="text-text/70 text-sm md:text-base leading-relaxed">
-                  {section.body}
-                </p>
-              </div>
-            ))}
-
-          {/* GM 전투 판정 데모 — 섹션 아래 */}
+          {/* 커스텀 비주얼 (섹션 아래) */}
           {system.code === "GM" && isContent && (
             <div className="mt-6">
               <CombatDemo />
+            </div>
+          )}
+          {system.code === "SYNC" && isContent && (
+            <div className="mt-6">
+              <ResonanceGauge />
+            </div>
+          )}
+          {system.code === "ARC" && isContent && (
+            <div className="mt-6">
+              <SeasonTeaser />
+            </div>
+          )}
+          {system.code === "OC" && isContent && (
+            <div className="mt-6">
+              <AbilitySystem />
             </div>
           )}
 
