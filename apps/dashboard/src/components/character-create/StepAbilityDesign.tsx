@@ -102,41 +102,39 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
         <p className="hud-label">// 단계별 서술</p>
 
         <div>
-          <label htmlFor="abilityTierBasic" className={labelClass}>기본기</label>
+          <label htmlFor="abilityTierBasic" className={labelClass}>기본 스킬</label>
           <textarea
             id="abilityTierBasic"
             maxLength={300}
             value={draft.abilityTierBasic}
             onChange={(e) => onChange({ abilityTierBasic: e.target.value })}
-            placeholder={isBureau ? "하모닉스 기본 출력" : "오버드라이브 기본 발현"}
+            placeholder="가장 낮은 출력의 기본 사용"
             className={textareaClass}
           />
         </div>
 
         <div>
-          <label htmlFor="abilityTierMid" className={labelClass}>
-            중급기 — {isBureau ? "프로젝트 하모닉스" : "오버드라이브"}
-          </label>
+          <label htmlFor="abilityTierMid" className={labelClass}>중급 스킬</label>
           <textarea
             id="abilityTierMid"
             maxLength={300}
             value={draft.abilityTierMid}
             onChange={(e) => onChange({ abilityTierMid: e.target.value })}
-            placeholder={isBureau ? "하모닉스 정밀 제어 단계" : "오버드라이브 본격 발현"}
+            placeholder="일반적인 전투 상황에서의 사용"
             className={textareaClass}
           />
         </div>
 
         <div>
           <label htmlFor="abilityTierAdvanced" className={labelClass}>
-            상급기 — {isBureau ? "프로젝트 하모닉스" : "오버드라이브"}
+            상급 스킬 — {systemName}
           </label>
           <textarea
             id="abilityTierAdvanced"
             maxLength={300}
             value={draft.abilityTierAdvanced}
             onChange={(e) => onChange({ abilityTierAdvanced: e.target.value })}
-            placeholder={isBureau ? "하모닉스 최대 출력, WILL 대량 소모" : "오버드라이브 전력, HP 대량 소모"}
+            placeholder="최대 출력, 큰 부담을 동반"
             className={textareaClass}
           />
         </div>

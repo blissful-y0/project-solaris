@@ -50,13 +50,22 @@ export function StepProfile({ draft, onChange }: StepProfileProps) {
           <input
             id="age"
             type="number"
-            min={10}
+            min={15}
             max={999}
             value={draft.age}
-            onChange={(e) => onChange({ age: e.target.value })}
-            placeholder="10~999"
-            className={inputClass}
+            onChange={(e) => {
+              const val = e.target.value;
+              // 빈 값이거나 숫자만 허용
+              if (val === "" || /^\d+$/.test(val)) {
+                onChange({ age: val });
+              }
+            }}
+            placeholder="15~999"
+            className={cn(inputClass, "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none")}
           />
+          {draft.age !== "" && Number(draft.age) < 15 && (
+            <p className="text-xs text-accent mt-1">최소 15세 이상이어야 합니다</p>
+          )}
         </div>
       </div>
 

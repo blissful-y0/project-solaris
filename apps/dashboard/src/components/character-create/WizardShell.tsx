@@ -37,7 +37,8 @@ function isStepValid(step: number, draft: CharacterDraft): boolean {
         draft.abilityConstraint.trim() !== ""
       );
     case 3:
-      return draft.name.trim() !== "" && draft.age.trim() !== "";
+      const age = Number(draft.age);
+      return draft.name.trim() !== "" && draft.age.trim() !== "" && age >= 15;
     case 4:
       return true;
     default:
@@ -50,14 +51,29 @@ export function WizardShell() {
   const [draft, setDraft] = useState<CharacterDraft>(() => EMPTY_DRAFT);
   const { isSaved, restored, clear } = useDraftSave(draft);
 
-  // 클라이언트에서만 복원 (hydration mismatch 방지)
-  const [restoredChecked, setRestoredChecked] = useState(false);
+  // 복원 확인 상태: "pending" → "ask" → "done"
+  const [restoreState, setRestoreState] = useState<"pending" | "ask" | "done">("pending");
+
   useEffect(() => {
-    if (!restoredChecked && restored) {
-      setDraft(restored);
+    if (restoreState === "pending") {
+      if (restored) {
+        setRestoreState("ask");
+      } else {
+        setRestoreState("done");
+      }
     }
-    setRestoredChecked(true);
-  }, [restored, restoredChecked]);
+  }, [restored, restoreState]);
+
+  const handleRestoreAccept = () => {
+    if (restored) setDraft(restored);
+    setRestoreState("done");
+    toast.success("이전 작성 내용을 불러왔습니다");
+  };
+
+  const handleRestoreDecline = () => {
+    clear();
+    setRestoreState("done");
+  };
 
   const updateDraft = useCallback((patch: Partial<CharacterDraft>) => {
     setDraft((prev) => ({ ...prev, ...patch }));
@@ -72,7 +88,6 @@ export function WizardShell() {
   };
 
   const handleSubmit = () => {
-    // Phase 1: API 미연동 — console.log + 토스트
     console.log("캐릭터 제출:", draft);
     clear();
     toast.success("캐릭터가 제출되었습니다!");
@@ -86,6 +101,26 @@ export function WizardShell() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      {/* 임시 저장 복원 확인 */}
+      {restoreState === "ask" && (
+        <div className="mb-8 rounded-lg border border-primary/30 bg-primary/5 p-5">
+          <p className="text-sm text-text mb-1">
+            이전에 작성 중이던 캐릭터가 있습니다.
+          </p>
+          <p className="text-xs text-text-secondary mb-4">
+            이어서 작성하시겠습니까?
+          </p>
+          <div className="flex gap-3">
+            <Button size="sm" onClick={handleRestoreAccept}>
+              불러오기
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleRestoreDecline}>
+              새로 시작
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* 스텝 인디케이터 */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3">
@@ -135,20 +170,20 @@ export function WizardShell() {
       </div>
 
       {/* 네비게이션 버튼 */}
-      {step < 4 && (
-        <div className="flex justify-between gap-4">
-          <Button
-            variant="ghost"
-            onClick={handlePrev}
-            disabled={step === 0}
-          >
-            이전
-          </Button>
+      <div className="flex justify-between gap-4">
+        <Button
+          variant="ghost"
+          onClick={handlePrev}
+          disabled={step === 0}
+        >
+          이전
+        </Button>
+        {step < 4 && (
           <Button onClick={handleNext} disabled={!canNext}>
             다음
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

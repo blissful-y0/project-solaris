@@ -8,7 +8,7 @@ type StepConfirmProps = {
   onEditStep: (step: number) => void;
 };
 
-const FACTION_LABELS = { bureau: "Bureau", static: "Static" } as const;
+const FACTION_LABELS = { bureau: "Solaris Bureau of Civic Security", static: "Static" } as const;
 const CLASS_LABELS = { field: "역장 (Field)", empathy: "감응 (Empathy)", shift: "변환 (Shift)", compute: "연산 (Compute)" } as const;
 const CROSSOVER_LABELS: Record<CrossoverStyle, string> = {
   "limiter-override": "리미터 해제",
@@ -76,9 +76,9 @@ export function StepConfirm({ draft, onSubmit, onEditStep }: StepConfirmProps) {
         <SummaryRow label="이름" value={draft.abilityName} />
         <SummaryRow label="설명" value={draft.abilityDescription} />
         <SummaryRow label="제약" value={draft.abilityConstraint} />
-        <SummaryRow label="기본기" value={draft.abilityTierBasic} />
-        <SummaryRow label="중급기" value={draft.abilityTierMid} />
-        <SummaryRow label="상급기" value={draft.abilityTierAdvanced} />
+        <SummaryRow label="기본 스킬" value={draft.abilityTierBasic} />
+        <SummaryRow label="중급 스킬" value={draft.abilityTierMid} />
+        <SummaryRow label="상급 스킬" value={draft.abilityTierAdvanced} />
         {draft.crossoverStyle && (
           <SummaryRow label="크로스오버" value={CROSSOVER_LABELS[draft.crossoverStyle]} />
         )}

@@ -26,16 +26,16 @@ describe("StepAbilityDesign", () => {
     expect(screen.getByLabelText(/제약 사항/)).toBeInTheDocument();
   });
 
-  it("단계별 textarea를 렌더링한다 (기본기/중급기/상급기)", () => {
+  it("단계별 textarea를 렌더링한다 (기본/중급/상급 스킬)", () => {
     render(<StepAbilityDesign draft={bureauDraft} onChange={onChange} />);
-    expect(screen.getByLabelText(/기본기/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/중급기/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/상급기/)).toBeInTheDocument();
+    expect(screen.getByLabelText("기본 스킬")).toBeInTheDocument();
+    expect(screen.getByLabelText("중급 스킬")).toBeInTheDocument();
+    expect(screen.getByLabelText(/상급 스킬/)).toBeInTheDocument();
   });
 
   it("Bureau 선택 시 하모닉스 프로토콜 표시", () => {
     render(<StepAbilityDesign draft={bureauDraft} onChange={onChange} />);
-    expect(screen.getByText(/하모닉스 프로토콜/)).toBeInTheDocument();
+    expect(screen.getAllByText(/하모닉스 프로토콜/).length).toBeGreaterThan(0);
   });
 
   it("Static 선택 시 오버드라이브 표시", () => {

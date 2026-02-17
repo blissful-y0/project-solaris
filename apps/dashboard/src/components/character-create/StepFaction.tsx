@@ -2,10 +2,11 @@ import { cn } from "@/lib/utils";
 
 import type { Faction } from "./types";
 
-const FACTIONS: { id: Faction; label: string; description: string; theme: string; glow: string }[] = [
+const FACTIONS: { id: Faction; label: string; sublabel: string; description: string; theme: string; glow: string }[] = [
   {
     id: "bureau",
-    label: "Bureau",
+    label: "Solaris Bureau of Civic Security",
+    sublabel: "",
     description: "질서와 통제. 솔라리스를 관리하는 자들.",
     theme: "border-primary",
     glow: "glow-cyan-strong",
@@ -13,6 +14,7 @@ const FACTIONS: { id: Faction; label: string; description: string; theme: string
   {
     id: "static",
     label: "Static",
+    sublabel: "",
     description: "저항과 자유. 시스템 밖에서 진실을 찾는 이들.",
     theme: "border-accent",
     glow: "glow-red-strong",
@@ -46,13 +48,16 @@ export function StepFaction({ value, onChange }: StepFactionProps) {
               )}
             >
               <h3 className={cn(
-                "text-lg font-bold tracking-wider uppercase mb-2",
+                "text-sm font-bold tracking-wider uppercase",
                 selected && f.id === "bureau" && "text-primary text-glow-cyan",
                 selected && f.id === "static" && "text-accent text-glow-red",
                 !selected && "text-text",
               )}>
                 {f.label}
               </h3>
+              {f.sublabel && (
+                <p className="text-[0.625rem] text-text-secondary/60 tracking-wide mb-2">{f.sublabel}</p>
+              )}
               <p className="text-sm text-text-secondary leading-relaxed">
                 {f.description}
               </p>
