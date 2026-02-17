@@ -1,6 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { TopBar } from "../TopBar";
+
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 describe("TopBar", () => {
   it("renders SOLARIS text", () => {
@@ -32,5 +40,20 @@ describe("TopBar", () => {
   it("has header role", () => {
     render(<TopBar />);
     expect(screen.getByRole("banner")).toBeInTheDocument();
+  });
+
+  /* --- MY 프로필 아이콘 --- */
+
+  it("renders MY profile link to /my", () => {
+    render(<TopBar />);
+    const myLink = screen.getByRole("link", { name: /마이페이지/i });
+    expect(myLink).toBeInTheDocument();
+    expect(myLink).toHaveAttribute("href", "/my");
+  });
+
+  it("shows both bell button and MY link in right section", () => {
+    render(<TopBar />);
+    expect(screen.getByRole("button", { name: /알림/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /마이페이지/i })).toBeInTheDocument();
   });
 });
