@@ -54,7 +54,7 @@ describe("CitizenIDCard", () => {
     it("Static 소속명을 표시한다", () => {
       const staticCitizen: CitizenData = { ...baseCitizen, faction: "Static" };
       render(<CitizenIDCard citizen={staticCitizen} />);
-      expect(screen.getByText("Static Resistance")).toBeInTheDocument();
+      expect(screen.getByText("The Static")).toBeInTheDocument();
     });
 
     it("공명율을 표시한다", () => {

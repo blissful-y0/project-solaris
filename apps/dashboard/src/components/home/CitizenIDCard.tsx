@@ -131,7 +131,7 @@ function RegisteredCard({ citizen }: { citizen: CitizenData }) {
             <p className="text-[0.65rem] text-text-secondary mt-0.5">
               {citizen.faction === "Bureau"
                 ? "Solaris Bureau of Civic Security"
-                : "Static Resistance"}
+                : "The Static"}
             </p>
           </div>
 
