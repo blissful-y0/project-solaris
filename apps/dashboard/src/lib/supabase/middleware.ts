@@ -1,11 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/**
- * 미들웨어에서 세션을 갱신하고, 인증 상태에 따라 리다이렉트한다.
- * - 미인증 → /login 으로 리다이렉트
- * - 인증 완료 상태에서 /login 접근 → / 로 리다이렉트
- */
+/** 미들웨어에서 세션 갱신 + 인증 리다이렉트 처리 */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -36,7 +32,6 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // 공개 경로: 로그인, 콜백, API
   const isPublicPath =
     pathname === "/login" ||
     pathname.startsWith("/api/auth") ||
