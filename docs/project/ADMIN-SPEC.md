@@ -791,6 +791,29 @@ This should be subtle and maintain gameplay fairness.`
    - 우측 "권장 설정" 패널 확인
    - 현재 시즌 진행도에 따른 가이드 제공
 
+### 5.1 AI 모델 정책 (`/admin/settings/ai-models`)
+
+### 화면 목적
+기능별 고정 AI 모델 라우팅을 운영 중단 없이 조정하고, 변경 이력을 감사 가능하게 관리.
+
+### 관련 API 엔드포인트
+
+```typescript
+// GET /api/admin/settings/ai-model-routing
+// Response: { routing, allowed_models }
+
+// PUT /api/admin/settings/ai-model-routing
+// Body: { version: number, routes, reason?: string }
+// Response: { success: true, routing }
+```
+
+### 운영 가드레일
+
+- 기능 키 고정: `main_story`, `battle_judgment`, `lore_reflection`, `news_generation`
+- allowlist 외 모델 저장 금지
+- fallback에 primary 중복 금지
+- 버전 충돌(409) 시 최신값 재조회 후 저장
+
 ---
 
 ## 6. 전투 관리 (`/admin/battles`)
@@ -1424,8 +1447,9 @@ DISCORD_API_URL=https://discord.com/api/v10
 JWT_SECRET=...
 SESSION_SECRET=...
 
-# OpenAI (AI GM)
-OPENAI_API_KEY=...
+# AI Providers
+GEMINI_API_KEY=...
+ANTHROPIC_API_KEY=...
 ```
 
 ### 보안 고려사항
@@ -1466,10 +1490,11 @@ OPENAI_API_KEY=...
 2. 캐릭터 승인 큐 (게임 진입의 게이트키퍼)
 3. 전투 관리 (실시간 모니터링)
 4. GM 바이어스 설정 (스토리 제어)
-5. 뉴스 관리 (콘텐츠 발행)
-6. 캐릭터 관리 (밸런스 조정)
-7. RP방 관리 (콘텐츠 모니터링)
-8. 유저 관리 (제재 등 마지막 수단)
+5. AI 모델 정책 (기능별 고정 라우팅 운영)
+6. 뉴스 관리 (콘텐츠 발행)
+7. 캐릭터 관리 (밸런스 조정)
+8. RP방 관리 (콘텐츠 모니터링)
+9. 유저 관리 (제재 등 마지막 수단)
 
 **Next Steps:**
 - Figma 디자인 프로토타입 제작
