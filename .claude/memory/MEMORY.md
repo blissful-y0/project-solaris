@@ -4,59 +4,80 @@
 - **장르**: 포스트아포칼립틱 자캐(OC) 커뮤니티. AI GM 텍스트 TRPG 플랫폼.
 - **유저 특성**: 세계관 텍스트를 직접 작성함. 반말체(~한다, ~이다) 선호. 구현 후 직접 파일을 수정하는 빈도 높음 → 커밋 전 반드시 `git diff` 확인.
 - **작업 흐름**: 비주얼 확인 → 피드백 → 반복 수정이 기본 루프. 한 컴포넌트에 5~6회 수정 거치는 게 일반적.
-- **디자인 판단**: 유저가 직접 내림. "이렇게 해줘" 식의 구체적 시안 제공이 많음. 과도한 제안/자동화보다 빠른 반영이 중요.
+- **디자인 판단**: 유저가 직접 내림. 과도한 제안/자동화보다 빠른 반영이 중요.
+- **커밋 규칙**: 한국어 메시지 + 코드 주석도 한국어. feature branch 전략.
+- **Git**: PR merge commit 사용 (squash 아님), 브랜치 유지.
 
-## Tailwind v4 Critical Pattern
-- **NEVER write unlayered `* { margin: 0; padding: 0 }` resets** — Tailwind v4 preflight handles this in `@layer base`. Unlayered CSS overrides ALL Tailwind utility classes.
-- **`position: fixed/absolute` in Tailwind v4**: unlayered CSS (e.g. `.section-shell > *`) can override utility classes. 해결: `createPortal(jsx, document.body)`로 DOM 트리 탈출.
-- See `tailwind-v4.md` for details.
-
-## React Portal Pattern (Modal)
-- `.section-shell > *` 가 unlayered `position: relative; z-index: 1` 설정 → Tailwind의 `fixed` 클래스 무력화.
-- **해결**: `createPortal(jsx, document.body)` 사용. 모달은 반드시 포탈로 렌더링.
-- 모달 높이 `92vh`, `flex flex-col` + 내부 `overflow-y-auto`로 HUD 브래킷 고정 + 콘텐츠 스크롤 분리.
-
-## React Animation State Machine
-- setTimeout 체인에서 `setPhase("closing")` 경합 조건: 사용자가 닫기 누르면 setTimeout 콜백이 "closing"을 덮어씀.
-- **해결**: `setPhase((prev) => prev === "closing" ? prev : "expand")` — functional update로 가드.
-- `useEffect` 안에서 state 변수 의존 + `setStep()` + `setTimeout()` 조합 시 cleanup이 타이머 킬함 → **별도 effect로 분리**.
+## 세계관 핵심 용어
+- **SOLARIS**: 도시 이름. 프로젝트명.
+- **HELIOS**: 도시 관장 AI 시스템. 뉴스/전투판정/관리 등 모든 시스템의 주체.
+- **Bureau (SBCS)**: Solaris Bureau of Civic Security. 보안국. 동조형. 시안 컬러.
+- **Static**: 저항 세력. 비동조형. 레드 컬러. 소속명: "The Static"
+- **하모닉스 프로토콜**: Bureau 능력 체계. WILL 소모.
+- **오버드라이브**: Static 능력 체계. HP 소모.
+- **능력 계열 4종**: 역장(Field), 감응(Empathy), 변환(Shift), 연산(Compute)
+- **HP**: 회복 가능. Static 120 / Bureau 80 / 전향자 100
+- **WILL**: 회복 불가 (영구 소모). Bureau 250 / Static 150 / 전향자 200
+- 뉴스피드 헤더: "HELIOS INTELLIGENCE FEED"
+- 목 캐릭터: 아마츠키 레이 (Bureau, 역장)
 
 ## Project Structure
 - Monorepo: Turborepo + pnpm workspaces
 - Landing: `apps/landing/` — Astro 5 + React + Tailwind CSS v4 (`@tailwindcss/vite`)
-- Dashboard: `apps/dashboard/` — Next.js 15
+- Dashboard: `apps/dashboard/` — Next.js 15 + @supabase/ssr + Tailwind CSS v4 (`@tailwindcss/postcss`)
 - Design: cyberpunk/post-apocalyptic, Korean UI text, HUD corner brackets
 - Colors: primary=#00d4ff (cyan), secondary=#93c5fd (SDF blue), accent=#dc2626 (red/Static)
 
+## Dashboard 구현 현황 (2026-02-18)
+
+### 인프라 + 인증 (PR #15)
+- Tailwind v4 + Vitest + 디자인 토큰
+- UI 아톰 6종: Button, Input, Badge, Card, Modal, Skeleton
+- 레이아웃: TopBar, MobileTabBar, DesktopSidebar, DashboardLayout
+- Discord OAuth (Supabase SSR 쿠키 세션 PKCE flow)
+
+### 캐릭터 생성 위자드 (PR #18)
+- 5단계 위자드 + useDraftSave (localStorage 자동 저장)
+
+### 홈 페이지 리디자인 (PR #23)
+- **CitizenIDCard**: 시민 신분증 카드 (next/image 아바타, RR%, HP 배터리 5세그먼트, WILL 파형 SVG)
+  - Bureau → "Solaris Bureau of Civic Security", Static → "The Static"
+  - 단일 카드 (flip 없음), 하단에 능력 계열 + 등록일
+  - 빈 카드(미등록) → `/character/create` CTA 통합
+- **ResonanceTasks**: HELIOS 지시 시스템 (BATTLE/SYSTEM/RP Badge + Link)
+- **PomiAd**: 프로파간다 광고 (rounded-xl pill 라벨, 귀여운 "~하세요!" 톤)
+- **BriefingFeed**: 헤더 "HELIOS INTELLIGENCE FEED", 3개마다 PomiAd 삽입
+- DEV 토글: 미등록/Bureau/Static 3단 전환 (배포 전 제거)
+
+### 테스트 현황 (244건 통과)
+- UI/레이아웃/로그인/브리핑/캐릭터 + CitizenIDCard(23), ResonanceTasks(10), PomiAd(4)
+
+## Dashboard Auth 아키텍처
+- `@supabase/ssr` 쿠키 세션 (PKCE flow)
+- `lib/supabase/client.ts`: 브라우저용
+- `lib/supabase/server.ts`: 서버 컴포넌트용
+- `lib/supabase/middleware.ts`: 세션 갱신 + 리다이렉트
+- `env.client.ts`: process.env 개별 키 직접 참조 (전체 객체 넘기면 클라이언트에서 undefined)
+- `.env.local`: gitignore됨, worktree 시 수동 복사 필요
+
+## Dashboard 컴포넌트 패턴
+- `cn()` 유틸리티: `import { cn } from "@/lib/utils"`
+- UI 아톰: `import { Button, Card, Badge, Modal } from "@/components/ui"`
+- 홈: `import { CitizenIDCard, ResonanceTasks, BriefingFeed } from "@/components/home"`
+- 이미지: `next/image` Image 컴포넌트 사용 (유저 선호)
+- 장식 최소화: HUD 코너 + 글로우 정도만. 블러 원형/스캔라인 자제.
+
 ## 용어 변경 이력
-- `동조율` → `공명율` (2026-02-16): 전체 코드베이스 + 문서 일괄 변경 완료
+- `동조율` → `공명율` (2026-02-16)
 - `SYNC RATE` → `RESONANCE RATE`
-- `DREAM` 시스템 → `OC` (캐릭터 생성)으로 교체
-- `HELIOS GM` → `HELIOS COMBAT SYSTEM` (CombatDemo)
-- ARC 타이틀: `시즌제 스토리` → `사건 발생 시스템`
-
-## Modal System Architecture
-- `systemData.ts`: 4개 시스템 (GM, SYNC, ARC, OC) 데이터. description은 optional.
-- `SystemModal.tsx`: 공통 모달 프레임. code별 분기:
-  - `SYNC` → `ResonanceGauge.tsx` (3구간 게이지)
-  - `ARC` → `SeasonTeaser.tsx` (브리핑 버블)
-  - `GM` → 기본 섹션 + `CombatDemo.tsx` (채팅 UI)
-  - `OC` → 기본 섹션 (아직 커스텀 없음)
-- 공통 heading 패턴: `text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold`
-
-## CSS Keyframes Registry (global.css)
-- `modal-scan`: 모달 열림 스캔라인
-- `bubble-in`: 채팅 버블 등장
-- `typing-dot`: 타이핑 인디케이터
-- `gauge-glitch-1/2`: 80 경계 앰버 글리치
-- `gauge-glitch-red-1/2`: 15 경계 레드 글리치
-- `gauge-red-pulse`: ~15 구간 레드 펄스
-- `season-tease-pulse`: Coming Soon 텍스트 펄스
+- `HELIOS NEWS` → `HELIOS INTELLIGENCE FEED` (홈 피드 헤더, 2026-02-18)
+- Static 소속명: `The Static` (2026-02-18)
 
 ## Dev Workflow
-- `?skip` URL param bypasses hero cinematic sequence for testing
-- 빌드 확인: `pnpm --filter landing build`
-- 브랜치: `feat/system-popups` (from main via develop)
+- 대시보드 빌드: `pnpm --filter @solaris/dashboard build`
+- 대시보드 테스트: `cd apps/dashboard && npx vitest run`
+- 대시보드 dev: `pnpm --filter dashboard dev` (port 3001)
+- `.next` 캐시 문제 시: `rm -rf apps/dashboard/.next`
 
-## Lessons Learned (2026-02-16)
+## Lessons Learned
 - See `lessons-learned.md` for detailed notes.
