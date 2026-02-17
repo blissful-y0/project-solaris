@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui";
@@ -43,18 +43,17 @@ function getDisplayName(user: User): string {
   const sanitized = rawName.replace(/[\u0000-\u001F\u007F]/g, "").trim();
   if (!sanitized) return "Operator";
 
-  return sanitized.slice(0, 27);
+  return sanitized.slice(0, 32);
 }
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const hasFetchedRef = useRef(false);
   // TODO: 실제 캐릭터 데이터는 API 연동 후 교체
   const hasCharacter = false;
 
-  const fetchUser = useCallback(async () => {
+  const fetchUser = useCallback(async (isCancelled?: () => boolean) => {
     const supabase = createClient();
     setIsLoading(true);
     setLoadError(false);
@@ -63,19 +62,24 @@ export default function HomePage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      if (isCancelled?.()) return;
       setUser(user);
     } catch {
+      if (isCancelled?.()) return;
       setUser(null);
       setLoadError(true);
     } finally {
+      if (isCancelled?.()) return;
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-    void fetchUser();
+    let cancelled = false;
+    void fetchUser(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, [fetchUser]);
 
   const avatarUrl = user ? getAvatarUrl(user) : null;

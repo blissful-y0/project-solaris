@@ -18,4 +18,11 @@ describe("SolarisTicker", () => {
     expect(ticker.className).toMatch(/fixed/);
     expect(ticker.className).toMatch(/top-14/);
   });
+
+  it("모션 축소 환경 대응 클래스를 포함한다", () => {
+    const { container } = render(<SolarisTicker />);
+    const track = container.querySelector(".ticker-track");
+    expect(track).toBeTruthy();
+    expect(track?.className).toContain("motion-reduce:animate-none");
+  });
 });

@@ -10,6 +10,7 @@ const nextConfig = {
         protocol: "https",
         hostname: "media.discordapp.net",
       },
+      // TODO(production): 목데이터 제거 시 함께 삭제 (Discord CDN/자체 스토리지만 허용)
       {
         protocol: "https",
         hostname: "images.unsplash.com",

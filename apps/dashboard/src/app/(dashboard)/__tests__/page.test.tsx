@@ -114,7 +114,7 @@ describe("Dashboard HomePage", () => {
 
     render(<HomePage />);
 
-    const expected = "테스트오퍼레이터_이름길이제한을확인하기위한문자열_1";
+    const expected = "테스트오퍼레이터_이름길이제한을확인하기위한문자열_123456".slice(0, 32);
     const matches = await screen.findAllByText(expected);
     expect(matches.length).toBeGreaterThan(0);
   });

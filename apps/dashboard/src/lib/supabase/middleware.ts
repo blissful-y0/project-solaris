@@ -1,14 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { env } from "@/lib/env";
+import { envServer } from "@/lib/env.server";
 
 /** 미들웨어에서 세션 갱신 + 인증 리다이렉트 처리 */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    envServer.NEXT_PUBLIC_SUPABASE_URL,
+    envServer.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {

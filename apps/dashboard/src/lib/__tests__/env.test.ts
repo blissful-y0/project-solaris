@@ -13,13 +13,16 @@ describe("env", () => {
     vi.resetModules();
   });
 
-  it("필수 Supabase 환경변수가 있으면 파싱에 성공한다", async () => {
+  it("필수 Supabase 환경변수가 있으면 client/server env 파싱에 성공한다", async () => {
     setRequiredEnv();
 
-    const { env } = await import("../env");
+    const { envClient } = await import("../env.client");
+    const { envServer } = await import("../env.server");
 
-    expect(env.NEXT_PUBLIC_SUPABASE_URL).toBe("https://example.supabase.co");
-    expect(env.NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe("anon-key");
+    expect(envClient.NEXT_PUBLIC_SUPABASE_URL).toBe("https://example.supabase.co");
+    expect(envClient.NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe("anon-key");
+    expect(envServer.NEXT_PUBLIC_SUPABASE_URL).toBe("https://example.supabase.co");
+    expect(envServer.NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe("anon-key");
   });
 
   it("필수 Supabase 환경변수가 없으면 명확한 에러를 던진다", async () => {
@@ -27,7 +30,10 @@ describe("env", () => {
     setRequiredEnv();
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-    await expect(import("../env")).rejects.toThrowError(
+    await expect(import("../env.client")).rejects.toThrowError(
+      /환경변수 검증 실패/,
+    );
+    await expect(import("../env.server")).rejects.toThrowError(
       /NEXT_PUBLIC_SUPABASE_URL/,
     );
   });
