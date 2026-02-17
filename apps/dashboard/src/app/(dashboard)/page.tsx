@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui";
 import type { User } from "@supabase/supabase-js";
+import Image from "next/image";
 
 /** Discord 아바타 URL 추출 */
 function getAvatarUrl(user: User): string | null {
@@ -50,9 +51,11 @@ export default function HomePage() {
       <Card hud className="max-w-md">
         <div className="flex items-center gap-4">
           {avatarUrl ? (
-            <img
+            <Image
               src={avatarUrl}
               alt="프로필"
+              width={56}
+              height={56}
               className="h-14 w-14 rounded-lg border border-border"
             />
           ) : (
