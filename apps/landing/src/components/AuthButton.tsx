@@ -39,6 +39,11 @@ export default function AuthButton() {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!supabase) {
+      setAuthState("loggedOut");
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
@@ -79,6 +84,7 @@ export default function AuthButton() {
   }, [menuOpen]);
 
   const handleLogin = async () => {
+    if (!supabase) return;
     await supabase.auth.signInWithOAuth({
       provider: "discord",
       options: { redirectTo: window.location.origin },
@@ -86,6 +92,7 @@ export default function AuthButton() {
   };
 
   const handleLogout = async () => {
+    if (!supabase) return;
     setMenuOpen(false);
     await supabase.auth.signOut();
   };
