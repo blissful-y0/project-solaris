@@ -259,50 +259,58 @@ function AbilityCardItem({
 }) {
   return (
     <div
-      className="cursor-pointer transition-colors duration-200"
+      className="transition-colors duration-200"
       style={{
         backgroundColor: isExpanded
           ? "rgba(17, 17, 17, 0.8)"
           : "rgba(17, 17, 17, 0.4)",
       }}
-      onClick={onToggle}
     >
-      {/* 카드 헤더 */}
-      <div className="flex items-stretch">
-        {/* 좌측 컬러 바 */}
-        <div
-          className="w-1 shrink-0"
-          style={{ backgroundColor: ability.barColor }}
-        />
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        aria-controls={`ability-panel-${ability.id}`}
+        className="w-full text-left cursor-pointer"
+      >
+        {/* 카드 헤더 */}
+        <div className="flex items-stretch">
+          {/* 좌측 컬러 바 */}
+          <div
+            className="w-1 shrink-0"
+            style={{ backgroundColor: ability.barColor }}
+          />
 
-        <div className="flex-1 p-4 flex items-center justify-between">
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span
-                className="text-sm font-bold tracking-wider"
-                style={{ color: ability.barColor }}
-              >
-                {ability.name}
-              </span>
-              <span className="text-text/40 text-xs">{ability.nameKo}</span>
+          <div className="flex-1 p-4 flex items-center justify-between">
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span
+                  className="text-sm font-bold tracking-wider"
+                  style={{ color: ability.barColor }}
+                >
+                  {ability.name}
+                </span>
+                <span className="text-text/40 text-xs">{ability.nameKo}</span>
+              </div>
+              <p className="text-text/50 text-xs mt-1">{ability.description}</p>
             </div>
-            <p className="text-text/50 text-xs mt-1">{ability.description}</p>
-          </div>
 
-          {/* 토글 아이콘 */}
-          <span
-            className="text-text/30 text-xs ml-3 shrink-0 transition-transform duration-200"
-            style={{
-              transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-            }}
-          >
-            ▼
-          </span>
+            {/* 토글 아이콘 */}
+            <span
+              className="text-text/30 text-xs ml-3 shrink-0 transition-transform duration-200"
+              style={{
+                transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+              }}
+            >
+              ▼
+            </span>
+          </div>
         </div>
-      </div>
+      </button>
 
       {/* 확장 콘텐츠 */}
       <div
+        id={`ability-panel-${ability.id}`}
         className="overflow-hidden transition-all duration-300"
         style={{
           maxHeight: isExpanded ? "600px" : "0",

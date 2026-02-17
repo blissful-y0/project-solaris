@@ -32,10 +32,11 @@ function FeatureCard({
   }, [index]);
 
   return (
-    <div
+    <button
       ref={ref}
+      type="button"
       onClick={onClick}
-      className="reveal group relative p-7 md:p-10 bg-bg/60
+      className="reveal group relative w-full p-7 md:p-10 bg-bg/60
                  transition-all duration-500 hover-glow-cyan cursor-pointer text-center"
     >
       {/* HUD 코너 브라켓 */}
@@ -83,7 +84,7 @@ function FeatureCard({
       {feature.description && (
         <p className="text-text/70 text-sm md:text-lg">{feature.description}</p>
       )}
-    </div>
+    </button>
   );
 }
 

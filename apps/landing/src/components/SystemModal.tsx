@@ -76,13 +76,23 @@ function SectionBlock({
 export default function SystemModal({ system, onClose }: Props) {
   const [phase, setPhase] = useState<Phase>("scan");
   const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ── 닫기 핸들러 ── */
   const handleClose = useCallback(() => {
     if (phase === "closing") return;
     setPhase("closing");
-    setTimeout(onClose, 250);
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    closeTimeoutRef.current = setTimeout(onClose, 250);
   }, [phase, onClose]);
+
+  useEffect(
+    () => () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    },
+    [],
+  );
 
   /* ── ESC 키 닫기 ── */
   useEffect(() => {
@@ -100,6 +110,48 @@ export default function SystemModal({ system, onClose }: Props) {
     return () => {
       document.body.style.overflow = prev;
     };
+  }, []);
+
+  /* ── 모달 포커스/탭 트랩 ── */
+  useEffect(() => {
+    const modalEl = modalRef.current;
+    if (!modalEl) return;
+
+    modalEl.focus();
+
+    const onTabKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+
+      const focusable = modalEl.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+
+      if (focusable.length === 0) {
+        e.preventDefault();
+        modalEl.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey) {
+        if (active === first || active === modalEl) {
+          e.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    modalEl.addEventListener("keydown", onTabKey);
+    return () => modalEl.removeEventListener("keydown", onTabKey);
   }, []);
 
   /* ── 애니메이션 상태 머신 ── */
@@ -162,6 +214,11 @@ export default function SystemModal({ system, onClose }: Props) {
 
       {/* 모달 프레임 — 고정 높이, 내부 스크롤 */}
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={system.title}
+        tabIndex={-1}
         className="relative w-full max-w-[640px] flex flex-col"
         style={{
           height: "92vh",
