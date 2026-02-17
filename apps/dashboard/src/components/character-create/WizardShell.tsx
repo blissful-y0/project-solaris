@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/Button";
@@ -50,14 +50,14 @@ export function WizardShell() {
   const [draft, setDraft] = useState<CharacterDraft>(() => EMPTY_DRAFT);
   const { isSaved, restored, clear } = useDraftSave(draft);
 
-  // 복원 확인 (한 번만)
+  // 클라이언트에서만 복원 (hydration mismatch 방지)
   const [restoredChecked, setRestoredChecked] = useState(false);
-  if (!restoredChecked && restored) {
-    setDraft(restored);
+  useEffect(() => {
+    if (!restoredChecked && restored) {
+      setDraft(restored);
+    }
     setRestoredChecked(true);
-  } else if (!restoredChecked) {
-    setRestoredChecked(true);
-  }
+  }, [restored, restoredChecked]);
 
   const updateDraft = useCallback((patch: Partial<CharacterDraft>) => {
     setDraft((prev) => ({ ...prev, ...patch }));
