@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ─── Design Tokens ─── */
+/* ─── 디자인 토큰 (랜딩과 동일 팔레트 + 대시보드 전용 확장) ─── */
 @theme {
   --color-bg: #0a0a0f;
   --color-bg-secondary: #131318;
@@ -22,7 +22,7 @@
     "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 }
 
-/* ─── Base ─── */
+/* ─── 기본 스타일 ─── */
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -37,7 +37,7 @@
     min-height: 100dvh;
   }
 
-  /* Scrollbar */
+  /* 스크롤바 스타일 */
   ::-webkit-scrollbar {
     width: 6px;
   }
@@ -53,7 +53,7 @@
   }
 }
 
-/* ─── Noise Overlay (opacity 절반 — 대시보드용) ─── */
+/* ─── 노이즈 오버레이 (랜딩 대비 opacity 절반 — 대시보드는 가독성 우선) ─── */
 @layer base {
   body::before {
     content: "";
@@ -68,7 +68,7 @@
   }
 }
 
-/* ─── Glow Utilities ─── */
+/* ─── 네온 글로우 유틸리티 (시안, 레드, 디스코드 3색) ─── */
 @layer utilities {
   .glow-cyan {
     box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
@@ -100,7 +100,7 @@
   }
 }
 
-/* ─── HUD Corner Brackets ─── */
+/* ─── HUD 코너 브래킷 (좌상단/우하단 L자 장식) ─── */
 @layer utilities {
   .hud-corners {
     position: relative;
@@ -127,7 +127,7 @@
   }
 }
 
-/* ─── HUD Label ─── */
+/* ─── HUD 라벨 (모노스페이스, 대문자, 넓은 자간) ─── */
 @layer utilities {
   .hud-label {
     font-family: monospace;
@@ -138,8 +138,9 @@
   }
 }
 
-/* ─── Keyframes ─── */
+/* ─── 키프레임 애니메이션 ─── */
 @layer base {
+  /* 숨쉬기 효과 — 글로우 펄스 */
   @keyframes pulse-glow {
     0%,
     100% {
@@ -149,6 +150,7 @@
       opacity: 0.6;
     }
   }
+  /* 깜빡임 — 터미널 느낌 */
   @keyframes flicker {
     0%,
     100% {
@@ -158,6 +160,7 @@
       opacity: 0.95;
     }
   }
+  /* 스캔라인 수직 이동 */
   @keyframes scan-line {
     0% {
       transform: translateY(-100%);
@@ -166,6 +169,7 @@
       transform: translateY(100%);
     }
   }
+  /* 스켈레톤 로딩 펄스 */
   @keyframes skeleton-pulse {
     0%,
     100% {
@@ -177,7 +181,7 @@
   }
 }
 
-/* ─── Accessibility ─── */
+/* ─── 접근성: 모션 축소 대응 ─── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
