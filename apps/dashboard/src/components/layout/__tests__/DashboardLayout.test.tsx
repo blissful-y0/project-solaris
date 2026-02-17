@@ -29,6 +29,15 @@ describe("DashboardLayout", () => {
     expect(screen.getByText("SOLARIS")).toBeInTheDocument();
   });
 
+  it("renders SolarisTicker", () => {
+    render(
+      <DashboardLayout>
+        <div>Content</div>
+      </DashboardLayout>,
+    );
+    expect(screen.getByTestId("solaris-ticker")).toBeInTheDocument();
+  });
+
   it("renders MobileTabBar", () => {
     render(
       <DashboardLayout>

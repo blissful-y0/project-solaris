@@ -1,4 +1,5 @@
 export { TopBar } from "./TopBar";
+export { SolarisTicker } from "./SolarisTicker";
 export { MobileTabBar } from "./MobileTabBar";
 export { DesktopSidebar } from "./DesktopSidebar";
 export { DashboardLayout } from "./DashboardLayout";
