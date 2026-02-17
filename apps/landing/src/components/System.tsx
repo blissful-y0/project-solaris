@@ -1,35 +1,16 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { SYSTEMS, type SystemInfo } from "./systemData";
+import SystemModal from "./SystemModal";
 
-interface Feature {
-  glyph: string;
-  title: string;
-  description: string;
-}
-
-const FEATURES: Feature[] = [
-  {
-    glyph: "GM",
-    title: "AI GM 전투 판정",
-    description: "서술의 논리가 곧 무기다",
-  },
-  {
-    glyph: "SYNC",
-    title: "동조율 & 능력",
-    description: "80을 넘는 순간, 인간을 초월한다",
-  },
-  {
-    glyph: "ARC",
-    title: "시즌제 스토리",
-    description: "당신의 선택이 도시의 운명을 바꾼다",
-  },
-  {
-    glyph: "DREAM",
-    title: "꿈의 메카닉",
-    description: "추방자만이 꿈을 꾼다",
-  },
-];
-
-function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
+function FeatureCard({
+  feature,
+  index,
+  onClick,
+}: {
+  feature: SystemInfo;
+  index: number;
+  onClick: () => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,10 +32,12 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
   }, [index]);
 
   return (
-    <div
+    <button
       ref={ref}
-      className="reveal group relative p-7 md:p-10 bg-bg/60
-                 transition-all duration-500 hover-glow-cyan cursor-default text-center"
+      type="button"
+      onClick={onClick}
+      className="reveal group relative w-full p-7 md:p-10 bg-bg/60
+                 transition-all duration-500 hover-glow-cyan cursor-pointer text-center"
     >
       {/* HUD 코너 브라켓 */}
       <span
@@ -98,21 +81,37 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
         {feature.title}
       </h3>
 
-      <p className="text-text/70 text-sm md:text-lg">{feature.description}</p>
-    </div>
+      {feature.description && (
+        <p className="text-text/70 text-sm md:text-lg">{feature.description}</p>
+      )}
+    </button>
   );
 }
 
 export default function System() {
+  const [selectedSystem, setSelectedSystem] = useState<SystemInfo | null>(null);
+
   return (
     <section id="section-system" className="section-shell section-divider">
       <div className="section-inner">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-          {FEATURES.map((feature, i) => (
-            <FeatureCard key={feature.title} feature={feature} index={i} />
+          {SYSTEMS.map((system, i) => (
+            <FeatureCard
+              key={system.code}
+              feature={system}
+              index={i}
+              onClick={() => setSelectedSystem(system)}
+            />
           ))}
         </div>
       </div>
+
+      {selectedSystem && (
+        <SystemModal
+          system={selectedSystem}
+          onClose={() => setSelectedSystem(null)}
+        />
+      )}
     </section>
   );
 }

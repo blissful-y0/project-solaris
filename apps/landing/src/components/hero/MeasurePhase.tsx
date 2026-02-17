@@ -22,7 +22,7 @@ export default function MeasurePhase({ onComplete }: MeasurePhaseProps) {
   const { value: syncValue, isComplete: firstCountDone } = useNumberCounter(
     76,
     2200,
-    show
+    show,
   );
 
   // 3단계: 76→100 카운트 (finalizing 때만)
@@ -30,7 +30,7 @@ export default function MeasurePhase({ onComplete }: MeasurePhaseProps) {
     100,
     800,
     step === "finalizing",
-    76
+    76,
   );
 
   // 화면에 표시할 숫자
@@ -74,7 +74,7 @@ export default function MeasurePhase({ onComplete }: MeasurePhaseProps) {
       ? "신호 분석 중..."
       : step === "finalizing" || step === "done"
         ? "캘리브레이션 완료"
-        : "동조율 측정 중...";
+        : "공명율 측정 중...";
 
   return (
     <div
@@ -101,7 +101,8 @@ export default function MeasurePhase({ onComplete }: MeasurePhaseProps) {
         <div
           className="absolute inset-4 md:inset-6 rounded-full"
           style={{
-            border: "1px dashed color-mix(in oklab, var(--color-primary) 35%, transparent)",
+            border:
+              "1px dashed color-mix(in oklab, var(--color-primary) 35%, transparent)",
             animation: "radar-sweep 6s linear infinite reverse",
           }}
         />
@@ -122,11 +123,14 @@ export default function MeasurePhase({ onComplete }: MeasurePhaseProps) {
             className={`font-mono text-3xl md:text-5xl font-bold text-primary text-glow-cyan transition-all duration-300 ${
               step === "paused" ? "animate-pulse" : ""
             }`}
-            style={{ animation: step !== "paused" ? "number-glitch 4s infinite" : undefined }}
+            style={{
+              animation:
+                step !== "paused" ? "number-glitch 4s infinite" : undefined,
+            }}
           >
             {displayValue}
           </span>
-          <span className="hud-label mt-1">SYNC RATE</span>
+          <span className="hud-label mt-1">RESONANCE RATE</span>
         </div>
 
         {/* 십자선 */}
