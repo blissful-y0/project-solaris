@@ -5,5 +5,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 const hasSupabaseEnv = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabase = hasSupabaseEnv
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { flowType: "implicit" },
+    })
   : null;
