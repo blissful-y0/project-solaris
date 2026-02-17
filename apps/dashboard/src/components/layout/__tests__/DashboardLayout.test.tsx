@@ -45,7 +45,7 @@ describe("DashboardLayout", () => {
       </DashboardLayout>,
     );
     // MobileTabBar renders nav items — check for one
-    const allHome = screen.getAllByText("홈");
+    const allHome = screen.getAllByText("Home");
     expect(allHome.length).toBeGreaterThanOrEqual(1);
   });
 
