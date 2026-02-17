@@ -37,10 +37,10 @@
 
 ## 문서 동기화 체크
 
-- `docs/API-SPEC.md`: 엔드포인트/응답/검증 규칙 반영
-- `docs/ADMIN-SPEC.md`: 정책 화면/운영 가드레일 반영
-- `docs/SERVICE-SPEC.md`: 아키텍처 AI 정책 문구 반영
-- `docs/DB-SCHEMA.md`: `ai_model_routing` 확장안 반영
+- `docs/project/API-SPEC.md`: 엔드포인트/응답/검증 규칙 반영
+- `docs/project/ADMIN-SPEC.md`: 정책 화면/운영 가드레일 반영
+- `docs/project/SERVICE-SPEC.md`: 아키텍처 AI 정책 문구 반영
+- `docs/project/DB-SCHEMA.md`: `ai_model_routing` 확장안 반영
 
 ## 메모
 

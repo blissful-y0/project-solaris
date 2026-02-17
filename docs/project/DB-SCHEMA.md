@@ -1361,25 +1361,93 @@ USING (
 WITH CHECK (deleted_at IS NOT NULL);
 ```
 
-### 17. system_settings (운영 확장)
+### 17. system_settings
 
-기능별 고정 AI 모델 라우팅을 운영하기 위한 설정 확장안.
+운영 정책 단일 설정 테이블 (싱글톤 레코드 1행 기준).
 
 ```sql
-ALTER TABLE system_settings
-ADD COLUMN ai_model_routing jsonb NOT NULL DEFAULT '{
-  "version": 1,
-  "routes": {
-    "main_story": {"primary": "claude-opus", "fallback": ["claude-sonnet"]},
-    "battle_judgment": {"primary": "gemini-pro", "fallback": ["gemini-flash"]},
-    "lore_reflection": {"primary": "gemini-flash", "fallback": ["claude-sonnet"]},
-    "news_generation": {"primary": "gemini-flash", "fallback": []}
-  }
-}'::jsonb;
+CREATE TABLE system_settings (
+  id text PRIMARY KEY DEFAULT 'default'
+    CHECK (id = 'default'),
+
+  gm_bias jsonb NOT NULL DEFAULT '{
+    "lawbringer": 0,
+    "rogue": 0,
+    "neutral": 0
+  }'::jsonb,
+
+  battle_settings jsonb NOT NULL DEFAULT '{
+    "default_turn_duration_hours": 24,
+    "max_turn_duration_hours": 72,
+    "turn_edit_allowed": true,
+    "turn_edit_count_limit": 1
+  }'::jsonb,
+
+  character_settings jsonb NOT NULL DEFAULT '{
+    "max_abilities": 5,
+    "min_abilities": 2,
+    "approval_required": true
+  }'::jsonb,
+
+  lore_settings jsonb NOT NULL DEFAULT '{
+    "approval_threshold": 0.7,
+    "min_votes_required": 2
+  }'::jsonb,
+
+  season jsonb NOT NULL DEFAULT '{
+    "current_season": 1,
+    "season_start": null,
+    "season_end": null
+  }'::jsonb,
+
+  ai_model_routing jsonb NOT NULL DEFAULT '{
+    "version": 1,
+    "routes": {
+      "main_story": {"primary": "claude-opus", "fallback": ["claude-sonnet"]},
+      "battle_judgment": {"primary": "gemini-pro", "fallback": ["gemini-flash"]},
+      "lore_reflection": {"primary": "gemini-flash", "fallback": ["claude-sonnet"]},
+      "news_generation": {"primary": "gemini-flash", "fallback": []}
+    }
+  }'::jsonb,
+
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  deleted_at timestamptz NULL
+);
+
+COMMENT ON TABLE system_settings IS '운영 정책 싱글톤 설정 (GM 바이어스/전투/시즌/AI 라우팅)';
 ```
 
-> 참고: 본 브랜치의 기존 스키마에는 `system_settings` 본문 정의가 별도 문서화되어 있지 않아,
-> 운영 확장안 형태로 우선 고정한다.
+#### RLS Policies
+
+```sql
+ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
+
+-- Admin만 조회/수정 가능
+CREATE POLICY "system_settings_select_admin"
+ON system_settings FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid() AND role = 'admin' AND deleted_at IS NULL
+  )
+);
+
+CREATE POLICY "system_settings_update_admin"
+ON system_settings FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid() AND role = 'admin' AND deleted_at IS NULL
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid() AND role = 'admin' AND deleted_at IS NULL
+  )
+);
+```
 
 ---
 
