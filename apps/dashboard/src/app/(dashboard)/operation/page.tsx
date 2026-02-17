@@ -71,17 +71,25 @@ const MOCK_ROOMS: OperationRoom[] = [
 export default function OperationPage() {
   return (
     <div className="py-6">
-      <p className="hud-label mb-2">OPERATION</p>
-      <h1 className="text-xl font-bold text-text mb-6">작전 목록</h1>
+      <div className="mb-6 flex items-end justify-between">
+        <div>
+          <p className="hud-label mb-2">OPERATION</p>
+          <h1 className="text-xl font-bold text-text">작전 목록</h1>
+        </div>
+        <p className="text-xs text-text-secondary">
+          {MOCK_ROOMS.length}개 작전 진행 중
+        </p>
+      </div>
 
-      <div className="space-y-3 max-w-3xl">
+      {/* 데스크탑: 2열 그리드 / 모바일: 단일 열 */}
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {MOCK_ROOMS.map((room) => (
           <article key={room.id}>
-            <Card hud>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  {/* 상단: 타입 뱃지 + 상태 */}
-                  <div className="flex items-center gap-2 mb-2">
+            <Card hud className="h-full">
+              <div className="flex flex-col h-full">
+                {/* 상단: 타입 뱃지 + 상태 */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
                     <Badge
                       variant={room.type === "전투" ? "info" : "warning"}
                     >
@@ -97,23 +105,23 @@ export default function OperationPage() {
                       {room.status}
                     </span>
                   </div>
-
-                  {/* 제목 + 설명 */}
-                  <p className="font-semibold text-text truncate">
-                    {room.title}
-                  </p>
-                  <p className="text-xs text-text-secondary mt-1 line-clamp-1">
-                    {room.description}
-                  </p>
-                </div>
-
-                {/* 우측: 참여자 수 + 호스트 */}
-                <div className="text-right shrink-0">
                   <p className="text-sm font-mono text-primary">
                     {room.participants}/{room.maxParticipants}
                   </p>
-                  <p className="text-xs text-text-secondary mt-1">
-                    {room.host}
+                </div>
+
+                {/* 제목 + 설명 */}
+                <p className="font-semibold text-text mb-1">
+                  {room.title}
+                </p>
+                <p className="text-xs text-text-secondary line-clamp-2 flex-1">
+                  {room.description}
+                </p>
+
+                {/* 하단: 호스트 */}
+                <div className="mt-3 pt-3 border-t border-border">
+                  <p className="text-xs text-text-secondary">
+                    호스트: <span className="text-text">{room.host}</span>
                   </p>
                 </div>
               </div>

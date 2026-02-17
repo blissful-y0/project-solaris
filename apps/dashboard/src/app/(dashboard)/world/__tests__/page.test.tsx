@@ -8,13 +8,19 @@ describe("WorldPage (Lore)", () => {
     expect(screen.getByText("LORE DATABASE")).toBeInTheDocument();
   });
 
-  it("renders placeholder message", () => {
+  it("renders lore section cards", () => {
     render(<WorldPage />);
-    expect(screen.getByText(/세계관 데이터베이스를 준비/i)).toBeInTheDocument();
+    const articles = screen.getAllByRole("article");
+    expect(articles.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("shows section status indicators", () => {
+    render(<WorldPage />);
+    expect(screen.getAllByText("열람 가능").length).toBeGreaterThanOrEqual(1);
   });
 
   it("has main heading", () => {
     render(<WorldPage />);
-    expect(screen.getByRole("heading")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
   });
 });

@@ -8,14 +8,21 @@ describe("CharactersPage (REGISTRY)", () => {
     expect(screen.getByText("REGISTRY")).toBeInTheDocument();
   });
 
-  it("renders placeholder message", () => {
-    render(<CharactersPage />);
-    expect(screen.getByText(/캐릭터/i)).toBeInTheDocument();
-  });
-
   it("renders mock character cards", () => {
     render(<CharactersPage />);
-    const cards = screen.getAllByRole("article");
-    expect(cards.length).toBeGreaterThanOrEqual(1);
+    const articles = screen.getAllByRole("article");
+    expect(articles.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("shows faction badges", () => {
+    render(<CharactersPage />);
+    expect(screen.getAllByText("SBCS").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("STATIC").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("shows character names", () => {
+    render(<CharactersPage />);
+    expect(screen.getByText("카이 안데르센")).toBeInTheDocument();
+    expect(screen.getByText("레이 노바크")).toBeInTheDocument();
   });
 });

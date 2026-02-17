@@ -8,13 +8,19 @@ describe("CorePage (Helios Core)", () => {
     expect(screen.getByText("HELIOS CORE")).toBeInTheDocument();
   });
 
-  it("renders placeholder message", () => {
+  it("renders timeline entries", () => {
     render(<CorePage />);
-    expect(screen.getByText(/ARC 사건 발생 시스템/i)).toBeInTheDocument();
+    const articles = screen.getAllByRole("article");
+    expect(articles.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("shows ARC EVENT badges", () => {
+    render(<CorePage />);
+    expect(screen.getAllByText("ARC EVENT").length).toBeGreaterThanOrEqual(1);
   });
 
   it("has main heading", () => {
     render(<CorePage />);
-    expect(screen.getByRole("heading")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
   });
 });

@@ -4,10 +4,20 @@ import MyPage from "../page";
 
 /* Supabase 클라이언트 모킹 */
 const mockSignOut = vi.fn().mockResolvedValue({ error: null });
+const mockGetUser = vi.fn().mockResolvedValue({
+  data: {
+    user: {
+      email: "test@example.com",
+      user_metadata: { full_name: "테스트 유저" },
+    },
+  },
+});
+
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     auth: {
       signOut: mockSignOut,
+      getUser: mockGetUser,
     },
   }),
 }));
@@ -52,6 +62,16 @@ describe("MyPage (마이페이지)", () => {
 
   it("has main heading", () => {
     render(<MyPage />);
-    expect(screen.getByRole("heading")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+  });
+
+  it("renders profile section", () => {
+    render(<MyPage />);
+    expect(screen.getByText("OPERATOR PROFILE")).toBeInTheDocument();
+  });
+
+  it("renders session control section", () => {
+    render(<MyPage />);
+    expect(screen.getByText("SESSION CONTROL")).toBeInTheDocument();
   });
 });
