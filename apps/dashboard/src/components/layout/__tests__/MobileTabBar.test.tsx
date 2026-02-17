@@ -16,7 +16,7 @@ describe("MobileTabBar", () => {
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Lore")).toBeInTheDocument();
     expect(screen.getByText("Operation")).toBeInTheDocument();
-    expect(screen.getByText("REGISTRY")).toBeInTheDocument();
+    expect(screen.getByText("Registry")).toBeInTheDocument();
     expect(screen.getByText("Helios Core")).toBeInTheDocument();
   });
 

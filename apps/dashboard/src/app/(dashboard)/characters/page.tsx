@@ -95,7 +95,7 @@ export default function CharactersPage() {
   return (
     <section className="py-6">
       <div className="mb-6">
-        <p className="hud-label mb-1">REGISTRY</p>
+        <p className="hud-label mb-1">Registry</p>
         <h1 className="text-xl font-bold text-text">인물 도감</h1>
       </div>
 

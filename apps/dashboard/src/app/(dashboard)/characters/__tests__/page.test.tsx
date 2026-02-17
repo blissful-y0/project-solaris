@@ -12,7 +12,7 @@ describe("CharactersPage", () => {
   it("초기 진입 시 목데이터 캐릭터 카드를 렌더링한다", () => {
     render(<CharactersPage />);
 
-    expect(screen.getByText("REGISTRY")).toBeInTheDocument();
+    expect(screen.getByText("Registry")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /상세 보기/i })).toHaveLength(6);
   });
 
