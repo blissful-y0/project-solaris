@@ -9,7 +9,10 @@ const envSchema = z.object({
     .min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY가 비어 있습니다."),
 });
 
-const parsedEnv = envSchema.safeParse(process.env);
+const parsedEnv = envSchema.safeParse({
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+});
 
 if (!parsedEnv.success) {
   const missingKeys = parsedEnv.error.issues
