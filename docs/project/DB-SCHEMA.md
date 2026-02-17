@@ -1361,6 +1361,26 @@ USING (
 WITH CHECK (deleted_at IS NOT NULL);
 ```
 
+### 17. system_settings (운영 확장)
+
+기능별 고정 AI 모델 라우팅을 운영하기 위한 설정 확장안.
+
+```sql
+ALTER TABLE system_settings
+ADD COLUMN ai_model_routing jsonb NOT NULL DEFAULT '{
+  "version": 1,
+  "routes": {
+    "main_story": {"primary": "claude-opus", "fallback": ["claude-sonnet"]},
+    "battle_judgment": {"primary": "gemini-pro", "fallback": ["gemini-flash"]},
+    "lore_reflection": {"primary": "gemini-flash", "fallback": ["claude-sonnet"]},
+    "news_generation": {"primary": "gemini-flash", "fallback": []}
+  }
+}'::jsonb;
+```
+
+> 참고: 본 브랜치의 기존 스키마에는 `system_settings` 본문 정의가 별도 문서화되어 있지 않아,
+> 운영 확장안 형태로 우선 고정한다.
+
 ---
 
 ## Indexes

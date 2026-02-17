@@ -8,6 +8,8 @@ dist/
 .next/
 .astro/
 .turbo/
+coverage/
+*.tsbuildinfo
 
 # Environment
 .env
@@ -25,6 +27,9 @@ dist/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# Local tooling artifacts
+.playwright-mcp/
 
 # Worktrees
 .worktrees/
