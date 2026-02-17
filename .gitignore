@@ -33,3 +33,6 @@ pnpm-debug.log*
 
 # Worktrees
 .worktrees/
+
+# Serena
+.serena/

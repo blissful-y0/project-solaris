@@ -188,6 +188,22 @@
       transform: translateX(-50%);
     }
   }
+
+  /* 글리치 이펙트 — Citizen ID 아바타 */
+  @keyframes glitch-shift {
+    0% {
+      filter: hue-rotate(0deg);
+      transform: translateX(0);
+    }
+    50% {
+      filter: hue-rotate(90deg);
+      transform: translateX(2px);
+    }
+    100% {
+      filter: hue-rotate(0deg);
+      transform: translateX(0);
+    }
+  }
 }
 
 @layer utilities {

@@ -43,14 +43,14 @@ const briefings: Briefing[] = [
 ];
 
 describe("BriefingFeed", () => {
-  it("HELIOS NEWS 헤더를 표시한다", () => {
+  it("HELIOS INTELLIGENCE FEED 헤더를 표시한다", () => {
     render(<BriefingFeed briefings={briefings} />);
-    expect(screen.getByText("HELIOS NEWS")).toBeInTheDocument();
+    expect(screen.getByText("HELIOS INTELLIGENCE FEED")).toBeInTheDocument();
   });
 
-  it("오늘의 브리핑 서브헤더를 표시한다", () => {
+  it("수신된 정보 목록 서브헤더를 표시한다", () => {
     render(<BriefingFeed briefings={briefings} />);
-    expect(screen.getByText("오늘의 브리핑")).toBeInTheDocument();
+    expect(screen.getByText("수신된 정보 목록")).toBeInTheDocument();
   });
 
   it("모든 브리핑 카드를 렌더링한다", () => {
@@ -60,9 +60,14 @@ describe("BriefingFeed", () => {
     expect(screen.getByText("HELIOS 시스템 점검")).toBeInTheDocument();
   });
 
+  it("3개 브리핑 후 PomiAd를 삽입한다", () => {
+    render(<BriefingFeed briefings={briefings} />);
+    expect(screen.getByText("POMI WELLNESS")).toBeInTheDocument();
+  });
+
   it("빈 배열일 때 빈 상태를 처리한다", () => {
     render(<BriefingFeed briefings={[]} />);
-    expect(screen.getByText("HELIOS NEWS")).toBeInTheDocument();
+    expect(screen.getByText("HELIOS INTELLIGENCE FEED")).toBeInTheDocument();
     expect(screen.getByText("수신된 브리핑이 없습니다")).toBeInTheDocument();
   });
 });

@@ -21,6 +21,12 @@ vi.mock("next/image", () => ({
 vi.mock("@/components/home", () => ({
   BriefingFeed: () => <div data-testid="briefing-feed" />,
   mockBriefings: [],
+  CitizenIDCard: ({ citizen }: any) => (
+    <div data-testid="citizen-id-card">{citizen ? citizen.name : "미등록"}</div>
+  ),
+  mockCitizen: { name: "목시민", faction: "Bureau", resonanceRate: 87 },
+  ResonanceTasks: () => <div data-testid="resonance-tasks" />,
+  mockTasks: [],
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
@@ -78,7 +84,7 @@ describe("Dashboard HomePage", () => {
     });
   });
 
-  it("비 Discord avatar_url은 렌더링하지 않는다", async () => {
+  it("캐릭터 미등록 시 CitizenIDCard에 null이 전달된다", async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: {
@@ -94,7 +100,7 @@ describe("Dashboard HomePage", () => {
     render(<HomePage />);
 
     await waitFor(() => {
-      expect(screen.queryByAltText("프로필")).not.toBeInTheDocument();
+      expect(screen.getByTestId("citizen-id-card")).toHaveTextContent("미등록");
     });
   });
 
