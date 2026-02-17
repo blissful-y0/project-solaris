@@ -1,11 +1,10 @@
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { CitizenIDCard } from "../CitizenIDCard";
 import type { CitizenData } from "../mock-citizen";
 
-/* ─── next/link 모킹 (href만 검증) ─── */
+/* ─── next/link 모킹 ─── */
 vi.mock("next/link", () => ({
   default: ({
     href,
@@ -36,12 +35,10 @@ const baseCitizen: CitizenData = {
 };
 
 describe("CitizenIDCard", () => {
-  describe("시민 등록 상태 (앞면)", () => {
+  describe("등록된 시민 카드", () => {
     it("시민 이름을 렌더링한다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
-      /* 앞면 + 뒷면 모두에 이름이 표시됨 */
-      const names = screen.getAllByText("카이 서연");
-      expect(names.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("카이 서연")).toBeInTheDocument();
     });
 
     it("SOLARIS CITIZEN ID 라벨을 표시한다", () => {
@@ -55,10 +52,7 @@ describe("CitizenIDCard", () => {
     });
 
     it("Static 진영은 STATIC Badge를 표시한다", () => {
-      const staticCitizen: CitizenData = {
-        ...baseCitizen,
-        faction: "Static",
-      };
+      const staticCitizen: CitizenData = { ...baseCitizen, faction: "Static" };
       render(<CitizenIDCard citizen={staticCitizen} />);
       expect(screen.getByText("STATIC")).toBeInTheDocument();
     });
@@ -105,23 +99,33 @@ describe("CitizenIDCard", () => {
 
     it("카드 번호를 표시한다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
-      /* 앞면 + 뒷면 모두에 카드 번호가 표시됨 */
-      const ids = screen.getAllByText("SCC-7291-0483");
-      expect(ids.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("SCC-7291-0483")).toBeInTheDocument();
     });
 
     it("RESONANCE RATE 라벨을 표시한다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
       expect(screen.getByText("RESONANCE RATE")).toBeInTheDocument();
     });
+
+    it("능력 계열을 표시한다", () => {
+      render(<CitizenIDCard citizen={baseCitizen} />);
+      expect(screen.getByText("역장 (Field)")).toBeInTheDocument();
+    });
+
+    it("등록일을 표시한다", () => {
+      render(<CitizenIDCard citizen={baseCitizen} />);
+      expect(screen.getByText("2026-01-15")).toBeInTheDocument();
+    });
+
+    it("소속 정보를 표시한다 (Bureau → SBCS)", () => {
+      render(<CitizenIDCard citizen={baseCitizen} />);
+      expect(screen.getByText("SBCS")).toBeInTheDocument();
+    });
   });
 
   describe("HP 배터리 색상", () => {
     it("HP >= 60%이면 success 색상", () => {
-      const citizen: CitizenData = {
-        ...baseCitizen,
-        hp: { current: 60, max: 80 },
-      };
+      const citizen: CitizenData = { ...baseCitizen, hp: { current: 60, max: 80 } };
       render(<CitizenIDCard citizen={citizen} />);
       const meter = screen.getByRole("meter", { name: /HP/ });
       const filledSegments = meter.querySelectorAll(".bg-success");
@@ -129,99 +133,11 @@ describe("CitizenIDCard", () => {
     });
 
     it("HP < 30%이면 accent (레드) 색상", () => {
-      const citizen: CitizenData = {
-        ...baseCitizen,
-        hp: { current: 15, max: 80 },
-      };
+      const citizen: CitizenData = { ...baseCitizen, hp: { current: 15, max: 80 } };
       render(<CitizenIDCard citizen={citizen} />);
       const meter = screen.getByRole("meter", { name: /HP/ });
       const filledSegments = meter.querySelectorAll(".bg-accent");
       expect(filledSegments.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe("플립 인터랙션", () => {
-    it("클릭하면 카드가 뒤집힌다", async () => {
-      const user = userEvent.setup();
-      render(<CitizenIDCard citizen={baseCitizen} />);
-
-      const card = screen.getByRole("button", {
-        name: /시민 ID 카드/,
-      });
-      await user.click(card);
-
-      /* 뒷면 컨텐츠: CITIZEN PROFILE 라벨 */
-      expect(screen.getByText("CITIZEN PROFILE")).toBeInTheDocument();
-    });
-
-    it("Enter 키로 카드를 뒤집을 수 있다", async () => {
-      const user = userEvent.setup();
-      render(<CitizenIDCard citizen={baseCitizen} />);
-
-      const card = screen.getByRole("button", {
-        name: /시민 ID 카드/,
-      });
-      card.focus();
-      await user.keyboard("{Enter}");
-
-      expect(screen.getByText("CITIZEN PROFILE")).toBeInTheDocument();
-    });
-
-    it("Space 키로 카드를 뒤집을 수 있다", async () => {
-      const user = userEvent.setup();
-      render(<CitizenIDCard citizen={baseCitizen} />);
-
-      const card = screen.getByRole("button", {
-        name: /시민 ID 카드/,
-      });
-      card.focus();
-      await user.keyboard(" ");
-
-      expect(screen.getByText("CITIZEN PROFILE")).toBeInTheDocument();
-    });
-
-    it("aria-label에 시민 이름이 포함된다", () => {
-      render(<CitizenIDCard citizen={baseCitizen} />);
-      const card = screen.getByRole("button");
-      expect(card).toHaveAttribute(
-        "aria-label",
-        "카이 서연 시민 ID 카드 (탭하여 뒤집기)",
-      );
-    });
-  });
-
-  describe("카드 뒷면", () => {
-    it("소속 풀네임을 표시한다 (Bureau)", async () => {
-      const user = userEvent.setup();
-      render(<CitizenIDCard citizen={baseCitizen} />);
-
-      const card = screen.getByRole("button", { name: /시민 ID 카드/ });
-      await user.click(card);
-
-      expect(
-        screen.getByText("Solaris Bureau of Civic Security"),
-      ).toBeInTheDocument();
-    });
-
-    it("능력 계열을 표시한다", async () => {
-      const user = userEvent.setup();
-      render(<CitizenIDCard citizen={baseCitizen} />);
-
-      const card = screen.getByRole("button", { name: /시민 ID 카드/ });
-      await user.click(card);
-
-      expect(screen.getByText("역장 (Field)")).toBeInTheDocument();
-    });
-
-    it("내 프로필 보기 링크가 /my로 이동한다", async () => {
-      const user = userEvent.setup();
-      render(<CitizenIDCard citizen={baseCitizen} />);
-
-      const card = screen.getByRole("button", { name: /시민 ID 카드/ });
-      await user.click(card);
-
-      const link = screen.getByText("내 프로필 보기 →");
-      expect(link.closest("a")).toHaveAttribute("href", "/my");
     });
   });
 
