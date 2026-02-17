@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Card, Button } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { BriefingFeed, mockBriefings } from "@/components/home";
 import type { User } from "@supabase/supabase-js";
 import Image from "next/image";

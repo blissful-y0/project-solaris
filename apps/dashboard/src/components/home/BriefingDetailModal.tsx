@@ -19,7 +19,7 @@ export function BriefingDetailModal({ briefing, onClose }: BriefingDetailModalPr
   const dateStr = format(new Date(briefing.timestamp), "yyyy.MM.dd HH:mm", { locale: ko });
 
   return (
-    <Modal open={!!briefing} onClose={onClose}>
+    <Modal open={!!briefing} onClose={onClose} ariaLabel="브리핑 상세">
       {/* BULLETIN + 카테고리 + 시간 한 줄 */}
       <div className="flex items-center gap-2 flex-wrap mb-3">
         <span className="hud-label">{briefing.bulletinNumber}</span>

@@ -77,6 +77,16 @@ describe("Modal", () => {
     );
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAttribute("aria-label", "상세 보기");
+  });
+
+  it("ariaLabel이 전달되면 dialog 이름으로 사용한다", () => {
+    render(
+      <Modal open onClose={() => {}} ariaLabel="브리핑 상세">
+        Content
+      </Modal>,
+    );
+    expect(screen.getByRole("dialog", { name: "브리핑 상세" })).toBeInTheDocument();
   });
 
   it("renders children", () => {

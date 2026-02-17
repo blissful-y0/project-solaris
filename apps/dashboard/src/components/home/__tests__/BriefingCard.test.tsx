@@ -1,13 +1,18 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { BriefingCard } from "../BriefingCard";
 import type { Briefing } from "../mock-briefings";
 
 /* date-fns 한국어 상대시간을 안정적으로 테스트하기 위해 모킹 */
-vi.mock("date-fns", () => ({
-  formatDistanceToNow: () => "2시간 전",
-}));
+vi.mock("date-fns", async () => {
+  const actual = await vi.importActual<typeof import("date-fns")>("date-fns");
+  return {
+    ...actual,
+    formatDistanceToNow: () => "2시간 전",
+  };
+});
 
 const baseBriefing: Briefing = {
   id: "b1",
@@ -64,5 +69,17 @@ describe("BriefingCard", () => {
     render(<BriefingCard briefing={sysBriefing} />);
     const badge = screen.getByText("시스템");
     expect(badge).toHaveClass("text-success");
+  });
+
+  it("키보드 Enter 입력으로 onClick을 호출한다", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(<BriefingCard briefing={baseBriefing} onClick={onClick} />);
+
+    const card = screen.getByRole("button", { name: /구역 7-B 교전 보고/ });
+    card.focus();
+    await user.keyboard("{Enter}");
+
+    expect(onClick).toHaveBeenCalledOnce();
   });
 });

@@ -4,9 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 import { BriefingFeed } from "../BriefingFeed";
 import type { Briefing } from "../mock-briefings";
 
-vi.mock("date-fns", () => ({
-  formatDistanceToNow: () => "2시간 전",
-}));
+vi.mock("date-fns", async () => {
+  const actual = await vi.importActual<typeof import("date-fns")>("date-fns");
+  return {
+    ...actual,
+    formatDistanceToNow: () => "2시간 전",
+  };
+});
 
 const briefings: Briefing[] = [
   {

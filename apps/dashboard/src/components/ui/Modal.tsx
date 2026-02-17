@@ -9,11 +9,12 @@ type ModalProps = {
   open: boolean;
   onClose: () => void;
   title?: string;
+  ariaLabel?: string;
   children: ReactNode;
   className?: string;
 };
 
-export function Modal({ open, onClose, title, children, className }: ModalProps) {
+export function Modal({ open, onClose, title, ariaLabel, children, className }: ModalProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -41,6 +42,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={ariaLabel ?? title ?? "상세 보기"}
         className={cn(
           "relative max-w-lg w-full mx-4 bg-bg-secondary border border-border rounded-lg max-h-[85dvh] overflow-y-auto",
           className,

@@ -38,7 +38,15 @@ export function BriefingCard({ briefing, onClick }: BriefingCardProps) {
 
   return (
     <article
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
       className={cn(
         "border-l-2 pl-4 py-3 transition-all cursor-pointer",
         borderColorMap[briefing.category],
