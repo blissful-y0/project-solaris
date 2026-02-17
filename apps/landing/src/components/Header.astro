@@ -1,0 +1,37 @@
+---
+// 사이트 헤더 — 히어로 완료 후 슬라이드인, 고정 네비게이션
+import AuthButton from "./AuthButton";
+---
+
+<header id="site-header" class="header-hidden">
+  <div class="header-inner">
+    <!-- 로고 -->
+    <a href="#" class="header-logo" aria-label="PROJECT SOLARIS 홈">
+      <span class="header-logo-sub">PROJECT</span>
+      <span class="header-logo-main">SOLARIS</span>
+    </a>
+
+    <!-- 네비게이션 -->
+    <nav class="header-nav" aria-label="주요 탐색">
+      <a href="#section-world" class="header-link">세계관</a>
+      <a href="#section-factions" class="header-link">진영</a>
+      <a href="#section-system" class="header-link">시스템</a>
+    </nav>
+
+    <!-- Discord 로그인 -->
+    <AuthButton client:idle />
+  </div>
+</header>
+
+<script>
+  const header = document.getElementById('site-header');
+  if (header) {
+    function showHeader() {
+      header.classList.remove('header-hidden');
+      header.classList.add('header-visible');
+    }
+
+    window.addEventListener('solaris:hero-done', showHeader);
+    window.addEventListener('solaris:hero-skipped', showHeader);
+  }
+</script>

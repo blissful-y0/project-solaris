@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import Hero from "../components/hero";
+import World from "../components/World";
+import Factions from "../components/Factions";
+import System from "../components/System";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+---
+
+<BaseLayout>
+  <Header />
+  <main>
+    <Hero client:load />
+    <section id="after-hero" class="after-hero-locked">
+      <div id="after-hero-start">
+        <World client:load />
+      </div>
+      <Factions client:load />
+      <System client:load />
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script is:inline>
+  const unlockAfterHero = () => {
+    const afterHero = document.getElementById("after-hero");
+    const anchor = document.getElementById("after-hero-start");
+    if (!afterHero) return;
+    afterHero.classList.remove("after-hero-locked");
+    afterHero.classList.add("after-hero-unlocked");
+    if (anchor) {
+      requestAnimationFrame(() => {
+        anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  };
+
+  window.addEventListener("solaris:hero-done", unlockAfterHero, { once: true });
+</script>

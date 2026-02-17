@@ -1,0 +1,378 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import type { SystemInfo, SystemSection } from "./systemData";
+import AbilitySystem from "./AbilitySystem";
+import CombatDemo from "./CombatDemo";
+import ResonanceGauge from "./ResonanceGauge";
+import SeasonTeaser from "./SeasonTeaser";
+
+interface Props {
+  system: SystemInfo;
+  onClose: () => void;
+}
+
+type Phase = "scan" | "expand" | "content" | "closing";
+
+/* ── 섹션 블록 렌더러 ── */
+function SectionBlock({
+  section,
+  index,
+  isContent,
+  isClosing,
+}: {
+  section: SystemSection;
+  index: number;
+  isContent: boolean;
+  isClosing: boolean;
+}) {
+  const bodyArray = Array.isArray(section.body)
+    ? section.body
+    : [section.body];
+
+  return (
+    <div
+      className="mb-5 last:mb-0"
+      style={{
+        opacity: isClosing ? 0 : isContent ? 1 : 0,
+        transform: isContent ? "translateY(0)" : "translateY(8px)",
+        transition: "opacity 300ms ease-out, transform 300ms ease-out",
+        transitionDelay: isContent ? `${(index + 1) * 100}ms` : "0ms",
+      }}
+    >
+      <h3 className="text-xs uppercase tracking-widest text-primary/80 mb-2 font-semibold">
+        {section.heading}
+      </h3>
+
+      {/* body 문단들 */}
+      <div className="text-text/70 text-sm md:text-base leading-relaxed space-y-3">
+        {bodyArray.map((paragraph, i) => (
+          <p key={i} style={{ whiteSpace: "pre-line" }}>
+            {paragraph}
+          </p>
+        ))}
+      </div>
+
+      {/* highlight (강조 마무리) */}
+      {section.highlight && (
+        <p
+          className="text-sm font-semibold mt-3"
+          style={{
+            color: "var(--color-primary)",
+            textShadow: "0 0 12px rgba(0,212,255,0.3)",
+          }}
+        >
+          {section.highlight}
+        </p>
+      )}
+
+      {/* note (작은 회색 주석) */}
+      {section.note && (
+        <p className="text-text/30 text-xs mt-3">{section.note}</p>
+      )}
+    </div>
+  );
+}
+
+export default function SystemModal({ system, onClose }: Props) {
+  const [phase, setPhase] = useState<Phase>("scan");
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* ── 닫기 핸들러 ── */
+  const handleClose = useCallback(() => {
+    if (phase === "closing") return;
+    setPhase("closing");
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    closeTimeoutRef.current = setTimeout(onClose, 250);
+  }, [phase, onClose]);
+
+  useEffect(
+    () => () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    },
+    [],
+  );
+
+  /* ── ESC 키 닫기 ── */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleClose]);
+
+  /* ── 바디 스크롤 잠금 ── */
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  /* ── 모달 포커스/탭 트랩 ── */
+  useEffect(() => {
+    const modalEl = modalRef.current;
+    if (!modalEl) return;
+
+    modalEl.focus();
+
+    const onTabKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+
+      const focusable = modalEl.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+
+      if (focusable.length === 0) {
+        e.preventDefault();
+        modalEl.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey) {
+        if (active === first || active === modalEl) {
+          e.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    modalEl.addEventListener("keydown", onTabKey);
+    return () => modalEl.removeEventListener("keydown", onTabKey);
+  }, []);
+
+  /* ── 애니메이션 상태 머신 ── */
+  useEffect(() => {
+    const t1 = setTimeout(
+      () => setPhase((prev) => (prev === "closing" ? prev : "expand")),
+      300,
+    );
+    const t2 = setTimeout(
+      () => setPhase((prev) => (prev === "closing" ? prev : "content")),
+      600,
+    );
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  /* ── 오버레이 클릭 (배경만) ── */
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === overlayRef.current) handleClose();
+  };
+
+  const isVisible = phase !== "scan";
+  const isContent = phase === "content";
+  const isClosing = phase === "closing";
+
+  return createPortal(
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        opacity: isClosing ? 0 : 1,
+        transition: "opacity 250ms ease-out",
+      }}
+      onClick={handleOverlayClick}
+    >
+      {/* 스캔라인 이펙트 */}
+      {phase === "scan" && (
+        <div
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          aria-hidden="true"
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: "100%",
+              height: "2px",
+              background:
+                "linear-gradient(90deg, transparent, rgba(0,212,255,0.5), rgba(0,212,255,0.8), rgba(0,212,255,0.5), transparent)",
+              animation: "modal-scan 0.3s linear forwards",
+            }}
+          />
+        </div>
+      )}
+
+      {/* 모달 프레임 — 고정 높이, 내부 스크롤 */}
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={system.title}
+        tabIndex={-1}
+        className="relative w-full max-w-[640px] flex flex-col"
+        style={{
+          height: "92vh",
+          backgroundColor: "rgba(10, 10, 15, 0.95)",
+          opacity: isClosing ? 0 : isVisible ? 1 : 0,
+          transform: isVisible ? "scaleY(1)" : "scaleY(0.95)",
+          transition: "opacity 300ms ease-out, transform 300ms ease-out",
+        }}
+      >
+        {/* HUD 코너 브래킷 */}
+        <span
+          className="absolute top-0 left-0 w-5 h-5 z-10"
+          style={{
+            borderTop: "1px solid var(--color-primary)",
+            borderLeft: "1px solid var(--color-primary)",
+            opacity: 0.5,
+          }}
+        />
+        <span
+          className="absolute top-0 right-0 w-5 h-5 z-10"
+          style={{
+            borderTop: "1px solid var(--color-primary)",
+            borderRight: "1px solid var(--color-primary)",
+            opacity: 0.5,
+          }}
+        />
+        <span
+          className="absolute bottom-0 left-0 w-5 h-5 z-10"
+          style={{
+            borderBottom: "1px solid var(--color-primary)",
+            borderLeft: "1px solid var(--color-primary)",
+            opacity: 0.5,
+          }}
+        />
+        <span
+          className="absolute bottom-0 right-0 w-5 h-5 z-10"
+          style={{
+            borderBottom: "1px solid var(--color-primary)",
+            borderRight: "1px solid var(--color-primary)",
+            opacity: 0.5,
+          }}
+        />
+
+        {/* 닫기 버튼 */}
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute top-3 right-3 text-text/50 hover:text-primary transition-colors duration-200 text-lg leading-none cursor-pointer z-10"
+          aria-label="닫기"
+        >
+          &#x2715;
+        </button>
+
+        {/* 스크롤 가능한 내부 콘텐츠 */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+          {/* 헤더 — 글리프 + 타이틀 */}
+          <div
+            className="flex items-center gap-4 mb-5"
+            style={{
+              opacity: isClosing ? 0 : isContent ? 1 : 0,
+              transition: "opacity 300ms ease-out",
+              transitionDelay: isContent ? "0ms" : "0ms",
+            }}
+          >
+            <div className="system-glyph pulse shrink-0">{system.glyph}</div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-primary text-glow-cyan">
+                {system.title}
+              </h2>
+              {system.description && (
+                <p className="text-text/50 text-sm mt-1">
+                  {system.description}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* 디바이더 */}
+          <div
+            className="mb-6"
+            style={{
+              height: "1px",
+              background:
+                "linear-gradient(to right, var(--color-primary), transparent)",
+              opacity: 0.4,
+            }}
+          />
+
+          {/* 콘텐츠 섹션들 (모든 시스템 공통) */}
+          {system.sections.map((section, i) => (
+            <SectionBlock
+              key={section.heading}
+              section={section}
+              index={i}
+              isContent={isContent}
+              isClosing={isClosing}
+            />
+          ))}
+
+          {/* 커스텀 비주얼 (섹션 아래) */}
+          {system.code === "GM" && isContent && (
+            <div className="mt-6">
+              <CombatDemo />
+            </div>
+          )}
+          {system.code === "SYNC" && isContent && (
+            <div className="mt-6">
+              <ResonanceGauge />
+            </div>
+          )}
+          {system.code === "ARC" && isContent && (
+            <div className="mt-6">
+              <SeasonTeaser />
+            </div>
+          )}
+          {system.code === "OC" && isContent && (
+            <div className="mt-6">
+              <AbilitySystem />
+            </div>
+          )}
+
+          {/* Notion 링크 */}
+          {system.notionUrl && (
+            <>
+              <div
+                className="my-5"
+                style={{
+                  height: "1px",
+                  background:
+                    "linear-gradient(to right, var(--color-primary), transparent)",
+                  opacity: 0.25,
+                }}
+              />
+              <a
+                href={system.notionUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary/70 hover:text-primary hover-glow-cyan transition-colors duration-200"
+                style={{
+                  opacity: isClosing ? 0 : isContent ? 1 : 0,
+                  transition: "opacity 300ms ease-out",
+                  transitionDelay: isContent
+                    ? `${(system.sections.length + 1) * 100}ms`
+                    : "0ms",
+                }}
+              >
+                <span>&#x2197;</span>
+                <span>노션에서 자세히 보기</span>
+              </a>
+            </>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
