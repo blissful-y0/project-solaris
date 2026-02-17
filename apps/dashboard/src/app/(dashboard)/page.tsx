@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui";
@@ -11,7 +11,20 @@ import Image from "next/image";
 /** Discord 아바타 URL 추출 */
 function getAvatarUrl(user: User): string | null {
   const meta = user.user_metadata;
-  if (meta?.avatar_url) return meta.avatar_url;
+  if (typeof meta?.avatar_url === "string") {
+    try {
+      const url = new URL(meta.avatar_url);
+      if (
+        url.protocol === "https:" &&
+        (url.hostname === "cdn.discordapp.com" ||
+          url.hostname === "media.discordapp.net")
+      ) {
+        return meta.avatar_url;
+      }
+    } catch {
+      return null;
+    }
+  }
   const discordId = meta?.provider_id ?? meta?.sub;
   const avatarHash = meta?.avatar;
   if (discordId && avatarHash) {
@@ -23,20 +36,47 @@ function getAvatarUrl(user: User): string | null {
 /** 표시 이름 추출 — 캐릭터 이름 우선, 없으면 Discord 아이디 */
 function getDisplayName(user: User): string {
   const meta = user.user_metadata;
-  return meta?.full_name ?? meta?.name ?? meta?.user_name ?? "Operator";
+  const rawName =
+    meta?.full_name ?? meta?.name ?? meta?.user_name ?? meta?.preferred_username;
+  if (typeof rawName !== "string") return "Operator";
+
+  const sanitized = rawName.replace(/[\u0000-\u001F\u007F]/g, "").trim();
+  if (!sanitized) return "Operator";
+
+  return sanitized.slice(0, 27);
 }
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const hasFetchedRef = useRef(false);
   // TODO: 실제 캐릭터 데이터는 API 연동 후 교체
   const hasCharacter = false;
 
-  useEffect(() => {
+  const fetchUser = useCallback(async () => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    setIsLoading(true);
+    setLoadError(false);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
-    });
+    } catch {
+      setUser(null);
+      setLoadError(true);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    void fetchUser();
+  }, [fetchUser]);
 
   const avatarUrl = user ? getAvatarUrl(user) : null;
   const displayName = user ? getDisplayName(user) : "...";
@@ -49,7 +89,27 @@ export default function HomePage() {
         <h1 className="text-xl font-bold text-text">
           환영합니다, <span className="text-primary">{displayName}</span>님
         </h1>
+        {isLoading && (
+          <p className="mt-2 text-sm text-text-secondary">
+            사용자 정보를 불러오는 중...
+          </p>
+        )}
       </div>
+
+      {loadError && (
+        <Card hud className="mb-4 max-w-md border border-red-500/40">
+          <p className="text-sm text-text">사용자 정보를 불러오지 못했습니다.</p>
+          <button
+            type="button"
+            onClick={() => {
+              void fetchUser();
+            }}
+            className="mt-3 rounded-md border border-border px-3 py-1.5 text-sm text-text hover:border-primary hover:text-primary"
+          >
+            다시 시도
+          </button>
+        </Card>
+      )}
 
       {/* 프로필 카드 */}
       <Card hud className="max-w-md">
