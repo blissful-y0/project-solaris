@@ -2,57 +2,70 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+// Supabase 클라이언트 모킹
+const mockSignInWithOAuth = vi.fn().mockResolvedValue({ error: null });
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: {
+      signInWithOAuth: mockSignInWithOAuth,
+    },
+  }),
+}));
+
 import LoginPage from "../page";
 
 describe("LoginPage", () => {
-  it("renders SOLARIS title", () => {
+  it("SOLARIS 타이틀을 렌더링한다", () => {
     render(<LoginPage />);
     expect(screen.getByText("SOLARIS")).toBeInTheDocument();
   });
 
-  it("shows SYSTEM ACCESS TERMINAL identifier", () => {
+  it("SOLARIS NETWORK 식별자를 표시한다", () => {
     render(<LoginPage />);
-    expect(screen.getByText("SYSTEM ACCESS TERMINAL")).toBeInTheDocument();
+    expect(screen.getByText("SOLARIS NETWORK")).toBeInTheDocument();
   });
 
-  it("shows OPERATOR AUTHENTICATION subtitle", () => {
-    render(<LoginPage />);
-    expect(screen.getByText("OPERATOR AUTHENTICATION")).toBeInTheDocument();
-  });
-
-  it("renders Discord login button with correct text", () => {
+  it("인증 요구 서브텍스트를 표시한다", () => {
     render(<LoginPage />);
     expect(
-      screen.getByRole("button", { name: /Discord로 로그인/i }),
+      screen.getByText("OPERATOR AUTHENTICATION REQUIRED"),
     ).toBeInTheDocument();
   });
 
-  it("Discord button calls onClick handler when clicked", async () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const user = userEvent.setup();
-
+  it("터미널 스타일 안내 메시지를 표시한다", () => {
     render(<LoginPage />);
+    expect(screen.getByText(/식별 인증이 필요합니다/)).toBeInTheDocument();
+  });
+
+  it("인증 버튼을 렌더링한다", () => {
+    render(<LoginPage />);
+    expect(
+      screen.getByRole("button", { name: /통신 채널로 인증/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("인증 버튼 클릭 시 Discord OAuth를 호출한다", async () => {
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
     await user.click(
-      screen.getByRole("button", { name: /Discord로 로그인/i }),
+      screen.getByRole("button", { name: /통신 채널로 인증/i }),
     );
 
-    expect(consoleSpy).toHaveBeenCalledWith("Discord login clicked");
-    consoleSpy.mockRestore();
+    expect(mockSignInWithOAuth).toHaveBeenCalledWith({
+      provider: "discord",
+      options: {
+        redirectTo: expect.stringContaining("/api/auth/callback"),
+      },
+    });
   });
 
-  it("shows system status indicator", () => {
+  it("시스템 온라인 상태를 표시한다", () => {
     render(<LoginPage />);
-    expect(screen.getByText(/SYSTEM STATUS/i)).toBeInTheDocument();
-    expect(screen.getByText(/ONLINE/i)).toBeInTheDocument();
+    expect(screen.getByText("SYSTEM ONLINE")).toBeInTheDocument();
   });
 
-  it("has accessible button role for Discord login", () => {
-    render(<LoginPage />);
-    const button = screen.getByRole("button", { name: /Discord로 로그인/i });
-    expect(button).toBeEnabled();
-  });
-
-  it("card has HUD corner styling", () => {
+  it("카드에 HUD 코너 스타일이 적용되어 있다", () => {
     render(<LoginPage />);
     const card = screen.getByTestId("login-card");
     expect(card.className).toMatch(/hud-corners/);
