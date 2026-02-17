@@ -37,7 +37,7 @@ describe("StepProfile", () => {
     const ageInput = screen.getByLabelText(/나이/);
 
     expect(ageInput).toHaveAttribute("type", "number");
-    expect(ageInput).toHaveAttribute("min", "10");
+    expect(ageInput).toHaveAttribute("min", "15");
     expect(ageInput).toHaveAttribute("max", "999");
   });
 

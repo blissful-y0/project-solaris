@@ -88,9 +88,7 @@ export function WizardShell() {
   };
 
   const handleSubmit = () => {
-    console.log("캐릭터 제출:", draft);
-    clear();
-    toast.success("캐릭터가 제출되었습니다!");
+    toast.info("제출 기능 준비 중입니다. 임시 저장은 유지됩니다.");
   };
 
   const handleEditStep = (targetStep: number) => {

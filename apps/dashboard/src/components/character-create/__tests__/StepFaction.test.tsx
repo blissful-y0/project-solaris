@@ -13,7 +13,7 @@ describe("StepFaction", () => {
   it("2개 팩션 카드를 렌더링한다", () => {
     render(<StepFaction {...defaultProps} />);
 
-    expect(screen.getByText("Bureau")).toBeInTheDocument();
+    expect(screen.getByText("Solaris Bureau of Civic Security")).toBeInTheDocument();
     expect(screen.getByText("Static")).toBeInTheDocument();
   });
 
@@ -29,7 +29,7 @@ describe("StepFaction", () => {
     const user = userEvent.setup();
 
     render(<StepFaction {...defaultProps} onChange={onChange} />);
-    await user.click(screen.getByText("Bureau"));
+    await user.click(screen.getByTestId("faction-bureau"));
 
     expect(onChange).toHaveBeenCalledWith("bureau");
   });

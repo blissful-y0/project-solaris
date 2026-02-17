@@ -17,7 +17,7 @@ describe("WizardShell", () => {
 
   it("첫 스텝에서 StepFaction을 렌더링한다", () => {
     render(<WizardShell />);
-    expect(screen.getByText("Bureau")).toBeInTheDocument();
+    expect(screen.getByText("Solaris Bureau of Civic Security")).toBeInTheDocument();
     expect(screen.getByText("Static")).toBeInTheDocument();
   });
 
@@ -35,7 +35,7 @@ describe("WizardShell", () => {
     const user = userEvent.setup();
     render(<WizardShell />);
 
-    await user.click(screen.getByText("Bureau"));
+    await user.click(screen.getByTestId("faction-bureau"));
     expect(screen.getByRole("button", { name: /다음/ })).toBeEnabled();
   });
 
@@ -44,7 +44,7 @@ describe("WizardShell", () => {
     render(<WizardShell />);
 
     // Step 1: 팩션 선택
-    await user.click(screen.getByText("Bureau"));
+    await user.click(screen.getByTestId("faction-bureau"));
     await user.click(screen.getByRole("button", { name: /다음/ }));
 
     // Step 2
@@ -57,7 +57,7 @@ describe("WizardShell", () => {
     render(<WizardShell />);
 
     // Step 1 → Step 2
-    await user.click(screen.getByText("Bureau"));
+    await user.click(screen.getByTestId("faction-bureau"));
     await user.click(screen.getByRole("button", { name: /다음/ }));
     expect(screen.getByText("2 / 5")).toBeInTheDocument();
 
@@ -76,7 +76,7 @@ describe("WizardShell", () => {
     render(<WizardShell />);
 
     // Step 1: 팩션 선택
-    await user.click(screen.getByText("Bureau"));
+    await user.click(screen.getByTestId("faction-bureau"));
     await user.click(screen.getByRole("button", { name: /다음/ }));
 
     // Step 2: 능력 계열 선택

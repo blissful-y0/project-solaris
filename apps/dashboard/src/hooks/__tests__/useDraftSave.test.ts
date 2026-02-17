@@ -20,6 +20,7 @@ describe("useDraftSave", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -65,6 +66,20 @@ describe("useDraftSave", () => {
     const { result } = renderHook(() => useDraftSave(EMPTY_DRAFT));
 
     expect(result.current.restored).toBeNull();
+  });
+
+  it("localStorage를 사용할 수 없는 환경에서도 안전하게 동작한다", () => {
+    vi.stubGlobal("localStorage", undefined);
+    expect(() => renderHook(() => useDraftSave(EMPTY_DRAFT))).not.toThrow();
+  });
+
+  it("손상된 localStorage 데이터는 무시하고 삭제한다", () => {
+    localStorage.setItem(STORAGE_KEY, "{invalid-json");
+
+    const { result } = renderHook(() => useDraftSave(EMPTY_DRAFT));
+
+    expect(result.current.restored).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it("clear 호출 시 localStorage를 비운다", () => {
@@ -116,5 +131,21 @@ describe("useDraftSave", () => {
     });
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
     expect(stored.abilityName).toBe("변경된 능력");
+  });
+
+  it("draft가 변경되면 다음 저장 전까지 isSaved는 false다", () => {
+    const { result, rerender } = renderHook(
+      ({ draft }) => useDraftSave(draft),
+      { initialProps: { draft: SAMPLE_DRAFT } },
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(result.current.isSaved).toBe(true);
+
+    const updatedDraft = { ...SAMPLE_DRAFT, name: "새 이름" };
+    rerender({ draft: updatedDraft });
+    expect(result.current.isSaved).toBe(false);
   });
 });
