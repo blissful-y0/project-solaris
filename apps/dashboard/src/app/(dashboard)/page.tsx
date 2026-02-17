@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import {
   BriefingFeed,
   mockBriefings,
@@ -56,7 +57,8 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   // TODO: 실제 캐릭터 데이터는 API 연동 후 교체
-  const [debugHasCharacter, setDebugHasCharacter] = useState(false);
+  // DEV 모드: 0=미등록, 1=Bureau, 2=Static
+  const [debugMode, setDebugMode] = useState(0);
 
   const fetchUser = useCallback(async (isCancelled?: () => boolean) => {
     const supabase = createClient();
@@ -90,10 +92,19 @@ export default function HomePage() {
   const avatarUrl = user ? getAvatarUrl(user) : null;
   const displayName = user ? getDisplayName(user) : "...";
 
-  /* 목 시민 데이터에 실제 유저 아바타 반영 */
-  const citizenData = debugHasCharacter
-    ? { ...mockCitizen, avatarUrl }
-    : null;
+  /* 목 시민 데이터 — DEV 모드에 따라 진영 전환 */
+  const citizenData = debugMode === 0
+    ? null
+    : {
+        ...mockCitizen,
+        avatarUrl,
+        ...(debugMode === 2 && {
+          faction: "Static" as const,
+          resonanceRate: 34,
+          hp: { current: 95, max: 120 },
+          will: { current: 42, max: 150 },
+        }),
+      };
 
   return (
     <div className="py-6 space-y-8">
@@ -112,13 +123,23 @@ export default function HomePage() {
 
       {/* DEV: 등록 유저 미리보기 토글 — 배포 전 제거 */}
       {process.env.NODE_ENV === "development" && (
-        <button
-          type="button"
-          onClick={() => setDebugHasCharacter((prev) => !prev)}
-          className="rounded border border-border px-2 py-1 text-[0.625rem] text-text-secondary hover:border-primary hover:text-primary transition-colors"
-        >
-          [DEV] {debugHasCharacter ? "미등록 상태로 전환" : "등록 유저로 전환"}
-        </button>
+        <div className="flex gap-2">
+          {(["미등록", "Bureau", "Static"] as const).map((label, i) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setDebugMode(i)}
+              className={cn(
+                "rounded border px-2 py-1 text-[0.625rem] transition-colors",
+                debugMode === i
+                  ? "border-primary text-primary"
+                  : "border-border text-text-secondary hover:border-primary hover:text-primary",
+              )}
+            >
+              [DEV] {label}
+            </button>
+          ))}
+        </div>
       )}
 
       {loadError && (

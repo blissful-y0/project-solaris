@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 import type { CitizenData } from "./mock-citizen";
@@ -124,17 +123,16 @@ function RegisteredCard({ citizen }: { citizen: CitizenData }) {
 
         {/* 우측 정보 */}
         <div className="flex flex-col flex-1 min-w-0">
-          {/* 이름 + 진영 */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-semibold text-text truncate">
+          {/* 이름 + 소속 */}
+          <div className="mb-2">
+            <span className="text-lg font-bold text-text truncate leading-tight block">
               {citizen.name}
             </span>
-            <Badge
-              variant={citizen.faction === "Bureau" ? "info" : "danger"}
-              size="sm"
-            >
-              {citizen.faction === "Bureau" ? "SBCS" : "STATIC"}
-            </Badge>
+            <p className="text-[0.65rem] text-text-secondary mt-0.5">
+              {citizen.faction === "Bureau"
+                ? "Solaris Bureau of Civic Security"
+                : "Static Resistance"}
+            </p>
           </div>
 
           {/* 공명율 — 크게 */}

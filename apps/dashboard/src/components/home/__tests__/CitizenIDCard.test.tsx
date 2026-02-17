@@ -23,7 +23,7 @@ vi.mock("next/link", () => ({
 
 /* ─── 테스트용 시민 데이터 ─── */
 const baseCitizen: CitizenData = {
-  name: "카이 서연",
+  name: "아마츠키 레이",
   faction: "Bureau",
   resonanceRate: 87,
   hp: { current: 64, max: 80 },
@@ -38,7 +38,7 @@ describe("CitizenIDCard", () => {
   describe("등록된 시민 카드", () => {
     it("시민 이름을 렌더링한다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
-      expect(screen.getByText("카이 서연")).toBeInTheDocument();
+      expect(screen.getByText("아마츠키 레이")).toBeInTheDocument();
     });
 
     it("SOLARIS CITIZEN ID 라벨을 표시한다", () => {
@@ -46,15 +46,15 @@ describe("CitizenIDCard", () => {
       expect(screen.getByText("SOLARIS CITIZEN ID")).toBeInTheDocument();
     });
 
-    it("진영 Badge를 표시한다 (Bureau → SBCS)", () => {
+    it("Bureau 소속 풀네임을 표시한다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
-      expect(screen.getByText("SBCS")).toBeInTheDocument();
+      expect(screen.getByText("Solaris Bureau of Civic Security")).toBeInTheDocument();
     });
 
-    it("Static 진영은 STATIC Badge를 표시한다", () => {
+    it("Static 소속명을 표시한다", () => {
       const staticCitizen: CitizenData = { ...baseCitizen, faction: "Static" };
       render(<CitizenIDCard citizen={staticCitizen} />);
-      expect(screen.getByText("STATIC")).toBeInTheDocument();
+      expect(screen.getByText("Static Resistance")).toBeInTheDocument();
     });
 
     it("공명율을 표시한다", () => {
@@ -117,15 +117,18 @@ describe("CitizenIDCard", () => {
       expect(screen.getByText("2026-01-15")).toBeInTheDocument();
     });
 
-    it("소속 정보를 표시한다 (Bureau → SBCS)", () => {
+    it("소속 풀네임이 이름 아래에 표시된다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
-      expect(screen.getByText("SBCS")).toBeInTheDocument();
+      expect(screen.getByText("Solaris Bureau of Civic Security")).toBeInTheDocument();
     });
   });
 
   describe("HP 배터리 색상", () => {
     it("HP >= 60%이면 success 색상", () => {
-      const citizen: CitizenData = { ...baseCitizen, hp: { current: 60, max: 80 } };
+      const citizen: CitizenData = {
+        ...baseCitizen,
+        hp: { current: 60, max: 80 },
+      };
       render(<CitizenIDCard citizen={citizen} />);
       const meter = screen.getByRole("meter", { name: /HP/ });
       const filledSegments = meter.querySelectorAll(".bg-success");
@@ -133,7 +136,10 @@ describe("CitizenIDCard", () => {
     });
 
     it("HP < 30%이면 accent (레드) 색상", () => {
-      const citizen: CitizenData = { ...baseCitizen, hp: { current: 15, max: 80 } };
+      const citizen: CitizenData = {
+        ...baseCitizen,
+        hp: { current: 15, max: 80 },
+      };
       render(<CitizenIDCard citizen={citizen} />);
       const meter = screen.getByRole("meter", { name: /HP/ });
       const filledSegments = meter.querySelectorAll(".bg-accent");

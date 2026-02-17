@@ -13,7 +13,7 @@ export interface CitizenData {
 
 /** 개발/테스트용 목 시민 데이터 */
 export const mockCitizen: CitizenData = {
-  name: "카이 서연",
+  name: "아마츠키 레이",
   faction: "Bureau",
   resonanceRate: 87,
   hp: { current: 64, max: 80 },
