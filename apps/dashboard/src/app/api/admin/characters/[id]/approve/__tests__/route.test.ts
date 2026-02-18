@@ -57,7 +57,7 @@ describe("POST /api/admin/characters/[id]/approve", () => {
     expect(mockCreateNotification).toHaveBeenCalled();
   });
 
-  it("내부 오류는 FORBIDDEN이 아니라 500으로 응답한다", async () => {
+  it("알림 생성 실패해도 승인 자체는 200으로 응답한다", async () => {
     mockCreateNotification.mockRejectedValueOnce(new Error("INSERT_FAILED"));
 
     const { POST } = await import("../route");
@@ -66,6 +66,6 @@ describe("POST /api/admin/characters/[id]/approve", () => {
     });
 
     const response = await POST(request, { params: { id: "char_001" } });
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(200);
   });
 });

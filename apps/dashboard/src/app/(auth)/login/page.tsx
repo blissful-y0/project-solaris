@@ -1,7 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+
+const IS_DEV = process.env.NODE_ENV === "development";
 
 /** Discord 로고 — 버튼 내 작은 아이콘용 */
 function DiscordIcon({ className }: { className?: string }) {
@@ -20,8 +23,12 @@ function DiscordIcon({ className }: { className?: string }) {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [devEmail, setDevEmail] = useState("");
+  const [devPassword, setDevPassword] = useState("");
+  const [devLoading, setDevLoading] = useState(false);
 
   /** Discord OAuth 로그인 실행 */
   const handleLogin = async () => {
@@ -133,6 +140,61 @@ export default function LoginPage() {
       {/* 에러 메시지 */}
       {error && (
         <p className="mt-3 text-center text-xs text-accent">{error}</p>
+      )}
+
+      {/* DEV 전용 이메일 로그인 */}
+      {IS_DEV && (
+        <div className="mt-6 border-t border-border/30 pt-4">
+          <p className="text-center text-[0.65rem] text-text-secondary/60 mb-3">
+            DEV ONLY — EMAIL LOGIN
+          </p>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setDevLoading(true);
+              setError(null);
+              try {
+                const supabase = createClient();
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                  email: devEmail,
+                  password: devPassword,
+                });
+                if (signInError) {
+                  setError(signInError.message);
+                } else {
+                  router.push("/");
+                }
+              } catch {
+                setError("로그인 실패");
+              } finally {
+                setDevLoading(false);
+              }
+            }}
+            className="space-y-2"
+          >
+            <input
+              type="email"
+              placeholder="이메일"
+              value={devEmail}
+              onChange={(e) => setDevEmail(e.target.value)}
+              className="w-full rounded border border-border/50 bg-bg/60 px-3 py-2 text-sm text-text placeholder:text-text-secondary/40 focus:border-primary focus:outline-none"
+            />
+            <input
+              type="password"
+              placeholder="비밀번호"
+              value={devPassword}
+              onChange={(e) => setDevPassword(e.target.value)}
+              className="w-full rounded border border-border/50 bg-bg/60 px-3 py-2 text-sm text-text placeholder:text-text-secondary/40 focus:border-primary focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={devLoading || !devEmail || !devPassword}
+              className="w-full rounded border border-warning/30 bg-warning/10 px-3 py-2 text-sm font-medium text-warning transition-colors hover:bg-warning/20 disabled:opacity-50"
+            >
+              {devLoading ? "로그인 중..." : "DEV 이메일 로그인"}
+            </button>
+          </form>
+        </div>
       )}
 
       {/* 하단 상태 표시 */}

@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 
+/** 알림 이력 조회 (최신 100건) */
 export async function GET() {
   try {
     const { supabase } = await requireAdmin();
 
     const { data, error } = await supabase
-      .from("characters")
-      .select("*, abilities(*)")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
+      .from("notifications")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (error) {
-      return NextResponse.json({ error: "FAILED_TO_FETCH_QUEUE" }, { status: 500 });
+      return NextResponse.json({ error: "FAILED_TO_FETCH" }, { status: 500 });
     }
 
     return NextResponse.json({ data: data ?? [] });
@@ -24,7 +25,7 @@ export async function GET() {
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
-    console.error("[admin/queue] 예상치 못한 에러:", error);
+    console.error("[admin/notifications] 예상치 못한 에러:", error);
     return NextResponse.json({ error: "INTERNAL_SERVER_ERROR" }, { status: 500 });
   }
 }

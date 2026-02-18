@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
-import { createNotification } from "@/app/actions/notification";
 
-export async function POST(
+/** 캐릭터 단건 조회 (status 무관) */
+export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -12,27 +12,12 @@ export async function POST(
 
     const { data, error } = await supabase
       .from("characters")
-      .update({ status: "approved", rejection_reason: null })
+      .select("*, abilities(*)")
       .eq("id", id)
-      .select("id, user_id, status")
       .single();
 
     if (error || !data) {
-      return NextResponse.json({ error: "FAILED_TO_APPROVE" }, { status: 500 });
-    }
-
-    try {
-      await createNotification({
-        userId: data.user_id,
-        scope: "user",
-        type: "character_approved",
-        title: "캐릭터 승인 완료",
-        body: "캐릭터가 승인되었습니다.",
-        channel: "discord_dm",
-        payload: { characterId: data.id },
-      }, supabase);
-    } catch (notifError) {
-      console.error("[admin/approve] 알림 생성 실패 (승인은 완료):", notifError);
+      return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
     }
 
     return NextResponse.json({ data });
@@ -44,6 +29,7 @@ export async function POST(
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
+    console.error("[admin/characters/:id] 예상치 못한 에러:", error);
     return NextResponse.json({ error: "INTERNAL_SERVER_ERROR" }, { status: 500 });
   }
 }
