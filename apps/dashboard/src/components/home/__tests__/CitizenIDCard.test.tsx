@@ -122,16 +122,16 @@ describe("CitizenIDCard", () => {
       expect(rr).toHaveClass("text-accent");
     });
 
-    it("HP 배터리를 렌더링한다", () => {
+    it("HP 게이지를 렌더링한다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
-      const hpMeter = screen.getByRole("meter", { name: /HP 64\/80/ });
-      expect(hpMeter).toBeInTheDocument();
+      const hpBar = screen.getByRole("progressbar", { name: /HP 64\/80/ });
+      expect(hpBar).toBeInTheDocument();
     });
 
-    it("WILL 파형을 렌더링한다", () => {
+    it("WILL 게이지를 렌더링한다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
-      const willMeter = screen.getByRole("meter", { name: /WILL 198\/250/ });
-      expect(willMeter).toBeInTheDocument();
+      const willBar = screen.getByRole("progressbar", { name: /WILL 198\/250/ });
+      expect(willBar).toBeInTheDocument();
     });
 
     it("HP 수치를 텍스트로 표시한다", () => {
@@ -304,33 +304,19 @@ describe("CitizenIDCard", () => {
     });
   });
 
-  describe("HP 배터리 색상", () => {
-    it("HP >= 60%이면 녹색 계열", () => {
-      const citizen: CitizenData = {
-        ...baseCitizen,
-        hp: { current: 60, max: 80 },
-      };
-      render(<CitizenIDCard citizen={citizen} />);
-      const meter = screen.getByRole("meter", { name: /HP/ });
-      const segments = Array.from(meter.querySelectorAll("div"));
-      const hasGreen = segments.some((segment) =>
-        (segment.getAttribute("style") ?? "").includes("#22c55e"),
-      );
-      expect(hasGreen).toBe(true);
+  describe("HP/WILL StatBar 스타일", () => {
+    it("HP 게이지가 그라디언트 스타일이다", () => {
+      render(<CitizenIDCard citizen={baseCitizen} />);
+      const hpBar = screen.getByRole("progressbar", { name: /HP/ });
+      const fill = hpBar.querySelector("div");
+      expect(fill?.className).toContain("bg-gradient-to-r");
     });
 
-    it("HP < 30%이면 레드 계열", () => {
-      const citizen: CitizenData = {
-        ...baseCitizen,
-        hp: { current: 15, max: 80 },
-      };
-      render(<CitizenIDCard citizen={citizen} />);
-      const meter = screen.getByRole("meter", { name: /HP/ });
-      const segments = Array.from(meter.querySelectorAll("div"));
-      const hasRed = segments.some((segment) =>
-        (segment.getAttribute("style") ?? "").includes("#dc2626"),
-      );
-      expect(hasRed).toBe(true);
+    it("WILL 게이지가 그라디언트 스타일이다", () => {
+      render(<CitizenIDCard citizen={baseCitizen} />);
+      const willBar = screen.getByRole("progressbar", { name: /WILL/ });
+      const fill = willBar.querySelector("div");
+      expect(fill?.className).toContain("bg-gradient-to-r");
     });
   });
 

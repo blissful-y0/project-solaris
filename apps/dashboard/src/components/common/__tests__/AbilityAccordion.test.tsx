@@ -51,11 +51,30 @@ describe("AbilityAccordion", () => {
     expect(screen.getByText("절대 역장")).toBeInTheDocument();
   });
 
-  it("tier 한글 매핑: basic→기본기, mid→중급기, advanced→상급기", () => {
+  it("faction 없으면 기본 스킬/중급 스킬/상급 스킬로 표시한다", () => {
     render(<AbilityAccordion abilities={mockAbilities} />);
-    expect(screen.getByText("기본기")).toBeInTheDocument();
-    expect(screen.getByText("중급기")).toBeInTheDocument();
-    expect(screen.getByText("상급기")).toBeInTheDocument();
+    expect(screen.getByText("기본 스킬")).toBeInTheDocument();
+    expect(screen.getByText("중급 스킬")).toBeInTheDocument();
+    expect(screen.getByText("상급 스킬")).toBeInTheDocument();
+  });
+
+  it("bureau → 상급 스킬이 '하모닉스 프로토콜'로 표시된다", () => {
+    render(<AbilityAccordion abilities={mockAbilities} faction="bureau" />);
+    expect(screen.getByText("기본 스킬")).toBeInTheDocument();
+    expect(screen.getByText("중급 스킬")).toBeInTheDocument();
+    expect(screen.getByText("하모닉스 프로토콜")).toBeInTheDocument();
+  });
+
+  it("static → 상급 스킬이 '오버드라이브'로 표시된다", () => {
+    render(<AbilityAccordion abilities={mockAbilities} faction="static" />);
+    expect(screen.getByText("기본 스킬")).toBeInTheDocument();
+    expect(screen.getByText("중급 스킬")).toBeInTheDocument();
+    expect(screen.getByText("오버드라이브")).toBeInTheDocument();
+  });
+
+  it("defector → 상급 스킬이 '오버드라이브'로 표시된다", () => {
+    render(<AbilityAccordion abilities={mockAbilities} faction="defector" />);
+    expect(screen.getByText("오버드라이브")).toBeInTheDocument();
   });
 
   it("초기 상태: description이 보이지 않는다", () => {
@@ -136,6 +155,19 @@ describe("AbilityAccordion", () => {
   it("빈 배열 → 빈 상태 메시지", () => {
     render(<AbilityAccordion abilities={[]} />);
     expect(screen.getByText("등록된 능력이 없습니다")).toBeInTheDocument();
+  });
+
+  it("순서가 뒤섞여도 기본→중급→상급 순으로 렌더링한다", () => {
+    const reversed: Ability[] = [
+      mockAbilities[2], // advanced
+      mockAbilities[0], // basic
+      mockAbilities[1], // mid
+    ];
+    render(<AbilityAccordion abilities={reversed} />);
+    const buttons = screen.getAllByRole("button");
+    expect(buttons[0]).toHaveTextContent("기본 스킬");
+    expect(buttons[1]).toHaveTextContent("중급 스킬");
+    expect(buttons[2]).toHaveTextContent("상급 스킬");
   });
 
   it("className prop을 병합한다", () => {

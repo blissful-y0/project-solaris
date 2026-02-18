@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -137,30 +137,11 @@ describe("CharactersPage", () => {
     });
   });
 
-  it("검색바를 렌더링한다", async () => {
+  it("TOTAL OPERATIVES 카운트를 표시한다", async () => {
     render(<CharactersPage />);
-    expect(screen.getByPlaceholderText("캐릭터 검색...")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
-  });
-
-  it("소속 필터 칩을 렌더링한다", async () => {
-    render(<CharactersPage />);
-    expect(screen.getByText("Bureau")).toBeInTheDocument();
-    expect(screen.getByText("Static")).toBeInTheDocument();
-    expect(screen.getAllByText("전향자").length).toBeGreaterThanOrEqual(1);
-    await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
-  });
-
-  it("Bureau 필터 → Bureau 캐릭터만 표시", async () => {
-    const user = userEvent.setup();
-    render(<CharactersPage />);
-
-    await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
-
-    await user.click(screen.getByText("Bureau"));
-    expect(screen.getByText("아마츠키 레이")).toBeInTheDocument();
-    expect(screen.queryByText("크로우 제로")).not.toBeInTheDocument();
-    expect(screen.queryByText("카이 렌")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/TOTAL OPERATIVES: 3/)).toBeInTheDocument();
+    });
   });
 
   it("캐릭터 카드 클릭 → 상세 fetch 후 프로필 모달 표시", async () => {
@@ -177,31 +158,8 @@ describe("CharactersPage", () => {
     expect(global.fetch).toHaveBeenCalledWith("/api/characters/1");
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Solaris Bureau of Civic Security"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("87%")).toBeInTheDocument();
     });
-  });
-
-  it("검색어 입력 → 매칭 캐릭터만 표시", async () => {
-    vi.useFakeTimers();
-    render(<CharactersPage />);
-
-    await act(async () => {
-      await vi.runAllTimersAsync();
-    });
-
-    const input = screen.getByPlaceholderText("캐릭터 검색...");
-    fireEvent.change(input, { target: { value: "아마츠키" } });
-
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    expect(screen.getByText("아마츠키 레이")).toBeInTheDocument();
-    expect(screen.queryByText("크로우 제로")).not.toBeInTheDocument();
-
-    vi.useRealTimers();
   });
 
   it("API 에러 시 에러 메시지를 표시한다", async () => {

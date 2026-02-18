@@ -29,7 +29,7 @@ export async function GET(
         id, name, faction, ability_class,
         hp_max, hp_current, will_max, will_current,
         appearance, backstory, profile_image_url,
-        is_leader, resonance_rate,
+        is_leader, resonance_rate, profile_data,
         abilities(id, tier, name, description, weakness, cost_hp, cost_will)
       `)
       .eq("id", id)

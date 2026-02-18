@@ -18,16 +18,28 @@ export type Ability = {
   costType?: "will" | "hp";
 };
 
+type Faction = "bureau" | "static" | "defector";
+
 type AbilityAccordionProps = {
   abilities: Ability[];
+  faction?: Faction;
   className?: string;
 };
 
-/* ─── tier 한글 매핑 ─── */
-const tierLabel: Record<Ability["tier"], string> = {
-  basic: "기본기",
-  mid: "중급기",
-  advanced: "상급기",
+/* ─── tier 한글 매핑 + 정렬 순서 ─── */
+function getTierLabel(tier: Ability["tier"], faction?: Faction): string {
+  if (tier === "basic") return "기본 스킬";
+  if (tier === "mid") return "중급 스킬";
+  /* 상급 스킬: 진영별 명칭 */
+  if (faction === "bureau") return "하모닉스 프로토콜";
+  if (faction === "static" || faction === "defector") return "오버드라이브";
+  return "상급 스킬";
+}
+
+const tierOrder: Record<Ability["tier"], number> = {
+  basic: 0,
+  mid: 1,
+  advanced: 2,
 };
 
 /* ─── cost 표시 포맷 ─── */
@@ -54,9 +66,15 @@ function formatCost(ability: Ability): string {
 /** 능력 접힘/펼침 아코디언 */
 export function AbilityAccordion({
   abilities,
+  faction,
   className,
 }: AbilityAccordionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  /** 기본기 → 중급기 → 상급기 순서로 정렬 */
+  const sorted = [...abilities].sort(
+    (a, b) => tierOrder[a.tier] - tierOrder[b.tier],
+  );
 
   if (abilities.length === 0) {
     return (
@@ -72,7 +90,7 @@ export function AbilityAccordion({
 
   return (
     <div className={cn("space-y-2", className)}>
-      {abilities.map((ability, index) => {
+      {sorted.map((ability, index) => {
         const isOpen = openIndex === index;
 
         return (
@@ -92,7 +110,7 @@ export function AbilityAccordion({
                   variant={ability.tier === "advanced" ? "info" : "default"}
                   size="sm"
                 >
-                  {tierLabel[ability.tier]}
+                  {getTierLabel(ability.tier, faction)}
                 </Badge>
                 <span className="text-sm font-medium text-text">
                   {ability.name}

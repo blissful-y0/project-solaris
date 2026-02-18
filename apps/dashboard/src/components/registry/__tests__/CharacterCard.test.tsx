@@ -57,29 +57,29 @@ describe("CharacterCard", () => {
     expect(screen.getByText("역장")).toBeInTheDocument();
   });
 
-  it("Bureau 소속 라벨을 표시한다", () => {
+  it("Bureau 소속 풀네임을 표시한다", () => {
     render(<CharacterCard character={bureau} onSelect={() => {}} />);
-    expect(screen.getByText("BUREAU")).toBeInTheDocument();
+    expect(screen.getByText("Solaris Bureau of Civic Security")).toBeInTheDocument();
   });
 
-  it("Static 소속 라벨을 표시한다", () => {
+  it("Static 소속 풀네임을 표시한다", () => {
     render(<CharacterCard character={staticChar} onSelect={() => {}} />);
-    expect(screen.getByText("STATIC")).toBeInTheDocument();
+    expect(screen.getByText("The Static")).toBeInTheDocument();
   });
 
   it("isLeader=true → ★ 리더 마크를 표시한다", () => {
     render(<CharacterCard character={bureau} onSelect={() => {}} />);
-    expect(screen.getByLabelText("리더")).toBeInTheDocument();
+    expect(screen.getByText("LEADER")).toBeInTheDocument();
   });
 
   it("isLeader=false → 리더 마크 없음", () => {
     render(<CharacterCard character={nonLeader} onSelect={() => {}} />);
-    expect(screen.queryByLabelText("리더")).not.toBeInTheDocument();
+    expect(screen.queryByText("LEADER")).not.toBeInTheDocument();
   });
 
-  it("defector → DEFECTOR 라벨을 표시한다", () => {
+  it("defector → 전향자 풀네임으로 표시한다", () => {
     render(<CharacterCard character={defector} onSelect={() => {}} />);
-    expect(screen.getByText("DEFECTOR")).toBeInTheDocument();
+    expect(screen.getByText("전향자")).toBeInTheDocument();
   });
 
   it("아바타 이미지를 렌더링한다", () => {
@@ -88,7 +88,7 @@ describe("CharacterCard", () => {
     expect(img).toBeInTheDocument();
   });
 
-  it("클릭 시 onSelect를 호출한다", async () => {
+  it("카드 클릭 시 onSelect를 호출한다", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<CharacterCard character={bureau} onSelect={onSelect} />);
@@ -109,9 +109,15 @@ describe("CharacterCard", () => {
     expect(article?.className).toContain("border-border");
   });
 
-  it("팩션 stripe를 렌더링한다", () => {
+  it("팩션 stripe를 렌더링한다 (bureau=primary)", () => {
     const { container } = render(<CharacterCard character={bureau} onSelect={() => {}} />);
     const stripe = container.querySelector(".bg-primary");
+    expect(stripe).toBeInTheDocument();
+  });
+
+  it("defector → accent stripe (Static과 동일)", () => {
+    const { container } = render(<CharacterCard character={defector} onSelect={() => {}} />);
+    const stripe = container.querySelector(".bg-accent");
     expect(stripe).toBeInTheDocument();
   });
 });

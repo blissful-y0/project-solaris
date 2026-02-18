@@ -23,6 +23,8 @@ export interface RegistryCharacter extends RegistryCharacterSummary {
   appearance: string;
   backstory: string;
   resonanceRate: number;
+  gender?: string;
+  personality?: string;
 }
 
 /* ─── 필터 옵션 ─── */
@@ -30,7 +32,6 @@ export const FACTION_OPTIONS = [
   { label: "전체", value: "all" },
   { label: "Bureau", value: "bureau" },
   { label: "Static", value: "static" },
-  { label: "전향자", value: "defector" },
 ] as const;
 
 export const ABILITY_OPTIONS = [
@@ -55,6 +56,21 @@ export const ABILITY_CLASS_LABEL: Record<string, string> = {
   shift: "변환",
   compute: "연산",
 };
+
+/* ─── profile_data JSON 파싱 ─── */
+function parseProfileField(
+  data: string | Record<string, string> | null | undefined,
+  field: string,
+): string | undefined {
+  if (!data) return undefined;
+  try {
+    const parsed = typeof data === "string" ? JSON.parse(data) : data;
+    const value = parsed?.[field];
+    return typeof value === "string" && value.length > 0 ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /* ─── DB row → UI 타입 매핑 ─── */
 
@@ -115,6 +131,7 @@ export function toRegistryCharacter(row: {
   profile_image_url: string | null;
   is_leader: boolean;
   resonance_rate: number;
+  profile_data?: string | Record<string, string> | null;
   abilities: {
     tier: "basic" | "mid" | "advanced";
     name: string;
@@ -139,6 +156,8 @@ export function toRegistryCharacter(row: {
     appearance: row.appearance ?? "",
     backstory: row.backstory ?? "",
     resonanceRate: row.resonance_rate,
+    gender: parseProfileField(row.profile_data, "gender"),
+    personality: parseProfileField(row.profile_data, "personality"),
     abilities: (row.abilities ?? []).map((a) => ({
       tier: a.tier,
       name: a.name,
