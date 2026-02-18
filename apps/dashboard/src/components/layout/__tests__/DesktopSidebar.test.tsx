@@ -11,29 +11,28 @@ vi.mock("next/link", () => ({
 }));
 
 describe("DesktopSidebar", () => {
-  it("renders all 5 navigation items with IA v2 labels", () => {
+  it("renders all 4 navigation items with IA v2 labels", () => {
     render(<DesktopSidebar currentPath="/" />);
     expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("Lore")).toBeInTheDocument();
     expect(screen.getByText("Operation")).toBeInTheDocument();
     expect(screen.getByText("Registry")).toBeInTheDocument();
     expect(screen.getByText("Helios Core")).toBeInTheDocument();
   });
 
   it("highlights active item based on currentPath", () => {
-    render(<DesktopSidebar currentPath="/characters" isCharacterApproved />);
+    render(<DesktopSidebar currentPath="/registry" isCharacterApproved />);
     const activeLink = screen.getByRole("link", { name: /registry/i });
     expect(activeLink).toHaveClass("text-primary");
   });
 
   it("does not highlight inactive items", () => {
-    render(<DesktopSidebar currentPath="/characters" isCharacterApproved />);
+    render(<DesktopSidebar currentPath="/registry" isCharacterApproved />);
     const homeLink = screen.getByRole("link", { name: /home/i });
     expect(homeLink).not.toHaveClass("text-primary");
   });
 
   it("활성 메뉴에 aria-current=page를 설정한다", () => {
-    render(<DesktopSidebar currentPath="/characters" isCharacterApproved />);
+    render(<DesktopSidebar currentPath="/registry" isCharacterApproved />);
     const activeLink = screen.getByRole("link", { name: /registry/i });
     const homeLink = screen.getByRole("link", { name: /home/i });
 
@@ -66,10 +65,9 @@ describe("DesktopSidebar", () => {
   it("links to correct routes", () => {
     render(<DesktopSidebar currentPath="/" isCharacterApproved />);
     expect(screen.getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: /lore/i })).toHaveAttribute("href", "/world");
-    expect(screen.getByRole("link", { name: /operation/i })).toHaveAttribute("href", "/operation");
-    expect(screen.getByRole("link", { name: /registry/i })).toHaveAttribute("href", "/characters");
     expect(screen.getByRole("link", { name: /helios core/i })).toHaveAttribute("href", "/core");
+    expect(screen.getByRole("link", { name: /operation/i })).toHaveAttribute("href", "/operation");
+    expect(screen.getByRole("link", { name: /registry/i })).toHaveAttribute("href", "/registry");
   });
 
   // --- 잠금 UI 테스트 ---

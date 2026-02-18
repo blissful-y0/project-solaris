@@ -229,6 +229,6 @@ describe("CharactersPage", () => {
 
     await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/characters");
+    expect(global.fetch).toHaveBeenCalledWith("/api/characters", expect.objectContaining({ signal: expect.any(AbortSignal) }));
   });
 });
