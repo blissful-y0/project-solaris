@@ -14,20 +14,20 @@ async function requireOwnerCharacter(id: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { supabase, user: null, error: "UNAUTHENTICATED" as const };
+  if (!user) return { supabase, user: null, character: null, error: "UNAUTHENTICATED" as const };
 
   const { data: character, error: charError } = await supabase
     .from("characters")
-    .select("id, user_id")
+    .select("id, user_id, profile_image_url")
     .eq("id", id)
     .eq("status", "approved")
     .is("deleted_at", null)
     .single();
 
-  if (charError || !character) return { supabase, user, error: "CHARACTER_NOT_FOUND" as const };
-  if (character.user_id !== user.id) return { supabase, user, error: "FORBIDDEN" as const };
+  if (charError || !character) return { supabase, user, character: null, error: "CHARACTER_NOT_FOUND" as const };
+  if (character.user_id !== user.id) return { supabase, user, character: null, error: "FORBIDDEN" as const };
 
-  return { supabase, user, error: null };
+  return { supabase, user, character, error: null };
 }
 
 /** 프로필 이미지 signed upload URL 발급 — 본인 캐릭터만 */
@@ -81,7 +81,7 @@ export async function POST(
   }
 }
 
-/** 업로드 완료 후 DB URL 반영 — 본인 캐릭터만 */
+/** 업로드 완료 후 DB URL 반영 + 이전 파일 삭제 — 본인 캐릭터만 */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -111,7 +111,7 @@ export async function PATCH(
       .from("character-profile-images")
       .getPublicUrl(body.path);
 
-    /* DB 업데이트 */
+    /* DB 업데이트 (먼저 실행 — 실패 시 이전 파일 유지) */
     const { error: updateError } = await owned.supabase
       .from("characters")
       .update({ profile_image_url: urlData.publicUrl })
@@ -120,6 +120,32 @@ export async function PATCH(
     if (updateError) {
       console.error("[avatar] DB 업데이트 실패:", updateError.message);
       return NextResponse.json({ error: "UPDATE_FAILED" }, { status: 500 });
+    }
+
+    /* 이전 아바타 삭제 — DB 업데이트 성공 후 best-effort 정리
+       RLS DELETE 정책이 인증 유저 자기 파일 삭제를 허용하므로 user-scoped 클라이언트 사용 */
+    const oldUrl = owned.character!.profile_image_url;
+    if (oldUrl) {
+      try {
+        const bucketSegment = "/object/public/character-profile-images/";
+        const idx = oldUrl.indexOf(bucketSegment);
+        if (idx !== -1) {
+          const oldPath = decodeURIComponent(oldUrl.substring(idx + bucketSegment.length));
+          const expectedPrefix = `${owned.user!.id}/${id}/`;
+          if (!oldPath.startsWith(expectedPrefix)) {
+            console.warn("[avatar] 이전 파일 경로가 현재 사용자/캐릭터와 불일치 — 삭제 건너뜀:", oldPath);
+          } else {
+            const { error: removeError } = await owned.supabase.storage
+              .from("character-profile-images")
+              .remove([oldPath]);
+            if (removeError) {
+              console.warn("[avatar] 이전 파일 삭제 실패 (무시):", removeError.message);
+            }
+          }
+        }
+      } catch (cleanupErr) {
+        console.warn("[avatar] 이전 파일 정리 중 에러 (무시):", cleanupErr);
+      }
     }
 
     return NextResponse.json({ url: urlData.publicUrl });
