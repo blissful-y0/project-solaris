@@ -1,0 +1,45 @@
+"use client";
+
+import { FilterChips } from "@/components/ui";
+import { FACTION_OPTIONS, ABILITY_OPTIONS } from "./mock-registry-data";
+
+interface CharacterFilterChipsProps {
+  factionFilter: string;
+  abilityFilter: string;
+  onFactionChange: (value: string) => void;
+  onAbilityChange: (value: string) => void;
+  className?: string;
+}
+
+/** 소속 필터 + 능력 계열 서브필터 */
+export function CharacterFilterChips({
+  factionFilter,
+  abilityFilter,
+  onFactionChange,
+  onAbilityChange,
+  className,
+}: CharacterFilterChipsProps) {
+  const showAbilityFilter =
+    factionFilter !== "all" && factionFilter !== "civilian";
+
+  return (
+    <div className={className}>
+      {/* 소속 필터 */}
+      <FilterChips
+        options={[...FACTION_OPTIONS]}
+        selected={factionFilter}
+        onChange={(v) => onFactionChange(v as string)}
+      />
+
+      {/* 능력 계열 서브필터 */}
+      {showAbilityFilter && (
+        <FilterChips
+          options={[...ABILITY_OPTIONS]}
+          selected={abilityFilter}
+          onChange={(v) => onAbilityChange(v as string)}
+          className="mt-2"
+        />
+      )}
+    </div>
+  );
+}
