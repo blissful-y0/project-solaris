@@ -7,11 +7,44 @@ vi.mock("next/image", () => ({
 }));
 
 import { CharacterCard } from "../CharacterCard";
-import { REGISTRY_CHARACTERS } from "../mock-registry-data";
+import type { RegistryCharacterSummary } from "../registry-data";
 
-const bureau = REGISTRY_CHARACTERS[0]; // 아마츠키 레이, bureau, field, isLeader
-const staticChar = REGISTRY_CHARACTERS[5]; // 크로우 제로, static, shift, isLeader
-const civilian = REGISTRY_CHARACTERS[10]; // 하나 유이, civilian, null
+const bureau: RegistryCharacterSummary = {
+  id: "reg-1",
+  isMine: true,
+  name: "아마츠키 레이",
+  faction: "bureau",
+  abilityClass: "field",
+  avatarUrl: "https://example.com/avatar.jpg",
+  isLeader: true,
+};
+
+const staticChar: RegistryCharacterSummary = {
+  id: "reg-6",
+  isMine: false,
+  name: "크로우 제로",
+  faction: "static",
+  abilityClass: "shift",
+  avatarUrl: "https://example.com/static.jpg",
+  isLeader: true,
+};
+
+const defector: RegistryCharacterSummary = {
+  id: "reg-11",
+  isMine: false,
+  name: "카이 렌",
+  faction: "defector",
+  abilityClass: "field",
+  avatarUrl: "https://example.com/defector.jpg",
+  isLeader: false,
+};
+
+const nonLeader: RegistryCharacterSummary = {
+  ...bureau,
+  id: "reg-2",
+  name: "세나 벨",
+  isLeader: false,
+};
 
 describe("CharacterCard", () => {
   it("캐릭터 이름을 렌더링한다", () => {
@@ -40,20 +73,13 @@ describe("CharacterCard", () => {
   });
 
   it("isLeader=false → LEADER Badge 없음", () => {
-    const nonLeader = REGISTRY_CHARACTERS[1]; // 세나 벨
     render(<CharacterCard character={nonLeader} onSelect={() => {}} />);
     expect(screen.queryByText("LEADER")).not.toBeInTheDocument();
   });
 
-  it("civilian → '비능력자' Badge를 표시한다", () => {
-    render(<CharacterCard character={civilian} onSelect={() => {}} />);
-    expect(screen.getByText("비능력자")).toBeInTheDocument();
-  });
-
-  it("civilian → 능력 계열 텍스트 없음", () => {
-    render(<CharacterCard character={civilian} onSelect={() => {}} />);
-    expect(screen.queryByText("역장")).not.toBeInTheDocument();
-    expect(screen.queryByText("감응")).not.toBeInTheDocument();
+  it("defector → '전향자' Badge를 표시한다", () => {
+    render(<CharacterCard character={defector} onSelect={() => {}} />);
+    expect(screen.getByText("전향자")).toBeInTheDocument();
   });
 
   it("아바타 이미지를 렌더링한다", () => {

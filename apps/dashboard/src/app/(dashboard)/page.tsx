@@ -66,10 +66,10 @@ export default function HomePage() {
         return;
       }
 
-      /* 내 캐릭터 조회 — DB에서 직접 */
+      /* 내 캐릭터 조회 — 카드 표시용 필드만 */
       const { data: character, error } = await supabase
         .from("characters")
-        .select("*, abilities(*)")
+        .select("id, name, faction, ability_class, hp_max, hp_current, will_max, will_current, profile_image_url, resonance_rate, status, created_at")
         .eq("user_id", user.id)
         .is("deleted_at", null)
         .maybeSingle();
@@ -83,6 +83,7 @@ export default function HomePage() {
 
       /* DB 데이터 → CitizenData 변환 */
       const mapped: CitizenData = {
+        characterId: character.id,
         name: character.name,
         faction: FACTION_MAP[character.faction] ?? "Bureau",
         resonanceRate: character.resonance_rate ?? 0,
@@ -147,7 +148,12 @@ export default function HomePage() {
 
       {/* 상단: ID 카드 + Tasks (데스크탑에서 나란히) */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <CitizenIDCard citizen={citizenData} />
+        <CitizenIDCard
+          citizen={citizenData}
+          onAvatarChange={(url) => {
+            setCitizenData((prev) => prev ? { ...prev, avatarUrl: url } : prev);
+          }}
+        />
         <ResonanceTasks tasks={mockTasks} />
       </div>
 
