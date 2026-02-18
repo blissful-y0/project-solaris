@@ -121,6 +121,9 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
             {character.abilityClass && (
               <DataField label="CLASS" value={ABILITY_CLASS_LABEL[character.abilityClass]} />
             )}
+            {typeof character.age === "number" && (
+              <DataField label="AGE" value={`${character.age}세`} />
+            )}
             {character.gender && (
               <DataField label="GENDER" value={character.gender} />
             )}

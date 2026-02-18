@@ -23,6 +23,7 @@ export interface RegistryCharacter extends RegistryCharacterSummary {
   appearance: string;
   backstory: string;
   resonanceRate: number;
+  age?: number;
   gender?: string;
   personality?: string;
 }
@@ -70,6 +71,27 @@ function parseProfileField(
   } catch {
     return undefined;
   }
+}
+
+function parseProfileAge(
+  data: string | Record<string, string> | null | undefined,
+): number | undefined {
+  if (!data) return undefined;
+  try {
+    const parsed = typeof data === "string" ? JSON.parse(data) : data;
+    const raw = (parsed as Record<string, unknown>)?.age;
+
+    if (typeof raw === "number" && Number.isFinite(raw) && raw >= 0) {
+      return Math.floor(raw);
+    }
+    if (typeof raw === "string") {
+      const n = Number(raw.trim());
+      if (Number.isFinite(n) && n >= 0) return Math.floor(n);
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
 }
 
 /* ─── DB row → UI 타입 매핑 ─── */
@@ -156,6 +178,7 @@ export function toRegistryCharacter(row: {
     appearance: row.appearance ?? "",
     backstory: row.backstory ?? "",
     resonanceRate: row.resonance_rate,
+    age: parseProfileAge(row.profile_data),
     gender: parseProfileField(row.profile_data, "gender"),
     personality: parseProfileField(row.profile_data, "personality"),
     abilities: (row.abilities ?? []).map((a) => ({
