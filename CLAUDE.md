@@ -16,6 +16,7 @@
 3. `docs/project/API-SPEC.md`
 4. `docs/project/DB-SCHEMA.md`
 5. `docs/project/ADMIN-SPEC.md`
+6. `docs/project/folder-governance.md`
 
 보충 자료:
 

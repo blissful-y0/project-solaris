@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { AccessDenied } from "@/components/admin/AccessDenied";
+import { AdminAccessDenied } from "@/components/common";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
 import { RejectReasonModal } from "@/components/admin/RejectReasonModal";
 import type { AdminCharacter } from "@/components/admin/types";
@@ -167,7 +167,7 @@ export default function AdminCharacterDetailPage() {
     }
   };
 
-  if (state === "forbidden") return <AccessDenied />;
+  if (state === "forbidden") return <AdminAccessDenied />;
 
   const statusInfo = character ? statusLabel(character.status) : null;
 

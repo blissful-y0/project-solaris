@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { AccessDenied } from "@/components/admin/AccessDenied";
+import { AdminAccessDenied } from "@/components/common";
 import { Button, Card } from "@/components/ui";
 
 type LoadState = "loading" | "ready" | "forbidden" | "error";
@@ -36,7 +36,7 @@ export default function AdminPage() {
     void run();
   }, []);
 
-  if (state === "forbidden") return <AccessDenied />;
+  if (state === "forbidden") return <AdminAccessDenied />;
   if (state === "error") {
     return (
       <section>

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Button, Card } from "@/components/ui";
 
-export function AccessDenied() {
+export function AdminAccessDenied() {
   return (
     <section className="py-10">
       <Card hud className="max-w-xl border-accent/40">
