@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/Button";
@@ -47,9 +48,11 @@ function isStepValid(step: number, draft: CharacterDraft): boolean {
 }
 
 export function WizardShell() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<CharacterDraft>(() => EMPTY_DRAFT);
   const { isSaved, restored, clear } = useDraftSave(draft);
+  const [submitting, setSubmitting] = useState(false);
 
   /* 이미지 — File 객체는 localStorage 직렬화 불가이므로 별도 state */
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -96,8 +99,83 @@ export function WizardShell() {
     if (step > 0) setStep((s) => s - 1);
   };
 
-  const handleSubmit = () => {
-    toast.info("제출 기능 준비 중입니다. 임시 저장은 유지됩니다.");
+  const handleSubmit = async () => {
+    if (!draft.faction) return;
+
+    setSubmitting(true);
+    try {
+      /* 프론트엔드 draft → 백엔드 Server Action 페이로드 변환 */
+      const payload = {
+        name: draft.name,
+        faction: draft.faction,
+        abilityClass: draft.abilityClass,
+        resonanceRate: Number(draft.resonanceRate) || 0,
+        profileData: {
+          age: draft.age || undefined,
+          gender: draft.gender || undefined,
+          personality: draft.personality || undefined,
+        },
+        profileImageUrl: undefined as string | undefined,
+        appearance: draft.appearance || undefined,
+        backstory: draft.backstory || undefined,
+        leaderApplication: draft.leaderApplication,
+        crossoverStyle: draft.crossoverStyle,
+        abilities: (["basic", "mid", "advanced"] as const).map((tier) => ({
+          tier,
+          name: draft.skills[tier].name,
+          description: draft.skills[tier].description,
+          weakness: draft.abilityWeakness,
+          costHp: Number(draft.skills[tier].costHp) || 0,
+          costWill: Number(draft.skills[tier].costWill) || 0,
+        })),
+      };
+
+      /* 이미지 업로드 (Supabase Storage) */
+      if (imageFile) {
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          const ext = imageFile.name.split(".").pop() || "webp";
+          const path = `avatars/${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from("avatars")
+            .upload(path, imageFile, { contentType: imageFile.type });
+
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+            payload.profileImageUrl = urlData.publicUrl;
+          }
+        } catch {
+          /* Storage 미설정 시 무시 — 이미지 없이 제출 */
+        }
+      }
+
+      /* Server Action 호출 (통합 빌드에서만 존재) */
+      let submitCharacter: ((d: typeof payload) => Promise<{ characterId: string }>) | null = null;
+      try {
+        const mod = await import("@/app/actions/character");
+        submitCharacter = mod.submitCharacter;
+      } catch {
+        /* 백엔드 미통합 시 mock 동작 */
+      }
+
+      if (submitCharacter) {
+        await submitCharacter(payload);
+        clear();
+        toast.success("캐릭터가 제출되었습니다. 관리자 승인을 기다려주세요.");
+        router.push("/");
+      } else {
+        /* 백엔드 미연결 — 로컬 개발용 */
+        clear();
+        toast.success("[DEV] 캐릭터 제출 시뮬레이션 완료. (DB 미연동)");
+        router.push("/");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "제출에 실패했습니다.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleEditStep = (targetStep: number) => {
@@ -178,6 +256,7 @@ export function WizardShell() {
             onSubmit={handleSubmit}
             onEditStep={handleEditStep}
             onLeaderChange={(checked) => updateDraft({ leaderApplication: checked })}
+            submitting={submitting}
           />
         )}
       </div>

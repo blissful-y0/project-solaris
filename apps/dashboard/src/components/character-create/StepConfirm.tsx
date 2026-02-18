@@ -7,6 +7,7 @@ type StepConfirmProps = {
   onSubmit: () => void;
   onEditStep: (step: number) => void;
   onLeaderChange?: (checked: boolean) => void;
+  submitting?: boolean;
 };
 
 const FACTION_LABELS = { bureau: "Solaris Bureau of Civic Security", static: "Static" } as const;
@@ -53,7 +54,7 @@ function formatCost(hp: string, will: string): string {
   return "—";
 }
 
-export function StepConfirm({ draft, onSubmit, onEditStep, onLeaderChange }: StepConfirmProps) {
+export function StepConfirm({ draft, onSubmit, onEditStep, onLeaderChange, submitting }: StepConfirmProps) {
   const isBureau = draft.faction === "bureau";
   const systemName = isBureau ? "하모닉스 프로토콜" : "오버드라이브";
 
@@ -153,8 +154,8 @@ export function StepConfirm({ draft, onSubmit, onEditStep, onLeaderChange }: Ste
 
       {/* 제출 */}
       <div className="pt-4">
-        <Button onClick={onSubmit} size="lg" className="w-full">
-          제출
+        <Button onClick={onSubmit} size="lg" className="w-full" disabled={submitting}>
+          {submitting ? "제출 중..." : "제출"}
         </Button>
       </div>
     </div>

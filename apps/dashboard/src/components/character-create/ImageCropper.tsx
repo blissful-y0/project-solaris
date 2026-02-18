@@ -153,7 +153,7 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
           <img
             src={previewUrl}
             alt="프로필 미리보기"
-            className="w-32 h-32 rounded-md border border-border object-cover"
+            className="w-40 h-40 rounded-md border border-border object-cover"
           />
           <div className="flex gap-2">
             <button
@@ -177,7 +177,7 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className={cn(
-            "w-32 h-32 rounded-md border-2 border-dashed border-border",
+            "w-40 h-40 rounded-md border-2 border-dashed border-border",
             "flex flex-col items-center justify-center gap-1",
             "hover:border-primary/40 transition-colors cursor-pointer",
           )}
