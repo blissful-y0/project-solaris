@@ -49,6 +49,7 @@ const bureau: RegistryCharacter = {
   avatarUrl: "https://example.com/avatar.jpg",
   isLeader: true,
   resonanceRate: 87,
+  age: 24,
   gender: "남성",
   personality: "지독할 정도로 말수가 적고 냉혹하다.",
 };
@@ -113,6 +114,13 @@ describe("CharacterProfileModal", () => {
       <CharacterProfileModal character={bureau} open onClose={() => {}} />,
     );
     expect(screen.getByText("남성")).toBeInTheDocument();
+  });
+
+  it("나이를 표시한다", () => {
+    render(
+      <CharacterProfileModal character={bureau} open onClose={() => {}} />,
+    );
+    expect(screen.getByText("24세")).toBeInTheDocument();
   });
 
   it("능력 계열을 표시한다 (역장)", () => {
