@@ -163,6 +163,7 @@ export function WizardShell() {
             draft={draft}
             onSubmit={handleSubmit}
             onEditStep={handleEditStep}
+            onLeaderChange={(checked) => updateDraft({ leaderApplication: checked })}
           />
         )}
       </div>

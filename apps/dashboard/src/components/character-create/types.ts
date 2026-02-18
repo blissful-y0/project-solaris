@@ -33,6 +33,8 @@ export interface CharacterDraft {
   name: string;
   gender: string;
   age: string;
+  /** 공명율 — Bureau: 80~100, Static: 0~15 */
+  resonanceRate: string;
   appearance: string;
   personality: string;
   backstory: string;
@@ -71,6 +73,7 @@ export const EMPTY_DRAFT: CharacterDraft = {
   name: "",
   gender: "",
   age: "",
+  resonanceRate: "",
   appearance: "",
   personality: "",
   backstory: "",

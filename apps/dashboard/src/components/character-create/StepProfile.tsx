@@ -12,15 +12,26 @@ const inputClass = cn(
   "w-full min-h-[44px] bg-bg-secondary border border-border rounded-md px-3 py-2 text-text placeholder:text-text-secondary/50",
   "focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-colors",
 );
-const textareaClass = cn(inputClass, "min-h-[80px] resize-y");
+const textareaClass = cn(inputClass, "min-h-[80px] resize-none");
+
+/** 팩션별 공명율 범위 */
+const RESONANCE_RANGE = {
+  bureau: { min: 80, max: 100, label: "80~100" },
+  static: { min: 0, max: 15, label: "0~15" },
+} as const;
 
 export function StepProfile({ draft, onChange }: StepProfileProps) {
+  const range = draft.faction ? RESONANCE_RANGE[draft.faction] : null;
+  const rrValue = Number(draft.resonanceRate);
+  const rrOutOfRange = draft.resonanceRate !== "" && range
+    && (rrValue < range.min || rrValue > range.max);
+
   return (
     <div className="space-y-5">
       <p className="hud-label mb-6">// 캐릭터 프로필을 입력하세요</p>
 
-      {/* 이름 + 성별 + 나이 (한 줄) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* 이름 + 성별 + 나이 + 공명율 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="charName" className={labelClass}>캐릭터 이름</label>
           <input
@@ -55,7 +66,6 @@ export function StepProfile({ draft, onChange }: StepProfileProps) {
             value={draft.age}
             onChange={(e) => {
               const val = e.target.value;
-              // 빈 값이거나 숫자만 허용
               if (val === "" || /^\d+$/.test(val)) {
                 onChange({ age: val });
               }
@@ -67,6 +77,38 @@ export function StepProfile({ draft, onChange }: StepProfileProps) {
             <p className="text-xs text-accent mt-1">최소 15세 이상이어야 합니다</p>
           )}
         </div>
+        {range && (
+          <div>
+            <div className="flex items-baseline justify-between">
+              <label htmlFor="resonanceRate" className={labelClass}>공명율 (Resonance Rate)</label>
+              <span className="text-[0.55rem] text-text-secondary/50 tabular-nums">{range.label}</span>
+            </div>
+            <input
+              id="resonanceRate"
+              type="number"
+              min={range.min}
+              max={range.max}
+              value={draft.resonanceRate}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "" || /^\d+$/.test(val)) {
+                  onChange({ resonanceRate: val });
+                }
+              }}
+              placeholder={range.label}
+              className={cn(
+                inputClass,
+                "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                rrOutOfRange && "border-accent/60 focus:ring-accent/50",
+              )}
+            />
+            {rrOutOfRange && (
+              <p className="text-xs text-accent mt-1">
+                {draft.faction === "bureau" ? "보안국" : "스태틱"} 소속 공명율 범위: {range.label}%
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 외형 묘사 */}

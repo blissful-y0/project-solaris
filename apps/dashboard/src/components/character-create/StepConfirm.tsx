@@ -123,6 +123,7 @@ export function StepConfirm({ draft, onSubmit, onEditStep, onLeaderChange }: Ste
         <SummaryRow label="이름" value={draft.name} />
         <SummaryRow label="성별" value={draft.gender} />
         <SummaryRow label="나이" value={draft.age} />
+        <SummaryRow label="공명율" value={draft.resonanceRate ? `${draft.resonanceRate}%` : ""} />
         <SummaryRow label="외형" value={draft.appearance} />
         <SummaryRow label="성격" value={draft.personality} />
         <SummaryRow label="배경" value={draft.backstory} />
