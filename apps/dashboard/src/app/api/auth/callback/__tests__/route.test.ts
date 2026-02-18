@@ -107,4 +107,29 @@ describe("GET /api/auth/callback", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("https://solaris.local/");
   });
+
+  it("discord provider_id가 없으면 업서트하지 않고 로그인 에러로 보낸다", async () => {
+    mockExchangeCodeForSession.mockResolvedValue({ error: null });
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "0a66be4b-c908-4f8f-8478-48cb12695f11",
+          user_metadata: {
+            full_name: "solaris-user",
+          },
+        },
+      },
+    });
+
+    const request = new Request("https://solaris.local/api/auth/callback?code=valid");
+
+    const { GET } = await import("../route");
+    const response = await GET(request);
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "https://solaris.local/login?error=auth_failed",
+    );
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
 });

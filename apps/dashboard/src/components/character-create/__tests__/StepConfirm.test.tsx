@@ -18,7 +18,6 @@ const FULL_DRAFT: CharacterDraft = {
   name: "카이 리",
   gender: "남성",
   age: "24",
-  profileImageUrl: "https://cdn.example.com/profile.png",
   appearance: "은발에 날카로운 눈매",
   personality: "냉철하지만 동료에게는 따뜻하다",
   backstory: "관리국 소속이었으나 진실을 알고 탈출했다",

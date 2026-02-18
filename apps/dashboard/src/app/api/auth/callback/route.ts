@@ -44,10 +44,16 @@ export async function GET(request: Request) {
       }
 
       const discordId =
-        typeof user.user_metadata?.provider_id === "string" &&
+        (typeof user.user_metadata?.provider_id === "string" &&
         user.user_metadata.provider_id.length > 0
           ? user.user_metadata.provider_id
-          : user.id;
+          : undefined) ??
+        (typeof user.user_metadata?.sub === "string" && user.user_metadata.sub.length > 0
+          ? user.user_metadata.sub
+          : undefined);
+      if (!discordId) {
+        return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+      }
       const discordUsername =
         (typeof user.user_metadata?.full_name === "string" &&
         user.user_metadata.full_name.length > 0

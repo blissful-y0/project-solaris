@@ -67,4 +67,29 @@ describe("createNotification", () => {
       }),
     );
   });
+
+  it("supabase 인스턴스가 전달되면 createClient를 다시 호출하지 않는다", async () => {
+    const { createNotification } = await import("../notification");
+    const providedInsert = vi.fn().mockResolvedValue({ error: null });
+    const providedClient = {
+      from: vi.fn(() => ({
+        insert: providedInsert,
+      })),
+    };
+
+    await createNotification(
+      {
+        userId: "1ab4a2b5-15e7-49ef-9108-ecc2ad850a08",
+        scope: "user",
+        type: "character_approved",
+        title: "승인 완료",
+        body: "캐릭터가 승인되었습니다.",
+        channel: "discord_dm",
+      },
+      providedClient as never,
+    );
+
+    expect(providedInsert).toHaveBeenCalled();
+    expect(mockCreateClient).not.toHaveBeenCalled();
+  });
 });

@@ -5,8 +5,6 @@ import type { CharacterDraft } from "./types";
 type StepProfileProps = {
   draft: CharacterDraft;
   onChange: (patch: Partial<CharacterDraft>) => void;
-  onImageUpload?: (file: File) => void | Promise<void>;
-  isUploading?: boolean;
 };
 
 const labelClass = "block text-xs uppercase tracking-widest text-text-secondary mb-1.5";
@@ -16,7 +14,7 @@ const inputClass = cn(
 );
 const textareaClass = cn(inputClass, "min-h-[80px] resize-y");
 
-export function StepProfile({ draft, onChange, onImageUpload, isUploading = false }: StepProfileProps) {
+export function StepProfile({ draft, onChange }: StepProfileProps) {
   return (
     <div className="space-y-5">
       <p className="hud-label mb-6">// 캐릭터 프로필을 입력하세요</p>
@@ -82,33 +80,6 @@ export function StepProfile({ draft, onChange, onImageUpload, isUploading = fals
           placeholder="캐릭터의 외모를 묘사하세요"
           className={textareaClass}
         />
-      </div>
-
-      <div>
-        <label htmlFor="profileImage" className={labelClass}>프로필 이미지</label>
-        <input
-          id="profileImage"
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          disabled={isUploading}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (!file || !onImageUpload) return;
-            void onImageUpload(file);
-            e.currentTarget.value = "";
-          }}
-          className={cn(inputClass, "file:mr-3 file:rounded file:border-0 file:bg-primary/15 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary")}
-        />
-        {isUploading && <p className="text-xs text-text-secondary mt-2">업로드 중...</p>}
-        {draft.profileImageUrl && (
-          <div className="mt-3">
-            <img
-              src={draft.profileImageUrl}
-              alt="프로필 미리보기"
-              className="h-28 w-28 rounded-md object-cover border border-border"
-            />
-          </div>
-        )}
       </div>
 
       {/* 성격 */}

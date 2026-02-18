@@ -30,6 +30,22 @@ interface CharacterDraft {
   }[];
 }
 
+function validateDraft(draft: CharacterDraft) {
+  const normalizedName = draft.name.trim();
+  if (normalizedName.length < 2 || normalizedName.length > 30) {
+    throw new Error("INVALID_CHARACTER_NAME");
+  }
+
+  for (const ability of draft.abilities) {
+    if (ability.name.trim().length < 1 || ability.name.trim().length > 40) {
+      throw new Error("INVALID_ABILITY_NAME");
+    }
+    if (ability.description.trim().length < 1 || ability.description.trim().length > 500) {
+      throw new Error("INVALID_ABILITY_DESCRIPTION");
+    }
+  }
+}
+
 export async function submitCharacter(draft: CharacterDraft) {
   const supabase = await createClient();
   const {
@@ -39,6 +55,8 @@ export async function submitCharacter(draft: CharacterDraft) {
   if (!user) {
     throw new Error("UNAUTHENTICATED");
   }
+
+  validateDraft(draft);
 
   if (draft.abilities.length !== 3) {
     throw new Error("INVALID_ABILITIES");
@@ -128,6 +146,7 @@ export async function cancelCharacter() {
 
   const { error: deleteError } = await supabase
     .from("characters")
+    // 기획 확정: pending/rejected는 신청 취소 시 재작성 가능하도록 hard delete 처리
     .delete()
     .eq("id", character.id)
     .eq("user_id", user.id);
@@ -155,7 +174,10 @@ export async function getMyCharacter(): Promise<CharacterWithAbilities | null> {
     .single();
 
   if (error) {
-    return null;
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    throw new Error(getUserFriendlyError(error));
   }
 
   return data as CharacterWithAbilities;

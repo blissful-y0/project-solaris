@@ -38,8 +38,9 @@ BEGIN
   ORDER BY created_at DESC
   LIMIT 1;
 
-  IF v_url IS NULL OR v_service_role_key IS NULL THEN
-    RAISE EXCEPTION 'notify webhook secrets are not configured';
+  IF v_url IS NULL OR v_service_role_key IS NULL OR v_webhook_secret IS NULL THEN
+    RAISE WARNING 'notify webhook secrets are not configured';
+    RETURN NEW;
   END IF;
 
   v_headers := jsonb_build_object(

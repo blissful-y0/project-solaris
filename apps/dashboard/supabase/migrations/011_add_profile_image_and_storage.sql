@@ -1,7 +1,4 @@
--- 캐릭터 프로필 이미지 URL + 스토리지 버킷/정책
-
-ALTER TABLE public.characters
-  ADD COLUMN IF NOT EXISTS profile_image_url text;
+-- 캐릭터 프로필 이미지 스토리지 버킷/정책
 
 DROP FUNCTION IF EXISTS public.create_character_with_abilities(
   text, uuid, text, text, text, int, int, int, int, int, jsonb, text, text, boolean, text, jsonb

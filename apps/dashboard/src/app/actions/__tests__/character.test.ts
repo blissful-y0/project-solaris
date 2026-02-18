@@ -345,6 +345,55 @@ describe("character actions", () => {
     ).rejects.toThrow("UNAUTHENTICATED");
   });
 
+  it("submitCharacter는 이름/설명 검증 실패 시 거부한다", async () => {
+    const { submitCharacter } = await import("../character");
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "1ab4a2b5-15e7-49ef-9108-ecc2ad850a08" } },
+    });
+
+    await expect(
+      submitCharacter({
+        name: " ",
+        faction: "bureau",
+        abilityClass: "field",
+        resonanceRate: 80,
+        profileData: {},
+        profileImageUrl: "",
+        appearance: "",
+        backstory: "",
+        leaderApplication: false,
+        crossoverStyle: null,
+        abilities: [
+          {
+            tier: "basic",
+            name: "기본",
+            description: "기본 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 10,
+          },
+          {
+            tier: "mid",
+            name: "중급",
+            description: "중급 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 20,
+          },
+          {
+            tier: "advanced",
+            name: "고급",
+            description: "고급 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 30,
+          },
+        ],
+      }),
+    ).rejects.toThrow("INVALID_CHARACTER_NAME");
+  });
+
   it("cancelCharacter는 pending/rejected 상태만 하드 삭제한다", async () => {
     const { cancelCharacter } = await import("../character");
 
@@ -383,5 +432,34 @@ describe("character actions", () => {
         id: "char_001",
       }),
     );
+  });
+
+  it("getMyCharacter는 캐릭터 미존재면 null을 반환한다", async () => {
+    const { getMyCharacter } = await import("../character");
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "1ab4a2b5-15e7-49ef-9108-ecc2ad850a08" } },
+    });
+    mockCharacterSingle.mockResolvedValue({
+      data: null,
+      error: { code: "PGRST116" },
+    });
+
+    const result = await getMyCharacter();
+    expect(result).toBeNull();
+  });
+
+  it("getMyCharacter는 DB 오류를 삼키지 않고 던진다", async () => {
+    const { getMyCharacter } = await import("../character");
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "1ab4a2b5-15e7-49ef-9108-ecc2ad850a08" } },
+    });
+    mockCharacterSingle.mockResolvedValue({
+      data: null,
+      error: { code: "42501" },
+    });
+
+    await expect(getMyCharacter()).rejects.toThrow("권한이 없습니다.");
   });
 });

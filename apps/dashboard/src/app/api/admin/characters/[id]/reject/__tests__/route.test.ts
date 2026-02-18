@@ -57,4 +57,17 @@ describe("POST /api/admin/characters/[id]/reject", () => {
     expect(response.status).toBe(200);
     expect(mockCreateNotification).toHaveBeenCalled();
   });
+
+  it("내부 오류는 FORBIDDEN이 아니라 500으로 응답한다", async () => {
+    mockCreateNotification.mockRejectedValueOnce(new Error("INSERT_FAILED"));
+
+    const { POST } = await import("../route");
+    const request = new Request("https://solaris.local/api/admin/characters/char_001/reject", {
+      method: "POST",
+      body: JSON.stringify({ reason: "형식 불일치" }),
+    });
+
+    const response = await POST(request, { params: { id: "char_001" } });
+    expect(response.status).toBe(500);
+  });
 });

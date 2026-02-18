@@ -9,8 +9,6 @@ describe("StepProfile", () => {
   const defaultProps = {
     draft: EMPTY_DRAFT,
     onChange: vi.fn() as (patch: Partial<CharacterDraft>) => void,
-    onImageUpload: vi.fn() as (file: File) => void,
-    isUploading: false,
   };
 
   it("모든 프로필 필드를 렌더링한다", () => {
@@ -20,23 +18,8 @@ describe("StepProfile", () => {
     expect(screen.getByLabelText(/성별/)).toBeInTheDocument();
     expect(screen.getByLabelText(/나이/)).toBeInTheDocument();
     expect(screen.getByLabelText(/외형 묘사/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/프로필 이미지/)).toBeInTheDocument();
     expect(screen.getByLabelText(/성격/)).toBeInTheDocument();
     expect(screen.getByLabelText(/배경 스토리/)).toBeInTheDocument();
-  });
-
-  it("프로필 이미지 선택 시 onImageUpload를 호출한다", async () => {
-    const user = userEvent.setup();
-    const onImageUpload = vi.fn();
-
-    render(<StepProfile {...defaultProps} onImageUpload={onImageUpload} />);
-
-    const imageInput = screen.getByLabelText(/프로필 이미지/) as HTMLInputElement;
-    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
-    await user.upload(imageInput, file);
-
-    expect(onImageUpload).toHaveBeenCalledOnce();
-    expect(onImageUpload).toHaveBeenCalledWith(file);
   });
 
   it("캐릭터 이름 입력 시 onChange를 호출한다", async () => {

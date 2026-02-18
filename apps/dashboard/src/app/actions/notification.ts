@@ -14,8 +14,13 @@ interface CreateNotificationParams {
   channel: "in_app" | "discord_dm" | "discord_webhook";
 }
 
-export async function createNotification(params: CreateNotificationParams) {
-  const supabase = await createClient();
+type NotificationClient = Awaited<ReturnType<typeof createClient>>;
+
+export async function createNotification(
+  params: CreateNotificationParams,
+  client?: NotificationClient,
+) {
+  const supabase = client ?? (await createClient());
   const deliveryStatus = params.channel === "in_app" ? "skipped" : "pending";
 
   const { error } = await supabase.from("notifications").insert({
@@ -32,6 +37,6 @@ export async function createNotification(params: CreateNotificationParams) {
   });
 
   if (error) {
-    throw new Error(getUserFriendlyError(error));
+    throw new Error(getUserFriendlyError(error as never));
   }
 }

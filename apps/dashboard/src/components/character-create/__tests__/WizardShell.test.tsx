@@ -6,21 +6,7 @@ import { WizardShell } from "../WizardShell";
 
 // sonner mock
 vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), info: vi.fn(), error: vi.fn() },
-}));
-
-vi.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
-    },
-    storage: {
-      from: vi.fn(() => ({
-        upload: vi.fn(),
-        getPublicUrl: vi.fn(),
-      })),
-    },
-  }),
+  toast: { success: vi.fn(), info: vi.fn() },
 }));
 
 describe("WizardShell", () => {

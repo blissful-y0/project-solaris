@@ -93,16 +93,6 @@ export function StepConfirm({ draft, onSubmit, onEditStep }: StepConfirmProps) {
         <SummaryRow label="이름" value={draft.name} />
         <SummaryRow label="성별" value={draft.gender} />
         <SummaryRow label="나이" value={draft.age} />
-        <SummaryRow label="이미지 URL" value={draft.profileImageUrl} />
-        {draft.profileImageUrl && (
-          <div className="pt-1">
-            <img
-              src={draft.profileImageUrl}
-              alt="프로필 미리보기"
-              className="h-24 w-24 rounded-md object-cover border border-border"
-            />
-          </div>
-        )}
         <SummaryRow label="외형" value={draft.appearance} />
         <SummaryRow label="성격" value={draft.personality} />
         <SummaryRow label="배경" value={draft.backstory} />

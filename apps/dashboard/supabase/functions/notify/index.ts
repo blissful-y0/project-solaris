@@ -22,12 +22,24 @@ interface UserRow {
   discord_username: string;
 }
 
-function getCorsHeaders() {
-  return {
-    "access-control-allow-origin": "*",
-    "access-control-allow-methods": "POST, OPTIONS",
-    "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
-  };
+const TRUSTED_DISCORD_WEBHOOK_HOSTS = new Set([
+  "discord.com",
+  "canary.discord.com",
+  "ptb.discord.com",
+  "discordapp.com",
+]);
+
+function isTrustedDiscordWebhookUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === "https:" &&
+      TRUSTED_DISCORD_WEBHOOK_HOSTS.has(parsed.hostname) &&
+      parsed.pathname.startsWith("/api/webhooks/")
+    );
+  } catch {
+    return false;
+  }
 }
 
 function parseNotification(body: unknown): NotificationRow | null {
@@ -55,7 +67,11 @@ function getWebhookUrl(notification: NotificationRow): string | null {
 }
 
 async function sendDiscordWebhook(webhookUrl: string, title: string, body: string) {
-  const response = await fetch(webhookUrl, {
+  if (!isTrustedDiscordWebhookUrl(webhookUrl)) {
+    throw new Error("WEBHOOK_URL_NOT_ALLOWED");
+  }
+
+  const response = await fetchWithRateLimitRetry(webhookUrl, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
@@ -69,8 +85,40 @@ async function sendDiscordWebhook(webhookUrl: string, title: string, body: strin
   }
 }
 
+function getRetryDelay(response: Response) {
+  const retryAfter = response.headers.get("retry-after");
+  const parsed = retryAfter ? Number.parseFloat(retryAfter) : Number.NaN;
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return Math.ceil(parsed * 1000);
+  }
+  return 1000;
+}
+
+async function fetchWithRateLimitRetry(
+  url: string,
+  init: RequestInit,
+  maxRetries = 3,
+) {
+  let attempt = 0;
+  while (attempt <= maxRetries) {
+    const response = await fetch(url, init);
+    if (response.status !== 429) {
+      return response;
+    }
+
+    if (attempt === maxRetries) {
+      return response;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, getRetryDelay(response)));
+    attempt += 1;
+  }
+
+  throw new Error("UNREACHABLE_RETRY_STATE");
+}
+
 async function sendDiscordDm(botToken: string, discordUserId: string, title: string, body: string) {
-  const createChannelResponse = await fetch("https://discord.com/api/v10/users/@me/channels", {
+  const createChannelResponse = await fetchWithRateLimitRetry("https://discord.com/api/v10/users/@me/channels", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -88,7 +136,7 @@ async function sendDiscordDm(botToken: string, discordUserId: string, title: str
     throw new Error("DISCORD_DM_CHANNEL_MISSING");
   }
 
-  const sendMessageResponse = await fetch(
+  const sendMessageResponse = await fetchWithRateLimitRetry(
     `https://discord.com/api/v10/channels/${channel.id}/messages`,
     {
       method: "POST",
@@ -109,25 +157,25 @@ async function sendDiscordDm(botToken: string, discordUserId: string, title: str
 }
 
 Deno.serve(async (request) => {
-  const corsHeaders = getCorsHeaders();
-
-  if (request.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "METHOD_NOT_ALLOWED" }), {
       status: 405,
-      headers: { ...corsHeaders, "content-type": "application/json" },
+      headers: { "content-type": "application/json" },
     });
   }
 
   const webhookSecret = Deno.env.get("NOTIFY_WEBHOOK_SECRET");
+  if (!webhookSecret) {
+    return new Response(JSON.stringify({ error: "MISSING_WEBHOOK_SECRET" }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
   const providedSecret = request.headers.get("x-webhook-secret");
-  if (webhookSecret && webhookSecret !== providedSecret) {
+  if (webhookSecret !== providedSecret) {
     return new Response(JSON.stringify({ error: "UNAUTHORIZED" }), {
       status: 401,
-      headers: { ...corsHeaders, "content-type": "application/json" },
+      headers: { "content-type": "application/json" },
     });
   }
 
@@ -137,7 +185,7 @@ Deno.serve(async (request) => {
   if (!supabaseUrl || !serviceRoleKey) {
     return new Response(JSON.stringify({ error: "MISSING_SUPABASE_ENV" }), {
       status: 500,
-      headers: { ...corsHeaders, "content-type": "application/json" },
+      headers: { "content-type": "application/json" },
     });
   }
 
@@ -152,7 +200,7 @@ Deno.serve(async (request) => {
     if (!notification) {
       return new Response(JSON.stringify({ error: "INVALID_PAYLOAD" }), {
         status: 400,
-        headers: { ...corsHeaders, "content-type": "application/json" },
+        headers: { "content-type": "application/json" },
       });
     }
 
@@ -164,7 +212,7 @@ Deno.serve(async (request) => {
 
       return new Response(JSON.stringify({ ok: true, delivery_status: "skipped" }), {
         status: 200,
-        headers: { ...corsHeaders, "content-type": "application/json" },
+        headers: { "content-type": "application/json" },
       });
     }
 
@@ -213,7 +261,7 @@ Deno.serve(async (request) => {
 
     return new Response(JSON.stringify({ ok: true, delivery_status: "sent" }), {
       status: 200,
-      headers: { ...corsHeaders, "content-type": "application/json" },
+      headers: { "content-type": "application/json" },
     });
   } catch (error) {
     if (currentNotification) {
@@ -235,7 +283,7 @@ Deno.serve(async (request) => {
       }),
       {
         status: 500,
-        headers: { ...corsHeaders, "content-type": "application/json" },
+        headers: { "content-type": "application/json" },
       },
     );
   }

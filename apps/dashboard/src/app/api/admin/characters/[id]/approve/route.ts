@@ -29,14 +29,17 @@ export async function POST(
       body: "캐릭터가 승인되었습니다.",
       channel: "discord_dm",
       payload: { characterId: data.id },
-    });
+    }, supabase);
 
     return NextResponse.json({ data });
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHENTICATED") {
       return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
     }
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    }
 
-    return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    return NextResponse.json({ error: "INTERNAL_SERVER_ERROR" }, { status: 500 });
   }
 }

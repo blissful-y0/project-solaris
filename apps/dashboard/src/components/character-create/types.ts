@@ -17,7 +17,6 @@ export interface CharacterDraft {
   name: string;
   gender: string;
   age: string;
-  profileImageUrl: string;
   appearance: string;
   personality: string;
   backstory: string;
@@ -44,7 +43,6 @@ export const EMPTY_DRAFT: CharacterDraft = {
   name: "",
   gender: "",
   age: "",
-  profileImageUrl: "",
   appearance: "",
   personality: "",
   backstory: "",
