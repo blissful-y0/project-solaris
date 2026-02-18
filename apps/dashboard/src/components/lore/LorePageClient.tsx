@@ -49,7 +49,7 @@ export function LorePageClient({
         params.set("category", id);
       }
       const query = params.toString();
-      router.replace(query ? `/world?${query}` : "/world", { scroll: false });
+      router.replace(query ? `/lore?${query}` : "/lore", { scroll: false });
     },
     [router, searchParams],
   );
@@ -57,7 +57,7 @@ export function LorePageClient({
   const activeContent = contents.find((c) => c.id === activeId);
 
   return (
-    <section className="py-6 space-y-6">
+    <section className="mx-auto max-w-3xl py-6 space-y-6">
       {/* 헤더 */}
       <div>
         <p className="hud-label mb-1">LORE // CLASSIFIED ARCHIVE</p>

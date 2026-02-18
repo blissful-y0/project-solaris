@@ -11,12 +11,13 @@ vi.mock("next/link", () => ({
 }));
 
 describe("DesktopSidebar", () => {
-  it("renders all 4 navigation items with IA v2 labels", () => {
+  it("renders all 5 navigation items", () => {
     render(<DesktopSidebar currentPath="/" />);
     expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Helios Core")).toBeInTheDocument();
     expect(screen.getByText("Operation")).toBeInTheDocument();
     expect(screen.getByText("Registry")).toBeInTheDocument();
-    expect(screen.getByText("Helios Core")).toBeInTheDocument();
+    expect(screen.getByText("Lore")).toBeInTheDocument();
   });
 
   it("highlights active item based on currentPath", () => {
@@ -68,6 +69,7 @@ describe("DesktopSidebar", () => {
     expect(screen.getByRole("link", { name: /helios core/i })).toHaveAttribute("href", "/core");
     expect(screen.getByRole("link", { name: /operation/i })).toHaveAttribute("href", "/operation");
     expect(screen.getByRole("link", { name: /registry/i })).toHaveAttribute("href", "/registry");
+    expect(screen.getByRole("link", { name: /lore/i })).toHaveAttribute("href", "/lore");
   });
 
   // --- 잠금 UI 테스트 ---
@@ -89,7 +91,7 @@ describe("DesktopSidebar", () => {
   it("isCharacterApproved=false → Operation에 흐린 스타일", () => {
     render(<DesktopSidebar currentPath="/" isCharacterApproved={false} />);
     const operationButton = screen.getByRole("button", { name: /operation/i });
-    expect(operationButton.className).toContain("text-text-secondary/40");
+    expect(operationButton.className).toContain("text-text-secondary/30");
   });
 
   it("isCharacterApproved=true → Operation에 정상 Link", () => {

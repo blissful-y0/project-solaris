@@ -68,7 +68,7 @@ describe("LorePageClient", () => {
     render(<LorePageClient contents={mockContents} />);
 
     await user.click(screen.getByText("대립구도"));
-    expect(mockReplace).toHaveBeenCalledWith("/world?category=factions", {
+    expect(mockReplace).toHaveBeenCalledWith("/lore?category=factions", {
       scroll: false,
     });
   });
