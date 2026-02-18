@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
 
 interface MobileTabBarProps {
   currentPath: string;
+  /** 캐릭터 승인 여부 — false이면 requireApproval 항목 잠금 */
+  isCharacterApproved?: boolean;
 }
 
-export function MobileTabBar({ currentPath }: MobileTabBarProps) {
+export function MobileTabBar({
+  currentPath,
+  isCharacterApproved = false,
+}: MobileTabBarProps) {
   return (
     <nav
       className={cn(
@@ -21,7 +27,33 @@ export function MobileTabBar({ currentPath }: MobileTabBarProps) {
     >
       {NAV_ITEMS.map((item) => {
         const isActive = currentPath === item.href;
+        const isLocked = item.requireApproval && !isCharacterApproved;
         const Icon = item.icon;
+
+        if (isLocked) {
+          return (
+            <button
+              key={item.href}
+              type="button"
+              aria-disabled="true"
+              aria-label={item.label}
+              className={cn(
+                "flex flex-1 flex-col items-center justify-center gap-1 py-2",
+                "text-text-secondary/40 cursor-not-allowed",
+              )}
+              onClick={(e) => e.preventDefault()}
+            >
+              <span className="relative">
+                <Icon className="h-5 w-5" />
+                <Lock
+                  className="absolute -right-1 -top-1 h-3 w-3"
+                  data-testid={`lock-icon-${item.href}`}
+                />
+              </span>
+              <span className="text-[0.625rem]">{item.label}</span>
+            </button>
+          );
+        }
 
         return (
           <Link

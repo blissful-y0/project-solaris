@@ -11,19 +11,28 @@ interface DashboardLayoutProps {
   children: ReactNode;
   currentPath?: string;
   notificationCount?: number;
+  /** 캐릭터 승인 여부 — MobileTabBar/DesktopSidebar에 전달 */
+  isCharacterApproved?: boolean;
 }
 
 export function DashboardLayout({
   children,
   currentPath = "/",
   notificationCount,
+  isCharacterApproved,
 }: DashboardLayoutProps) {
   return (
     <div className="min-h-dvh bg-bg">
       <TopBar notificationCount={notificationCount} />
       <SolarisTicker />
-      <DesktopSidebar currentPath={currentPath} />
-      <MobileTabBar currentPath={currentPath} />
+      <DesktopSidebar
+        currentPath={currentPath}
+        isCharacterApproved={isCharacterApproved}
+      />
+      <MobileTabBar
+        currentPath={currentPath}
+        isCharacterApproved={isCharacterApproved}
+      />
 
       <main
         className={cn(
