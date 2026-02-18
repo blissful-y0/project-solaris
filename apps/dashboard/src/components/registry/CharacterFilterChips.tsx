@@ -1,7 +1,7 @@
 "use client";
 
 import { FilterChips } from "@/components/ui";
-import { FACTION_OPTIONS, ABILITY_OPTIONS } from "./mock-registry-data";
+import { FACTION_OPTIONS, ABILITY_OPTIONS } from "./registry-data";
 
 interface CharacterFilterChipsProps {
   factionFilter: string;
@@ -19,8 +19,7 @@ export function CharacterFilterChips({
   onAbilityChange,
   className,
 }: CharacterFilterChipsProps) {
-  const showAbilityFilter =
-    factionFilter !== "all" && factionFilter !== "civilian";
+  const showAbilityFilter = factionFilter !== "all";
 
   return (
     <div className={className}>

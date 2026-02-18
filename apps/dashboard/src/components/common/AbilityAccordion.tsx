@@ -12,8 +12,10 @@ export type Ability = {
   name: string;
   description: string;
   weakness: string;
-  costAmount: number;
-  costType: "will" | "hp";
+  costHp?: number;
+  costWill?: number;
+  costAmount?: number;
+  costType?: "will" | "hp";
 };
 
 type AbilityAccordionProps = {
@@ -29,8 +31,24 @@ const tierLabel: Record<Ability["tier"], string> = {
 };
 
 /* ─── cost 표시 포맷 ─── */
-function formatCost(costType: Ability["costType"], costAmount: number): string {
-  return `${costType === "will" ? "WILL" : "HP"} ${costAmount}`;
+function formatCost(ability: Ability): string {
+  const hp =
+    typeof ability.costHp === "number"
+      ? ability.costHp
+      : ability.costType === "hp"
+        ? (ability.costAmount ?? 0)
+        : 0;
+  const will =
+    typeof ability.costWill === "number"
+      ? ability.costWill
+      : ability.costType === "will"
+        ? (ability.costAmount ?? 0)
+        : 0;
+
+  if (hp > 0 && will > 0) return `HP ${hp} + WILL ${will}`;
+  if (hp > 0) return `HP ${hp}`;
+  if (will > 0) return `WILL ${will}`;
+  return "—";
 }
 
 /** 능력 접힘/펼침 아코디언 */
@@ -104,10 +122,14 @@ export function AbilityAccordion({
                 {/* 코스트 */}
                 <div className="flex justify-end">
                   <Badge
-                    variant={ability.costType === "will" ? "info" : "danger"}
+                    variant={
+                      (ability.costWill ?? 0) > 0 && (ability.costHp ?? 0) === 0
+                        ? "info"
+                        : "danger"
+                    }
                     size="sm"
                   >
-                    {formatCost(ability.costType, ability.costAmount)}
+                    {formatCost(ability)}
                   </Badge>
                 </div>
               </div>

@@ -32,6 +32,17 @@ const mockAbilities: Ability[] = [
   },
 ];
 
+const dualCostAbility: Ability[] = [
+  {
+    tier: "advanced",
+    name: "하모닉스 프로토콜",
+    description: "이중 자원 소모 스킬",
+    weakness: "회복 부담",
+    costHp: 10,
+    costWill: 30,
+  },
+];
+
 describe("AbilityAccordion", () => {
   it("3개 능력 이름을 모두 렌더링한다", () => {
     render(<AbilityAccordion abilities={mockAbilities} />);
@@ -86,6 +97,14 @@ describe("AbilityAccordion", () => {
 
     await user.click(screen.getByText("역장 폭발"));
     expect(screen.getByText("HP 15")).toBeInTheDocument();
+  });
+
+  it("클릭 시 HP/WILL 이중 코스트를 함께 표시한다", async () => {
+    const user = userEvent.setup();
+    render(<AbilityAccordion abilities={dualCostAbility} />);
+
+    await user.click(screen.getByText("하모닉스 프로토콜"));
+    expect(screen.getByText("HP 10 + WILL 30")).toBeInTheDocument();
   });
 
   it("다시 클릭하면 접힌다", async () => {
