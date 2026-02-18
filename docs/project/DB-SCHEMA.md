@@ -1,5 +1,7 @@
 # PROJECT SOLARIS - Database Schema
 
+> 설계 이유(비개발자용): `docs/project/DB-ARCHITECTURE-RATIONALE.md`
+
 **Version:** 1.0  
 **Database:** Supabase PostgreSQL  
 **ID Strategy:** nanoid(12) generated at application layer  
