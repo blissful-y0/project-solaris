@@ -4,8 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils";
+import { StatBar } from "@/components/common";
 import type { CitizenData } from "./mock-citizen";
-import { factionStyle, HpBattery, WillGauge, DataField } from "./StatDisplay";
+import { factionStyle, DataField } from "./StatDisplay";
 import { AvatarWithEdit } from "./AvatarWithEdit";
 
 /* ────────────────────────────────────────────────
@@ -69,8 +70,8 @@ export function RegisteredCard({
             </div>
 
             <div className="mt-2 space-y-1">
-              <HpBattery current={citizen.hp.current} max={citizen.hp.max} />
-              <WillGauge current={citizen.will.current} max={citizen.will.max} />
+              <StatBar current={citizen.hp.current} max={citizen.hp.max} variant="hp" label="HP" />
+              <StatBar current={citizen.will.current} max={citizen.will.max} variant="will" label="WILL" />
             </div>
           </div>
         </div>

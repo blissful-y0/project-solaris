@@ -1,11 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui";
 import {
-  CharacterSearchBar,
-  CharacterFilterChips,
   CharacterCard,
   CharacterProfileModal,
   toCharacterSummary,
@@ -20,10 +18,6 @@ export default function CharactersPage() {
   const [characters, setCharacters] = useState<RegistryCharacterSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [factionFilter, setFactionFilter] = useState("all");
-  const [abilityFilter, setAbilityFilter] = useState("all");
 
   /* 상세 모달 상태 */
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -101,52 +95,23 @@ export default function CharactersPage() {
     setDetailError(null);
   }, []);
 
-  const filteredCharacters = useMemo(() => {
-    let result = [...characters];
-
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((c) => c.name.toLowerCase().includes(q));
-    }
-
-    if (factionFilter !== "all") {
-      result = result.filter((c) => c.faction === factionFilter);
-    }
-
-    if (abilityFilter !== "all") {
-      result = result.filter((c) => c.abilityClass === abilityFilter);
-    }
-
-    return result;
-  }, [characters, searchQuery, factionFilter, abilityFilter]);
-
-  function handleFactionChange(value: string) {
-    setFactionFilter(value);
-    setAbilityFilter("all");
-  }
-
   return (
     <section className="py-6">
       {/* 헤더 */}
       <div className="mb-6">
         <h1 className="hud-label text-lg">REGISTRY // CITIZEN DATABASE</h1>
+        {!loading && !error && (
+          <p className="mt-1 hud-label text-text-secondary">
+            TOTAL OPERATIVES: {characters.length}
+          </p>
+        )}
       </div>
-
-      {/* 검색 + 필터 */}
-      <CharacterSearchBar value={searchQuery} onChange={setSearchQuery} className="mb-4" />
-      <CharacterFilterChips
-        factionFilter={factionFilter}
-        abilityFilter={abilityFilter}
-        onFactionChange={handleFactionChange}
-        onAbilityChange={setAbilityFilter}
-        className="mb-6"
-      />
 
       {/* 로딩 */}
       {loading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-lg" />
+            <Skeleton key={i} className="h-[170px] rounded-lg" />
           ))}
         </div>
       )}
@@ -158,8 +123,8 @@ export default function CharactersPage() {
 
       {/* 카드 그리드 */}
       {!loading && !error && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCharacters.map((character) => (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {characters.map((character) => (
             <CharacterCard
               key={character.id}
               character={character}
@@ -170,11 +135,9 @@ export default function CharactersPage() {
       )}
 
       {/* 빈 결과 */}
-      {!loading && !error && filteredCharacters.length === 0 && (
+      {!loading && !error && characters.length === 0 && (
         <p className="text-center text-sm text-text-secondary py-12">
-          {characters.length === 0
-            ? "등록된 시민이 없습니다"
-            : "검색 결과가 없습니다"}
+          등록된 시민이 없습니다
         </p>
       )}
 

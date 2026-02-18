@@ -17,7 +17,7 @@ describe("CharacterFilterChips", () => {
     expect(screen.getByText("전체")).toBeInTheDocument();
     expect(screen.getByText("Bureau")).toBeInTheDocument();
     expect(screen.getByText("Static")).toBeInTheDocument();
-    expect(screen.getByText("전향자")).toBeInTheDocument();
+    /* 전향자 제거됨 — bureau/static만 표시 */
   });
 
   it("소속 칩 클릭 시 onFactionChange를 호출한다", async () => {
@@ -63,10 +63,10 @@ describe("CharacterFilterChips", () => {
     expect(screen.queryByText("역장")).not.toBeInTheDocument();
   });
 
-  it("소속이 'defector'이면 능력 서브필터를 표시한다", () => {
+  it("소속이 'static'이면 능력 서브필터를 표시한다", () => {
     render(
       <CharacterFilterChips
-        factionFilter="defector"
+        factionFilter="static"
         abilityFilter="all"
         onFactionChange={() => {}}
         onAbilityChange={() => {}}
