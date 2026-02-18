@@ -14,10 +14,18 @@ export async function POST(
     const { supabase } = await requireAdmin();
     const { id } = await params;
     const body = (await request.json()) as RejectBody;
+    const reason = body.reason?.trim() ?? "";
+
+    if (reason.length < 20) {
+      return NextResponse.json(
+        { error: "REASON_TOO_SHORT", min: 20 },
+        { status: 400 },
+      );
+    }
 
     const { data, error } = await supabase
       .from("characters")
-      .update({ status: "rejected", rejection_reason: body.reason ?? null })
+      .update({ status: "rejected", rejection_reason: reason })
       .eq("id", id)
       .select("id, user_id, status")
       .single();
@@ -26,15 +34,19 @@ export async function POST(
       return NextResponse.json({ error: "FAILED_TO_REJECT" }, { status: 500 });
     }
 
-    await createNotification({
-      userId: data.user_id,
-      scope: "user",
-      type: "character_rejected",
-      title: "캐릭터 반려 안내",
-      body: "캐릭터가 반려되었습니다.",
-      channel: "discord_dm",
-      payload: { characterId: data.id },
-    }, supabase);
+    try {
+      await createNotification({
+        userId: data.user_id,
+        scope: "user",
+        type: "character_rejected",
+        title: "캐릭터 반려 안내",
+        body: "캐릭터가 반려되었습니다.",
+        channel: "discord_dm",
+        payload: { characterId: data.id },
+      }, supabase);
+    } catch (notifError) {
+      console.error("[admin/reject] 알림 생성 실패 (반려는 완료):", notifError);
+    }
 
     return NextResponse.json({ data });
   } catch (error) {

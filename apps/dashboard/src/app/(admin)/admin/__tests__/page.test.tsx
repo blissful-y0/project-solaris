@@ -8,16 +8,17 @@ describe("AdminPage", () => {
     vi.clearAllMocks();
   });
 
-  it("큐 요약을 표시한다", async () => {
+  it("통계 카드를 표시한다", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          data: [
-            { id: "char_1", faction: "bureau", leader_application: true },
-            { id: "char_2", faction: "static", leader_application: false },
-          ],
+          data: {
+            characters: { pending: 3, approved: 10, rejected: 2, total: 15 },
+            users: 5,
+            notifications: 8,
+          },
         }),
       }),
     );
@@ -26,10 +27,11 @@ describe("AdminPage", () => {
 
     expect(screen.getByText("ADMIN CONSOLE")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText("대기 신청")).toBeInTheDocument();
-      expect(screen.getByText("리더 신청")).toBeInTheDocument();
-      expect(screen.getByText("Bureau 대기")).toBeInTheDocument();
-      expect(screen.getByText("Static 대기")).toBeInTheDocument();
+      expect(screen.getByText("3")).toBeInTheDocument();
+      expect(screen.getByText("10")).toBeInTheDocument();
+      expect(screen.getByText("2")).toBeInTheDocument();
+      expect(screen.getByText("15")).toBeInTheDocument();
+      expect(screen.getByText("5")).toBeInTheDocument();
     });
   });
 

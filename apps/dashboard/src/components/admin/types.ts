@@ -26,6 +26,10 @@ export type AdminCharacter = {
     gender?: string;
     personality?: string;
   } | null;
+  hp_max: number;
+  hp_current: number;
+  will_max: number;
+  will_current: number;
   crossover_style: string | null;
   created_at?: string;
   abilities: AdminAbility[];

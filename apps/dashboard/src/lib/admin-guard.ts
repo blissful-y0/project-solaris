@@ -16,7 +16,12 @@ export async function requireAdmin() {
     .eq("id", user.id)
     .single();
 
-  if (error || userRow?.role !== "admin") {
+  if (error) {
+    console.error("[admin-guard] users 테이블 조회 실패:", error.message, error.code);
+    throw new Error("ADMIN_CHECK_FAILED");
+  }
+
+  if (userRow?.role !== "admin") {
     throw new Error("FORBIDDEN");
   }
 
