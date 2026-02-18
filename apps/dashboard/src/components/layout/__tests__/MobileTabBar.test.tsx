@@ -11,12 +11,13 @@ vi.mock("next/link", () => ({
 }));
 
 describe("MobileTabBar", () => {
-  it("renders all 4 navigation items with IA v2 labels", () => {
+  it("renders all 5 navigation items", () => {
     render(<MobileTabBar currentPath="/" />);
     expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Helios Core")).toBeInTheDocument();
     expect(screen.getByText("Operation")).toBeInTheDocument();
     expect(screen.getByText("Registry")).toBeInTheDocument();
-    expect(screen.getByText("Helios Core")).toBeInTheDocument();
+    expect(screen.getByText("Lore")).toBeInTheDocument();
   });
 
   it("highlights active item based on currentPath", () => {
@@ -48,7 +49,7 @@ describe("MobileTabBar", () => {
   it("each item has accessible label via link text", () => {
     render(<MobileTabBar currentPath="/" isCharacterApproved />);
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(4);
+    expect(links).toHaveLength(5);
   });
 
   it("has md:hidden class for desktop hiding", () => {
@@ -63,6 +64,7 @@ describe("MobileTabBar", () => {
     expect(screen.getByRole("link", { name: /helios core/i })).toHaveAttribute("href", "/core");
     expect(screen.getByRole("link", { name: /operation/i })).toHaveAttribute("href", "/operation");
     expect(screen.getByRole("link", { name: /registry/i })).toHaveAttribute("href", "/registry");
+    expect(screen.getByRole("link", { name: /lore/i })).toHaveAttribute("href", "/lore");
   });
 
   // --- 잠금 UI 테스트 ---

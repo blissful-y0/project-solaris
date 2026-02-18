@@ -21,18 +21,9 @@ export function TopBar({ notificationCount }: TopBarProps) {
         "md:pl-[244px] md:pr-6",
       )}
     >
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-bold uppercase tracking-widest text-primary text-glow-cyan">
-          SOLARIS
-        </span>
-        <span className="text-text-secondary/40">·</span>
-        <Link
-          href="/lore"
-          className="hud-label text-text-secondary transition-colors hover:text-primary"
-        >
-          LORE
-        </Link>
-      </div>
+      <span className="text-sm font-bold uppercase tracking-widest text-primary text-glow-cyan">
+        SOLARIS
+      </span>
 
       <div className="flex items-center gap-1">
         <button
