@@ -17,8 +17,8 @@ export type Database = {
       abilities: {
         Row: {
           character_id: string
-          cost_amount: number
-          cost_type: string
+          cost_hp: number
+          cost_will: number
           created_at: string
           deleted_at: string | null
           description: string
@@ -30,8 +30,8 @@ export type Database = {
         }
         Insert: {
           character_id: string
-          cost_amount: number
-          cost_type: string
+          cost_hp?: number
+          cost_will?: number
           created_at?: string
           deleted_at?: string | null
           description: string
@@ -43,8 +43,8 @@ export type Database = {
         }
         Update: {
           character_id?: string
-          cost_amount?: number
-          cost_type?: string
+          cost_hp?: number
+          cost_will?: number
           created_at?: string
           deleted_at?: string | null
           description?: string
@@ -70,6 +70,7 @@ export type Database = {
           appearance: string | null
           backstory: string | null
           created_at: string
+          crossover_style: string | null
           deleted_at: string | null
           faction: string
           hp_current: number
@@ -92,6 +93,7 @@ export type Database = {
           appearance?: string | null
           backstory?: string | null
           created_at?: string
+          crossover_style?: string | null
           deleted_at?: string | null
           faction: string
           hp_current: number
@@ -114,6 +116,7 @@ export type Database = {
           appearance?: string | null
           backstory?: string | null
           created_at?: string
+          crossover_style?: string | null
           deleted_at?: string | null
           faction?: string
           hp_current?: number
@@ -391,25 +394,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_character_with_abilities: {
-        Args: {
-          p_abilities: Json
-          p_ability_class: string
-          p_appearance: string
-          p_backstory: string
-          p_faction: string
-          p_hp_current: number
-          p_hp_max: number
-          p_id: string
-          p_leader_application: boolean
-          p_name: string
-          p_profile_data: Json
-          p_user_id: string
-          p_will_current: number
-          p_will_max: number
-        }
-        Returns: string
-      }
+      create_character_with_abilities:
+        | {
+            Args: {
+              p_abilities: Json
+              p_ability_class: string
+              p_appearance: string
+              p_backstory: string
+              p_faction: string
+              p_hp_current: number
+              p_hp_max: number
+              p_id: string
+              p_leader_application: boolean
+              p_name: string
+              p_profile_data: Json
+              p_user_id: string
+              p_will_current: number
+              p_will_max: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_abilities: Json
+              p_ability_class: string
+              p_appearance: string
+              p_backstory: string
+              p_crossover_style: string
+              p_faction: string
+              p_hp_current: number
+              p_hp_max: number
+              p_id: string
+              p_leader_application: boolean
+              p_name: string
+              p_profile_data: Json
+              p_user_id: string
+              p_will_current: number
+              p_will_max: number
+            }
+            Returns: string
+          }
     }
     Enums: {
       [_ in never]: never

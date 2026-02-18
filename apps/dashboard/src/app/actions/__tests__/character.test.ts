@@ -111,21 +111,24 @@ describe("character actions", () => {
           name: "기본",
           description: "기본 설명",
           weakness: "약점",
-          costAmount: 10,
+          costHp: 0,
+          costWill: 10,
         },
         {
           tier: "mid",
           name: "중급",
           description: "중급 설명",
           weakness: "약점",
-          costAmount: 20,
+          costHp: 0,
+          costWill: 20,
         },
         {
           tier: "advanced",
           name: "고급",
           description: "고급 설명",
           weakness: "약점",
-          costAmount: 30,
+          costHp: 0,
+          costWill: 30,
         },
       ],
     });
@@ -139,8 +142,56 @@ describe("character actions", () => {
         p_hp_max: 80,
         p_will_max: 250,
         p_leader_application: true,
+        p_crossover_style: null,
       }),
     );
+  });
+
+  it("submitCharacter는 crossoverStyle이 있으면 스킬별 HP/WILL 코스트를 모두 요구한다", async () => {
+    const { submitCharacter } = await import("../character");
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "1ab4a2b5-15e7-49ef-9108-ecc2ad850a08" } },
+    });
+
+    await expect(
+      submitCharacter({
+        name: "테스터",
+        faction: "bureau",
+        abilityClass: "field",
+        profileData: {},
+        appearance: "",
+        backstory: "",
+        leaderApplication: false,
+        crossoverStyle: "limiter-override",
+        abilities: [
+          {
+            tier: "basic",
+            name: "기본",
+            description: "기본 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 10,
+          },
+          {
+            tier: "mid",
+            name: "중급",
+            description: "중급 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 20,
+          },
+          {
+            tier: "advanced",
+            name: "고급",
+            description: "고급 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 30,
+          },
+        ],
+      }),
+    ).rejects.toThrow("INVALID_DUAL_COST");
   });
 
   it("submitCharacter는 미인증 사용자를 거부한다", async () => {
@@ -157,27 +208,31 @@ describe("character actions", () => {
         appearance: "",
         backstory: "",
         leaderApplication: false,
+        crossoverStyle: null,
         abilities: [
           {
             tier: "basic",
             name: "기본",
             description: "기본 설명",
             weakness: "",
-            costAmount: 10,
+            costHp: 0,
+            costWill: 10,
           },
           {
             tier: "mid",
             name: "중급",
             description: "중급 설명",
             weakness: "",
-            costAmount: 20,
+            costHp: 0,
+            costWill: 20,
           },
           {
             tier: "advanced",
             name: "고급",
             description: "고급 설명",
             weakness: "",
-            costAmount: 30,
+            costHp: 0,
+            costWill: 30,
           },
         ],
       }),

@@ -17,12 +17,14 @@ interface CharacterDraft {
   appearance?: string;
   backstory?: string;
   leaderApplication: boolean;
+  crossoverStyle?: "limiter-override" | "hardware-bypass" | "dead-reckoning" | "defector" | null;
   abilities: {
     tier: "basic" | "mid" | "advanced";
     name: string;
     description: string;
     weakness: string;
-    costAmount: number;
+    costHp: number;
+    costWill: number;
   }[];
 }
 
@@ -40,6 +42,15 @@ export async function submitCharacter(draft: CharacterDraft) {
     throw new Error("INVALID_ABILITIES");
   }
 
+  if (draft.crossoverStyle) {
+    const hasInvalidDualCost = draft.abilities.some(
+      (ability) => ability.costHp <= 0 || ability.costWill <= 0,
+    );
+    if (hasInvalidDualCost) {
+      throw new Error("INVALID_DUAL_COST");
+    }
+  }
+
   const characterId = nanoid(12);
   const stats = FACTION_STATS[draft.faction];
 
@@ -49,8 +60,8 @@ export async function submitCharacter(draft: CharacterDraft) {
     name: ability.name,
     description: ability.description,
     weakness: ability.weakness,
-    cost_type: "will",
-    cost_amount: ability.costAmount,
+    cost_hp: ability.costHp,
+    cost_will: ability.costWill,
   }));
 
   const { data, error } = await supabase.rpc("create_character_with_abilities", {
@@ -67,6 +78,7 @@ export async function submitCharacter(draft: CharacterDraft) {
     p_appearance: draft.appearance ?? null,
     p_backstory: draft.backstory ?? null,
     p_leader_application: draft.leaderApplication,
+    p_crossover_style: draft.crossoverStyle ?? null,
     p_abilities: abilityPayload,
   });
 
