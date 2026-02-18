@@ -6,6 +6,7 @@ type StepConfirmProps = {
   draft: CharacterDraft;
   onSubmit: () => void;
   onEditStep: (step: number) => void;
+  onLeaderChange?: (checked: boolean) => void;
 };
 
 const FACTION_LABELS = { bureau: "Solaris Bureau of Civic Security", static: "Static" } as const;
@@ -41,7 +42,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-export function StepConfirm({ draft, onSubmit, onEditStep }: StepConfirmProps) {
+export function StepConfirm({ draft, onSubmit, onEditStep, onLeaderChange }: StepConfirmProps) {
   const isBureau = draft.faction === "bureau";
   const systemName = isBureau ? "하모닉스 프로토콜" : "오버드라이브";
 
@@ -76,6 +77,8 @@ export function StepConfirm({ draft, onSubmit, onEditStep }: StepConfirmProps) {
         <SummaryRow label="이름" value={draft.abilityName} />
         <SummaryRow label="설명" value={draft.abilityDescription} />
         <SummaryRow label="제약" value={draft.abilityConstraint} />
+        <SummaryRow label="약점" value={draft.abilityWeakness} />
+        <SummaryRow label="비용 수치" value={draft.abilityCostAmount} />
         <SummaryRow label="기본 스킬" value={draft.abilityTierBasic} />
         <SummaryRow label="중급 스킬" value={draft.abilityTierMid} />
         <SummaryRow label="상급 스킬" value={draft.abilityTierAdvanced} />
@@ -96,6 +99,26 @@ export function StepConfirm({ draft, onSubmit, onEditStep }: StepConfirmProps) {
         <SummaryRow label="외형" value={draft.appearance} />
         <SummaryRow label="성격" value={draft.personality} />
         <SummaryRow label="배경" value={draft.backstory} />
+      </div>
+
+      {/* 리더 신청 */}
+      <div className="flex items-start gap-3 border border-border rounded-lg p-4 bg-bg-secondary/50">
+        <input
+          type="checkbox"
+          id="leaderApplication"
+          checked={draft.leaderApplication}
+          onChange={(e) => onLeaderChange?.(e.target.checked)}
+          className="mt-0.5 accent-primary"
+          aria-label="리더 신청"
+        />
+        <div>
+          <label htmlFor="leaderApplication" className="text-sm font-medium text-text cursor-pointer">
+            리더 신청
+          </label>
+          <p className="text-xs text-text-secondary mt-1">
+            작전의 리더로 활동하여 팀을 이끌 수 있습니다. 승인 후 작전 개설 권한이 부여됩니다.
+          </p>
+        </div>
       </div>
 
       {/* 제출 */}

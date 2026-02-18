@@ -8,6 +8,8 @@ export interface CharacterDraft {
   abilityName: string;
   abilityDescription: string;
   abilityConstraint: string;
+  abilityWeakness: string;
+  abilityCostAmount: string;
   abilityTierBasic: string;
   abilityTierMid: string;
   abilityTierAdvanced: string;
@@ -20,6 +22,8 @@ export interface CharacterDraft {
   appearance: string;
   personality: string;
   backstory: string;
+  // Step 5: 확인 및 제출
+  leaderApplication: boolean;
 }
 
 /** Bureau 크로스오버: 리미터 해제 */
@@ -36,6 +40,8 @@ export const EMPTY_DRAFT: CharacterDraft = {
   abilityName: "",
   abilityDescription: "",
   abilityConstraint: "",
+  abilityWeakness: "",
+  abilityCostAmount: "",
   abilityTierBasic: "",
   abilityTierMid: "",
   abilityTierAdvanced: "",
@@ -46,6 +52,7 @@ export const EMPTY_DRAFT: CharacterDraft = {
   appearance: "",
   personality: "",
   backstory: "",
+  leaderApplication: false,
 };
 
 export type Faction = NonNullable<CharacterDraft["faction"]>;

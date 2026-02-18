@@ -92,8 +92,35 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
           maxLength={200}
           value={draft.abilityConstraint}
           onChange={(e) => onChange({ abilityConstraint: e.target.value })}
-          placeholder="능력의 한계나 약점을 서술하세요"
+          placeholder="능력의 한계나 사용 조건을 서술하세요"
           className={textareaClass}
+        />
+      </div>
+
+      {/* 약점 */}
+      <div>
+        <label htmlFor="abilityWeakness" className={labelClass}>약점</label>
+        <textarea
+          id="abilityWeakness"
+          maxLength={200}
+          value={draft.abilityWeakness}
+          onChange={(e) => onChange({ abilityWeakness: e.target.value })}
+          placeholder="능력의 약점이나 부작용을 서술하세요"
+          className={textareaClass}
+        />
+      </div>
+
+      {/* 비용 수치 */}
+      <div>
+        <label htmlFor="abilityCostAmount" className={labelClass}>비용 수치</label>
+        <input
+          id="abilityCostAmount"
+          type="text"
+          maxLength={10}
+          value={draft.abilityCostAmount}
+          onChange={(e) => onChange({ abilityCostAmount: e.target.value })}
+          placeholder={`${costType} 소모량 (예: 15)`}
+          className={inputClass}
         />
       </div>
 
