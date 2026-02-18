@@ -101,6 +101,7 @@ describe("character actions", () => {
       name: "테스터",
       faction: "bureau",
       abilityClass: "field",
+      resonanceRate: 80,
       profileData: { age: "24", gender: "M", personality: "침착" },
       appearance: "검은 코트",
       backstory: "테스트 배경",
@@ -143,8 +144,105 @@ describe("character actions", () => {
         p_will_max: 250,
         p_leader_application: true,
         p_crossover_style: null,
+        p_resonance_rate: 80,
       }),
     );
+  });
+
+  it("submitCharacter는 보안국 공명율이 80 미만이면 거부한다", async () => {
+    const { submitCharacter } = await import("../character");
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "1ab4a2b5-15e7-49ef-9108-ecc2ad850a08" } },
+    });
+
+    await expect(
+      submitCharacter({
+        name: "테스터",
+        faction: "bureau",
+        abilityClass: "field",
+        resonanceRate: 79,
+        profileData: {},
+        appearance: "",
+        backstory: "",
+        leaderApplication: false,
+        crossoverStyle: null,
+        abilities: [
+          {
+            tier: "basic",
+            name: "기본",
+            description: "기본 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 10,
+          },
+          {
+            tier: "mid",
+            name: "중급",
+            description: "중급 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 20,
+          },
+          {
+            tier: "advanced",
+            name: "고급",
+            description: "고급 설명",
+            weakness: "",
+            costHp: 0,
+            costWill: 30,
+          },
+        ],
+      }),
+    ).rejects.toThrow("INVALID_RESONANCE_RATE");
+  });
+
+  it("submitCharacter는 스태틱 공명율이 15 초과면 거부한다", async () => {
+    const { submitCharacter } = await import("../character");
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "1ab4a2b5-15e7-49ef-9108-ecc2ad850a08" } },
+    });
+
+    await expect(
+      submitCharacter({
+        name: "테스터",
+        faction: "static",
+        abilityClass: "field",
+        resonanceRate: 16,
+        profileData: {},
+        appearance: "",
+        backstory: "",
+        leaderApplication: false,
+        crossoverStyle: null,
+        abilities: [
+          {
+            tier: "basic",
+            name: "기본",
+            description: "기본 설명",
+            weakness: "",
+            costHp: 10,
+            costWill: 0,
+          },
+          {
+            tier: "mid",
+            name: "중급",
+            description: "중급 설명",
+            weakness: "",
+            costHp: 20,
+            costWill: 0,
+          },
+          {
+            tier: "advanced",
+            name: "고급",
+            description: "고급 설명",
+            weakness: "",
+            costHp: 30,
+            costWill: 0,
+          },
+        ],
+      }),
+    ).rejects.toThrow("INVALID_RESONANCE_RATE");
   });
 
   it("submitCharacter는 crossoverStyle이 있으면 스킬별 HP/WILL 코스트를 모두 요구한다", async () => {
@@ -159,6 +257,7 @@ describe("character actions", () => {
         name: "테스터",
         faction: "bureau",
         abilityClass: "field",
+        resonanceRate: 80,
         profileData: {},
         appearance: "",
         backstory: "",
@@ -204,6 +303,7 @@ describe("character actions", () => {
         name: "테스터",
         faction: "bureau",
         abilityClass: "field",
+        resonanceRate: 80,
         profileData: {},
         appearance: "",
         backstory: "",

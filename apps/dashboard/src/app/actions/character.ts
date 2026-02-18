@@ -9,6 +9,7 @@ interface CharacterDraft {
   name: string;
   faction: Faction;
   abilityClass: AbilityClass | null;
+  resonanceRate: number;
   profileData: {
     age?: string;
     gender?: string;
@@ -40,6 +41,14 @@ export async function submitCharacter(draft: CharacterDraft) {
 
   if (draft.abilities.length !== 3) {
     throw new Error("INVALID_ABILITIES");
+  }
+
+  if (draft.faction === "bureau" && draft.resonanceRate < 80) {
+    throw new Error("INVALID_RESONANCE_RATE");
+  }
+
+  if (draft.faction === "static" && draft.resonanceRate > 15) {
+    throw new Error("INVALID_RESONANCE_RATE");
   }
 
   if (draft.crossoverStyle) {
@@ -74,6 +83,7 @@ export async function submitCharacter(draft: CharacterDraft) {
     p_hp_current: stats.hp,
     p_will_max: stats.will,
     p_will_current: stats.will,
+    p_resonance_rate: draft.resonanceRate,
     p_profile_data: draft.profileData,
     p_appearance: draft.appearance ?? null,
     p_backstory: draft.backstory ?? null,

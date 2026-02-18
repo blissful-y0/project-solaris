@@ -82,6 +82,7 @@ export type Database = {
           profile_data: Json | null
           profile_image_url: string | null
           rejection_reason: string | null
+          resonance_rate: number
           status: string
           updated_at: string
           user_id: string
@@ -105,6 +106,7 @@ export type Database = {
           profile_data?: Json | null
           profile_image_url?: string | null
           rejection_reason?: string | null
+          resonance_rate?: number
           status?: string
           updated_at?: string
           user_id: string
@@ -128,6 +130,7 @@ export type Database = {
           profile_data?: Json | null
           profile_image_url?: string | null
           rejection_reason?: string | null
+          resonance_rate?: number
           status?: string
           updated_at?: string
           user_id?: string
@@ -428,6 +431,27 @@ export type Database = {
               p_leader_application: boolean
               p_name: string
               p_profile_data: Json
+              p_user_id: string
+              p_will_current: number
+              p_will_max: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_abilities: Json
+              p_ability_class: string
+              p_appearance: string
+              p_backstory: string
+              p_crossover_style: string
+              p_faction: string
+              p_hp_current: number
+              p_hp_max: number
+              p_id: string
+              p_leader_application: boolean
+              p_name: string
+              p_profile_data: Json
+              p_resonance_rate: number
               p_user_id: string
               p_will_current: number
               p_will_max: number
