@@ -57,29 +57,29 @@ describe("CharacterCard", () => {
     expect(screen.getByText("역장")).toBeInTheDocument();
   });
 
-  it("Bureau 소속 Badge를 표시한다", () => {
+  it("Bureau 소속 라벨을 표시한다", () => {
     render(<CharacterCard character={bureau} onSelect={() => {}} />);
     expect(screen.getByText("BUREAU")).toBeInTheDocument();
   });
 
-  it("Static 소속 Badge를 표시한다", () => {
+  it("Static 소속 라벨을 표시한다", () => {
     render(<CharacterCard character={staticChar} onSelect={() => {}} />);
     expect(screen.getByText("STATIC")).toBeInTheDocument();
   });
 
-  it("isLeader=true → LEADER Badge를 표시한다", () => {
+  it("isLeader=true → ★ 리더 마크를 표시한다", () => {
     render(<CharacterCard character={bureau} onSelect={() => {}} />);
-    expect(screen.getByText("LEADER")).toBeInTheDocument();
+    expect(screen.getByLabelText("리더")).toBeInTheDocument();
   });
 
-  it("isLeader=false → LEADER Badge 없음", () => {
+  it("isLeader=false → 리더 마크 없음", () => {
     render(<CharacterCard character={nonLeader} onSelect={() => {}} />);
-    expect(screen.queryByText("LEADER")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("리더")).not.toBeInTheDocument();
   });
 
-  it("defector → '전향자' Badge를 표시한다", () => {
+  it("defector → DEFECTOR 라벨을 표시한다", () => {
     render(<CharacterCard character={defector} onSelect={() => {}} />);
-    expect(screen.getByText("전향자")).toBeInTheDocument();
+    expect(screen.getByText("DEFECTOR")).toBeInTheDocument();
   });
 
   it("아바타 이미지를 렌더링한다", () => {
@@ -95,5 +95,23 @@ describe("CharacterCard", () => {
 
     await user.click(screen.getByRole("button", { name: /아마츠키 레이 상세 보기/ }));
     expect(onSelect).toHaveBeenCalledWith(bureau);
+  });
+
+  it("isMine=true → 프라이머리 보더", () => {
+    const { container } = render(<CharacterCard character={bureau} onSelect={() => {}} />);
+    const article = container.querySelector("article");
+    expect(article?.className).toContain("border-primary/20");
+  });
+
+  it("isMine=false → 기본 보더", () => {
+    const { container } = render(<CharacterCard character={staticChar} onSelect={() => {}} />);
+    const article = container.querySelector("article");
+    expect(article?.className).toContain("border-border");
+  });
+
+  it("팩션 stripe를 렌더링한다", () => {
+    const { container } = render(<CharacterCard character={bureau} onSelect={() => {}} />);
+    const stripe = container.querySelector(".bg-primary");
+    expect(stripe).toBeInTheDocument();
   });
 });

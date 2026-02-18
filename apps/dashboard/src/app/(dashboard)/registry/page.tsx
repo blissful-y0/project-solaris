@@ -130,6 +130,14 @@ export default function CharactersPage() {
       {/* 헤더 */}
       <div className="mb-6">
         <h1 className="hud-label text-lg">REGISTRY // CITIZEN DATABASE</h1>
+        {!loading && !error && (
+          <p className="mt-1 hud-label text-text-secondary">
+            TOTAL OPERATIVES: {characters.length}
+            {filteredCharacters.length !== characters.length && (
+              <span className="ml-3">|  FILTERED: {filteredCharacters.length}</span>
+            )}
+          </p>
+        )}
       </div>
 
       {/* 검색 + 필터 */}
@@ -144,9 +152,9 @@ export default function CharactersPage() {
 
       {/* 로딩 */}
       {loading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-lg" />
+            <Skeleton key={i} className="h-[170px] rounded-lg" />
           ))}
         </div>
       )}
@@ -158,7 +166,7 @@ export default function CharactersPage() {
 
       {/* 카드 그리드 */}
       {!loading && !error && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-2">
           {filteredCharacters.map((character) => (
             <CharacterCard
               key={character.id}

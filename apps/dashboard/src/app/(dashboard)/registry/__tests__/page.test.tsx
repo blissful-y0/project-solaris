@@ -120,7 +120,7 @@ describe("CharactersPage", () => {
     ) as unknown as typeof fetch;
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     render(<CharactersPage />);
-    const skeletons = document.querySelectorAll(".h-48");
+    const skeletons = document.querySelectorAll(".h-\\[170px\\]");
     expect(skeletons.length).toBe(6);
     await Promise.resolve();
     expect(consoleErrorSpy).not.toHaveBeenCalled();
