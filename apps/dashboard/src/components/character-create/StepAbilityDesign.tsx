@@ -12,7 +12,7 @@ const inputClass = cn(
   "w-full min-h-[44px] bg-bg-secondary border border-border rounded-md px-3 py-2 text-text placeholder:text-text-secondary/50",
   "focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-colors",
 );
-const textareaClass = cn(inputClass, "min-h-[80px] resize-y");
+const textareaClass = cn(inputClass, "min-h-[80px] resize-none");
 const costInputClass = cn(inputClass, "min-h-[44px] w-full");
 
 /** Bureau 크로스오버 옵션 */
@@ -53,29 +53,38 @@ const TIER_LABELS = {
 
 type TierKey = keyof typeof TIER_LABELS;
 
+/** 티어별 권장 코스트 범위 */
+const COST_GUIDE = {
+  basic:    { will: "3~5", hp: "15~20", computeWill: "+2" },
+  mid:      { will: "8~15", hp: "30~40", computeWill: "+5" },
+  advanced: { will: "20~30", hp: "50~60", computeWill: "+10" },
+} as const;
+
 /** 개별 스킬 티어 입력 블록 */
 function SkillTierBlock({
   tier,
   skill,
   systemName,
   isBureau,
-  hasCrossover,
+  showDualCost,
+  isStaticCompute,
   onChange,
 }: {
   tier: TierKey;
   skill: SkillTier;
   systemName: string;
   isBureau: boolean;
-  hasCrossover: boolean;
+  /** 크로스오버 또는 Static+Compute로 HP+WILL 둘 다 표시 */
+  showDualCost: boolean;
+  /** Static+Compute 특수 규칙 (HP + 추가 WILL) */
+  isStaticCompute: boolean;
   onChange: (patch: Partial<SkillTier>) => void;
 }) {
   const tierLabel = tier === "advanced"
     ? `${TIER_LABELS[tier]} — ${systemName}`
     : TIER_LABELS[tier];
 
-  /* 크로스오버 시 HP+WILL 둘 다 입력, 아니면 진영에 따라 한 쪽만 */
-  const showBothCosts = hasCrossover;
-  const primaryCost = isBureau ? "WILL" : "HP";
+  const guide = COST_GUIDE[tier];
 
   return (
     <div className="rounded-lg border border-border bg-bg-secondary/30 p-4 space-y-3">
@@ -111,10 +120,13 @@ function SkillTierBlock({
       </div>
 
       {/* 코스트 입력 */}
-      <div className={cn("grid gap-3", showBothCosts ? "grid-cols-2" : "grid-cols-1")}>
-        {(showBothCosts || !isBureau) && (
+      <div className={cn("grid gap-3", showDualCost ? "grid-cols-2" : "grid-cols-1")}>
+        {(showDualCost || !isBureau) && (
           <div>
-            <label htmlFor={`skill-${tier}-hp`} className={labelClass}>HP 소모</label>
+            <div className="flex items-baseline justify-between">
+              <label htmlFor={`skill-${tier}-hp`} className={labelClass}>HP 소모</label>
+              <span className="text-[0.55rem] text-text-secondary/50 tabular-nums">{guide.hp}</span>
+            </div>
             <input
               id={`skill-${tier}-hp`}
               type="number"
@@ -122,14 +134,19 @@ function SkillTierBlock({
               max="999"
               value={skill.costHp}
               onChange={(e) => onChange({ costHp: e.target.value })}
-              placeholder="HP 소모량"
+              placeholder={guide.hp}
               className={costInputClass}
             />
           </div>
         )}
-        {(showBothCosts || isBureau) && (
+        {(showDualCost || isBureau) && (
           <div>
-            <label htmlFor={`skill-${tier}-will`} className={labelClass}>WILL 소모</label>
+            <div className="flex items-baseline justify-between">
+              <label htmlFor={`skill-${tier}-will`} className={labelClass}>WILL 소모</label>
+              <span className="text-[0.55rem] text-text-secondary/50 tabular-nums">
+                {isBureau && !showDualCost ? guide.will : isStaticCompute ? guide.computeWill : guide.will}
+              </span>
+            </div>
             <input
               id={`skill-${tier}-will`}
               type="number"
@@ -137,16 +154,17 @@ function SkillTierBlock({
               max="999"
               value={skill.costWill}
               onChange={(e) => onChange({ costWill: e.target.value })}
-              placeholder="WILL 소모량"
+              placeholder={isBureau && !showDualCost ? guide.will : isStaticCompute ? guide.computeWill : guide.will}
               className={costInputClass}
             />
           </div>
         )}
       </div>
 
-      {!showBothCosts && (
-        <p className="text-[0.625rem] text-text-secondary/60">
-          {primaryCost} 소모 기반 — 크로스오버 선택 시 HP/WILL 이중 소모로 전환됩니다
+      {/* 가이드라인 안내 */}
+      {isStaticCompute && !showDualCost && (
+        <p className="text-[0.625rem] text-warning/70">
+          연산(Compute) 계열 — 비동조형 사용 시 HP + 추가 WILL 이중 소모
         </p>
       )}
     </div>
@@ -157,6 +175,10 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
   const isBureau = draft.faction === "bureau";
   const systemName = isBureau ? "하모닉스 프로토콜" : "오버드라이브";
   const hasCrossover = draft.crossoverStyle !== null;
+  /** 비동조형(Static) + 연산(Compute) = HP + 추가 WILL 이중 코스트 */
+  const isStaticCompute = !isBureau && draft.abilityClass === "compute";
+  /** 이중 코스트 표시 조건: 크로스오버 OR Static+Compute */
+  const showDualCost = hasCrossover || isStaticCompute;
 
   /** 특정 티어의 스킬 데이터를 업데이트 */
   function updateSkill(tier: TierKey, patch: Partial<SkillTier>) {
@@ -175,6 +197,9 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
         능력 체계: <span className={cn("font-semibold", isBureau ? "text-primary" : "text-accent")}>{systemName}</span>
         {hasCrossover && (
           <span className="text-warning ml-2">⚠ 크로스오버: HP + WILL 이중 소모</span>
+        )}
+        {isStaticCompute && !hasCrossover && (
+          <span className="text-warning ml-2">⚠ 연산 계열: HP + WILL 이중 소모</span>
         )}
       </p>
 
@@ -245,7 +270,8 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
             skill={draft.skills[tier]}
             systemName={systemName}
             isBureau={isBureau}
-            hasCrossover={hasCrossover}
+            showDualCost={showDualCost}
+            isStaticCompute={isStaticCompute}
             onChange={(patch) => updateSkill(tier, patch)}
           />
         ))}
