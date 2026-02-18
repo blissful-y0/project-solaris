@@ -147,34 +147,29 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
   /* 미리보기 / 업로드 모드 */
   return (
     <div className={cn("space-y-2", className)}>
-      <p className="text-xs uppercase tracking-widest text-text-secondary mb-1.5">
-        프로필 이미지
-      </p>
-
       {previewUrl ? (
-        <div className="flex items-start gap-4">
+        <div className="space-y-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
             alt="프로필 미리보기"
-            className="w-24 h-24 rounded-md border border-border object-cover"
+            className="w-32 h-32 rounded-md border border-border object-cover"
           />
-          <div className="flex flex-col gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
+          <div className="flex gap-2">
+            <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
+              className="text-[0.625rem] text-primary/60 hover:text-primary transition-colors uppercase tracking-wider"
             >
               변경
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
+            </button>
+            <button
+              type="button"
               onClick={handleRemove}
-              className="text-accent hover:text-accent"
+              className="text-[0.625rem] text-accent/60 hover:text-accent transition-colors uppercase tracking-wider"
             >
               제거
-            </Button>
+            </button>
           </div>
         </div>
       ) : (
@@ -182,13 +177,15 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className={cn(
-            "w-full rounded-lg border-2 border-dashed border-border p-6",
-            "flex flex-col items-center gap-2",
+            "w-32 h-32 rounded-md border-2 border-dashed border-border",
+            "flex flex-col items-center justify-center gap-1",
             "hover:border-primary/40 transition-colors cursor-pointer",
           )}
         >
           <span className="text-2xl text-text-secondary/40">+</span>
-          <span className="text-xs text-text-secondary">JPG, PNG, WebP (최대 5MB)</span>
+          <span className="text-[0.55rem] text-text-secondary leading-tight text-center px-1">
+            프로필 이미지
+          </span>
         </button>
       )}
 

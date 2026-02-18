@@ -6,9 +6,7 @@ import { ImageCropper } from "./ImageCropper";
 type StepProfileProps = {
   draft: CharacterDraft;
   onChange: (patch: Partial<CharacterDraft>) => void;
-  /** 이미지 파일 변경 콜백 (File은 localStorage 저장 불가이므로 별도 관리) */
   onImageChange: (file: File | null, previewUrl: string | null) => void;
-  /** 현재 이미지 미리보기 URL */
   imagePreviewUrl: string | null;
 };
 
@@ -16,6 +14,10 @@ const labelClass = "block text-xs uppercase tracking-widest text-text-secondary 
 const inputClass = cn(
   "w-full min-h-[44px] bg-bg-secondary border border-border rounded-md px-3 py-2 text-text placeholder:text-text-secondary/50",
   "focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-colors",
+);
+const numInputClass = cn(
+  inputClass,
+  "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
 );
 const textareaClass = cn(inputClass, "min-h-[80px] resize-none");
 
@@ -35,92 +37,100 @@ export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }:
     <div className="space-y-5">
       <p className="hud-label mb-6">// 캐릭터 프로필을 입력하세요</p>
 
-      {/* 이름 + 성별 + 나이 + 공명율 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="charName" className={labelClass}>캐릭터 이름</label>
-          <input
-            id="charName"
-            type="text"
-            maxLength={20}
-            value={draft.name}
-            onChange={(e) => onChange({ name: e.target.value })}
-            placeholder="이름"
-            className={inputClass}
+      {/* 상단: 이미지 (좌) + 기본 정보 (우) — 이력서 스타일 */}
+      <div className="flex gap-5">
+        {/* 좌측: 프로필 이미지 */}
+        <div className="shrink-0">
+          <ImageCropper
+            previewUrl={imagePreviewUrl}
+            onImageChange={onImageChange}
           />
         </div>
-        <div>
-          <label htmlFor="gender" className={labelClass}>성별</label>
-          <input
-            id="gender"
-            type="text"
-            maxLength={10}
-            value={draft.gender}
-            onChange={(e) => onChange({ gender: e.target.value })}
-            placeholder="자유 입력"
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label htmlFor="age" className={labelClass}>나이</label>
-          <input
-            id="age"
-            type="number"
-            min={15}
-            max={999}
-            value={draft.age}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === "" || /^\d+$/.test(val)) {
-                onChange({ age: val });
-              }
-            }}
-            placeholder="15~999"
-            className={cn(inputClass, "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none")}
-          />
-          {draft.age !== "" && Number(draft.age) < 15 && (
-            <p className="text-xs text-accent mt-1">최소 15세 이상이어야 합니다</p>
+
+        {/* 우측: 이름 / 성별 / 나이 / 공명율 */}
+        <div className="flex-1 min-w-0 space-y-3">
+          <div>
+            <label htmlFor="charName" className={labelClass}>캐릭터 이름</label>
+            <input
+              id="charName"
+              type="text"
+              maxLength={20}
+              value={draft.name}
+              onChange={(e) => onChange({ name: e.target.value })}
+              placeholder="이름"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="gender" className={labelClass}>성별</label>
+              <input
+                id="gender"
+                type="text"
+                maxLength={10}
+                value={draft.gender}
+                onChange={(e) => onChange({ gender: e.target.value })}
+                placeholder="자유 입력"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="age" className={labelClass}>나이</label>
+              <input
+                id="age"
+                type="number"
+                min={15}
+                max={999}
+                value={draft.age}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || /^\d+$/.test(val)) {
+                    onChange({ age: val });
+                  }
+                }}
+                placeholder="15~999"
+                className={numInputClass}
+              />
+              {draft.age !== "" && Number(draft.age) < 15 && (
+                <p className="text-xs text-accent mt-1">최소 15세</p>
+              )}
+            </div>
+          </div>
+
+          {range && (
+            <div>
+              <div className="flex items-baseline justify-between">
+                <label htmlFor="resonanceRate" className={labelClass}>공명율</label>
+                <span className="text-[0.55rem] text-text-secondary/50 tabular-nums">{range.label}%</span>
+              </div>
+              <input
+                id="resonanceRate"
+                type="number"
+                min={range.min}
+                max={range.max}
+                value={draft.resonanceRate}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || /^\d+$/.test(val)) {
+                    onChange({ resonanceRate: val });
+                  }
+                }}
+                placeholder={range.label}
+                className={cn(
+                  numInputClass,
+                  rrOutOfRange && "border-accent/60 focus:ring-accent/50",
+                )}
+              />
+              {rrOutOfRange && (
+                <p className="text-xs text-accent mt-1">
+                  {draft.faction === "bureau" ? "보안국" : "스태틱"} 범위: {range.label}%
+                </p>
+              )}
+            </div>
           )}
         </div>
-        {range && (
-          <div>
-            <div className="flex items-baseline justify-between">
-              <label htmlFor="resonanceRate" className={labelClass}>공명율 (Resonance Rate)</label>
-              <span className="text-[0.55rem] text-text-secondary/50 tabular-nums">{range.label}</span>
-            </div>
-            <input
-              id="resonanceRate"
-              type="number"
-              min={range.min}
-              max={range.max}
-              value={draft.resonanceRate}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "" || /^\d+$/.test(val)) {
-                  onChange({ resonanceRate: val });
-                }
-              }}
-              placeholder={range.label}
-              className={cn(
-                inputClass,
-                "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                rrOutOfRange && "border-accent/60 focus:ring-accent/50",
-              )}
-            />
-            {rrOutOfRange && (
-              <p className="text-xs text-accent mt-1">
-                {draft.faction === "bureau" ? "보안국" : "스태틱"} 소속 공명율 범위: {range.label}%
-              </p>
-            )}
-          </div>
-        )}
       </div>
-
-      {/* 프로필 이미지 */}
-      <ImageCropper
-        previewUrl={imagePreviewUrl}
-        onImageChange={onImageChange}
-      />
 
       {/* 외형 묘사 */}
       <div>
