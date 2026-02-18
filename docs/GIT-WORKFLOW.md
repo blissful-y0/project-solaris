@@ -10,6 +10,8 @@
 - 기능 작업 브랜치: `feat/*`, `fix/*`, `chore/*`
 - 루트 워크트리(`project-solaris`)는 기본적으로 `develop`만 사용한다.
 - 실제 개발/검증은 `.worktrees/<task-branch>/`에서 진행한다.
+- **worktree 경로는 프로젝트 내부 `.worktrees/`로 통일한다.**
+- `~/.../project-solaris-worktrees` 같은 외부 worktree 경로는 신규 생성하지 않는다.
 
 ## 권장 작업 흐름
 1. 최신 동기화
@@ -45,6 +47,15 @@ git fetch --prune
 git worktree prune
 ```
 
+6. 외부 worktree를 `.worktrees/`로 정리(1회 마이그레이션)
+```bash
+git worktree list
+# 외부 경로 worktree를 확인한 뒤, 브랜치 기준으로 내부 .worktrees로 재생성
+git worktree add .worktrees/<branch-name> <branch-name>
+# 기존 외부 worktree 제거
+git worktree remove <old-worktree-path>
+```
+
 ## 정리 기준
 - 즉시 삭제 대상:
   - 이미 `develop`에 머지된 로컬 기능 브랜치
@@ -65,3 +76,4 @@ git worktree prune
 - 브랜치 base가 잘못되면 rebase보다 "올바른 base에서 새 브랜치 생성 + 체리픽/재작업"이 안전하다.
 - 한 브랜치에는 한 주제만 넣는다.
 - PR 병합 전 마지막 검증은 항상 실행한다.
+- 여러 worktree를 동시에 사용할 때도 기준 저장소 루트는 항상 `develop`으로 유지한다.

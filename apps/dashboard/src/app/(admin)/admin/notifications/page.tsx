@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { AccessDenied } from "@/components/admin/AccessDenied";
+import { AdminAccessDenied } from "@/components/common";
 import { Badge, Card } from "@/components/ui";
 
 type LoadState = "loading" | "ready" | "forbidden" | "error";
@@ -68,7 +68,7 @@ export default function AdminNotificationsPage() {
     void run();
   }, []);
 
-  if (state === "forbidden") return <AccessDenied />;
+  if (state === "forbidden") return <AdminAccessDenied />;
 
   return (
     <section className="space-y-4">

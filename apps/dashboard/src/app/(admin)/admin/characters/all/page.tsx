@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { AccessDenied } from "@/components/admin/AccessDenied";
+import { AdminAccessDenied } from "@/components/common";
 import type { AdminCharacter } from "@/components/admin/types";
 import { Badge, Button, Card, FilterChips } from "@/components/ui";
 
@@ -118,7 +118,7 @@ export default function AdminCharactersAllPage() {
       )
     : rows;
 
-  if (state === "forbidden") return <AccessDenied />;
+  if (state === "forbidden") return <AdminAccessDenied />;
 
   return (
     <section className="space-y-4">
