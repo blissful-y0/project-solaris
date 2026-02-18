@@ -5,6 +5,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { mockGetUser } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
 }));
+const { mockMaybeSingle } = vi.hoisted(() => ({
+  mockMaybeSingle: vi.fn(),
+}));
 
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: any) => (
@@ -34,6 +37,15 @@ vi.mock("@/lib/supabase/client", () => ({
     auth: {
       getUser: mockGetUser,
     },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          is: () => ({
+            maybeSingle: mockMaybeSingle,
+          }),
+        }),
+      }),
+    }),
   }),
 }));
 
@@ -54,6 +66,8 @@ function createDeferred<T>() {
 describe("Dashboard HomePage", () => {
   beforeEach(() => {
     mockGetUser.mockReset();
+    mockMaybeSingle.mockReset();
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
   });
 
   it("getUser 응답 전에는 로딩 상태를 표시한다", () => {
@@ -88,6 +102,7 @@ describe("Dashboard HomePage", () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: {
+          id: "user-1",
           email: "user@solaris.test",
           user_metadata: {
             full_name: "테스트 오퍼레이터",
@@ -110,6 +125,7 @@ describe("Dashboard HomePage", () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: {
+          id: "user-1",
           email: "user@solaris.test",
           user_metadata: {
             full_name: rawName,
@@ -123,5 +139,77 @@ describe("Dashboard HomePage", () => {
     const expected = "테스트오퍼레이터_이름길이제한을확인하기위한문자열_123456".slice(0, 32);
     const matches = await screen.findAllByText(expected);
     expect(matches.length).toBeGreaterThan(0);
+  });
+
+  it("캐릭터가 approved면 환영 문구에 캐릭터 이름을 우선 표시한다", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-1",
+          email: "user@solaris.test",
+          user_metadata: {
+            full_name: "ambiguousmorality",
+          },
+        },
+      },
+    });
+    mockMaybeSingle.mockResolvedValue({
+      data: {
+        id: "char-1",
+        name: "아마츠키 레이",
+        faction: "bureau",
+        ability_class: "field",
+        hp_max: 80,
+        hp_current: 80,
+        will_max: 250,
+        will_current: 230,
+        profile_image_url: null,
+        resonance_rate: 87,
+        status: "approved",
+        created_at: "2026-02-18T00:00:00.000Z",
+      },
+      error: null,
+    });
+
+    render(<HomePage />);
+
+    const heading = await screen.findByRole("heading", { level: 1 });
+    expect(heading).toHaveTextContent("아마츠키 레이");
+    expect(screen.queryByText("ambiguousmorality")).not.toBeInTheDocument();
+  });
+
+  it("캐릭터가 approved가 아니면 환영 문구에 Discord 표시명을 표시한다", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-1",
+          email: "user@solaris.test",
+          user_metadata: {
+            full_name: "ambiguousmorality",
+          },
+        },
+      },
+    });
+    mockMaybeSingle.mockResolvedValue({
+      data: {
+        id: "char-1",
+        name: "아마츠키 레이",
+        faction: "bureau",
+        ability_class: "field",
+        hp_max: 80,
+        hp_current: 80,
+        will_max: 250,
+        will_current: 230,
+        profile_image_url: null,
+        resonance_rate: 87,
+        status: "pending",
+        created_at: "2026-02-18T00:00:00.000Z",
+      },
+      error: null,
+    });
+
+    render(<HomePage />);
+
+    expect(await screen.findByText("ambiguousmorality")).toBeInTheDocument();
   });
 });
