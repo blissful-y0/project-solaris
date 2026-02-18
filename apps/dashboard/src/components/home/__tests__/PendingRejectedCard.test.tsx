@@ -9,6 +9,10 @@ vi.mock("next/image", () => ({
   default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img {...props} />,
 }));
 
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({}),
+}));
+
 vi.mock("next/link", () => ({
   default: ({
     href,
@@ -77,9 +81,9 @@ describe("PendingCard", () => {
     expect(onCancel).toHaveBeenCalledOnce();
   });
 
-  it("HELIOS 심사 안내 텍스트를 표시한다", () => {
+  it("HELIOS 신원 확인 안내 텍스트를 표시한다", () => {
     render(<CitizenIDCard citizen={pendingCitizen} />);
-    expect(screen.getByText(/HELIOS 심사/)).toBeInTheDocument();
+    expect(screen.getByText(/HELIOS 시스템이 신원을 확인/)).toBeInTheDocument();
   });
 });
 
