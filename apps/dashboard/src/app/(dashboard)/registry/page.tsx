@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui";
 import {
@@ -31,11 +31,16 @@ export default function CharactersPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
 
-  /* 목록 fetch */
+  /* 상세 fetch race condition 방어 */
+  const latestRequestRef = useRef(0);
+
+  /* 목록 fetch — AbortController로 언마운트 시 취소 */
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchCharacters() {
       try {
-        const res = await fetch("/api/characters");
+        const res = await fetch("/api/characters", { signal: controller.signal });
         if (!res.ok) {
           throw new Error("캐릭터 데이터를 불러오는 데 실패했습니다.");
         }
@@ -43,6 +48,7 @@ export default function CharactersPage() {
         const mapped = (json.data ?? []).map(toCharacterSummary);
         setCharacters(mapped);
       } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         setError(
           err instanceof Error
             ? err.message
@@ -54,10 +60,12 @@ export default function CharactersPage() {
     }
 
     fetchCharacters();
+    return () => controller.abort();
   }, []);
 
-  /* 상세 fetch */
+  /* 상세 fetch — stale 요청 방어 */
   const handleSelect = useCallback(async (character: RegistryCharacterSummary) => {
+    const requestId = ++latestRequestRef.current;
     setSelectedId(character.id);
     setDetail(null);
     setDetailError(null);
@@ -68,9 +76,11 @@ export default function CharactersPage() {
       if (!res.ok) {
         throw new Error("캐릭터 상세 정보를 불러올 수 없습니다.");
       }
+      if (requestId !== latestRequestRef.current) return;
       const json = await res.json();
       setDetail({ ...toRegistryCharacter(json.data), isMine: character.isMine });
     } catch (err) {
+      if (requestId !== latestRequestRef.current) return;
       setDetail(null);
       setDetailError(
         err instanceof Error
@@ -78,11 +88,14 @@ export default function CharactersPage() {
           : "상세 정보를 불러올 수 없습니다.",
       );
     } finally {
-      setDetailLoading(false);
+      if (requestId === latestRequestRef.current) {
+        setDetailLoading(false);
+      }
     }
   }, []);
 
   const handleCloseModal = useCallback(() => {
+    latestRequestRef.current++; // 기존 요청 무효화
     setSelectedId(null);
     setDetail(null);
     setDetailError(null);
