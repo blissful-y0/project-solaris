@@ -5,6 +5,7 @@ type ISODateString = `${number}-${number}-${number}`;
 export type CitizenStatus = "pending" | "approved" | "rejected";
 
 export interface CitizenData {
+  characterId?: string; // DB characters.id — 아바타 업로드용
   name: string;
   faction: "Bureau" | "Static";
   resonanceRate: number; // 0-100
