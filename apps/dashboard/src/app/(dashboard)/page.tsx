@@ -116,7 +116,12 @@ export default function HomePage() {
     return () => { cancelled = true; };
   }, [fetchData]);
 
-  const displayName = user ? getDisplayName(user) : "...";
+  const displayName =
+    citizenData?.status === "approved" && citizenData.name
+      ? citizenData.name
+      : user
+        ? getDisplayName(user)
+        : "...";
 
   return (
     <div className="py-6 space-y-8">
