@@ -51,6 +51,15 @@ export function WizardShell() {
   const [draft, setDraft] = useState<CharacterDraft>(() => EMPTY_DRAFT);
   const { isSaved, restored, clear } = useDraftSave(draft);
 
+  /* 이미지 — File 객체는 localStorage 직렬화 불가이므로 별도 state */
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  const handleImageChange = useCallback((file: File | null, previewUrl: string | null) => {
+    setImageFile(file);
+    setImagePreviewUrl(previewUrl);
+  }, []);
+
   // 복원 확인 상태: "pending" → "ask" → "done"
   const [restoreState, setRestoreState] = useState<"pending" | "ask" | "done">("pending");
 
@@ -156,7 +165,12 @@ export function WizardShell() {
           <StepAbilityDesign draft={draft} onChange={updateDraft} />
         )}
         {step === 3 && (
-          <StepProfile draft={draft} onChange={updateDraft} />
+          <StepProfile
+            draft={draft}
+            onChange={updateDraft}
+            onImageChange={handleImageChange}
+            imagePreviewUrl={imagePreviewUrl}
+          />
         )}
         {step === 4 && (
           <StepConfirm

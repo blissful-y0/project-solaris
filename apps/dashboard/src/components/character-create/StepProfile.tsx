@@ -1,10 +1,15 @@
 import { cn } from "@/lib/utils";
 
 import type { CharacterDraft } from "./types";
+import { ImageCropper } from "./ImageCropper";
 
 type StepProfileProps = {
   draft: CharacterDraft;
   onChange: (patch: Partial<CharacterDraft>) => void;
+  /** 이미지 파일 변경 콜백 (File은 localStorage 저장 불가이므로 별도 관리) */
+  onImageChange: (file: File | null, previewUrl: string | null) => void;
+  /** 현재 이미지 미리보기 URL */
+  imagePreviewUrl: string | null;
 };
 
 const labelClass = "block text-xs uppercase tracking-widest text-text-secondary mb-1.5";
@@ -20,7 +25,7 @@ const RESONANCE_RANGE = {
   static: { min: 0, max: 15, label: "0~15" },
 } as const;
 
-export function StepProfile({ draft, onChange }: StepProfileProps) {
+export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }: StepProfileProps) {
   const range = draft.faction ? RESONANCE_RANGE[draft.faction] : null;
   const rrValue = Number(draft.resonanceRate);
   const rrOutOfRange = draft.resonanceRate !== "" && range
@@ -110,6 +115,12 @@ export function StepProfile({ draft, onChange }: StepProfileProps) {
           </div>
         )}
       </div>
+
+      {/* 프로필 이미지 */}
+      <ImageCropper
+        previewUrl={imagePreviewUrl}
+        onImageChange={onImageChange}
+      />
 
       {/* 외형 묘사 */}
       <div>
