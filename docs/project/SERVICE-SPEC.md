@@ -2,6 +2,7 @@
 
 > 이 문서는 Claude Code 및 개발 에이전트가 참조하는 서비스 전체 스펙이다.
 > 랜딩 페이지(Astro 5)는 이미 완성. 이 문서는 대시보드(Next.js 15) 이후의 모든 기능을 다룬다.
+> DB 설계 이유서(비개발자용): `docs/project/DB-ARCHITECTURE-RATIONALE.md`
 
 ---
 
