@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
@@ -8,9 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
 interface ImageCropperProps {
-  /** 현재 미리보기 URL (blob 또는 업로드된 URL) */
   previewUrl: string | null;
-  /** 이미지 변경 시 콜백 (크롭된 Blob + 미리보기 URL) */
   onImageChange: (file: File | null, previewUrl: string | null) => void;
   className?: string;
 }
@@ -30,54 +29,27 @@ function getCroppedBlob(
   const ctx = canvas.getContext("2d");
   if (!ctx) return Promise.resolve(null);
 
-  ctx.drawImage(
-    image,
-    crop.x,
-    crop.y,
-    crop.width,
-    crop.height,
-    0,
-    0,
-    size,
-    size,
-  );
+  ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, size, size);
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob), "image/webp", 0.85);
   });
 }
 
-export function ImageCropper({ previewUrl, onImageChange, className }: ImageCropperProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+/** 크롭 모달 — Portal로 body에 렌더링 */
+function CropModal({
+  rawSrc,
+  onConfirm,
+  onCancel,
+}: {
+  rawSrc: string;
+  onConfirm: (file: File, previewUrl: string) => void;
+  onCancel: () => void;
+}) {
   const imgRef = useRef<HTMLImageElement>(null);
-
-  /* 원본 이미지 소스 (크롭 전) */
-  const [rawSrc, setRawSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState<Crop>();
-  const [error, setError] = useState<string | null>(null);
 
-  /** 파일 선택 */
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError("JPG, PNG, WebP 파일만 업로드 가능합니다.");
-      return;
-    }
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      setError(`파일 크기가 ${MAX_SIZE_MB}MB를 초과합니다.`);
-      return;
-    }
-
-    const url = URL.createObjectURL(file);
-    setRawSrc(url);
-    setCrop(undefined);
-  }, []);
-
-  /** 크롭 확정 */
-  const handleCropConfirm = useCallback(async () => {
+  const handleConfirm = useCallback(async () => {
     if (!imgRef.current || !crop) return;
 
     const pixelCrop: PixelCrop = {
@@ -93,30 +65,18 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
 
     const croppedFile = new File([blob], "avatar.webp", { type: "image/webp" });
     const croppedUrl = URL.createObjectURL(blob);
+    onConfirm(croppedFile, croppedUrl);
+  }, [crop, onConfirm]);
 
-    onImageChange(croppedFile, croppedUrl);
-    setRawSrc(null);
-  }, [crop, onImageChange]);
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="w-full max-w-lg rounded-lg border border-border bg-bg-secondary p-5 space-y-4">
+        <p className="hud-label">// 이미지 영역을 선택하세요</p>
 
-  /** 크롭 취소 */
-  const handleCropCancel = useCallback(() => {
-    if (rawSrc) URL.revokeObjectURL(rawSrc);
-    setRawSrc(null);
-    setCrop(undefined);
-  }, [rawSrc]);
-
-  /** 이미지 제거 */
-  const handleRemove = useCallback(() => {
-    onImageChange(null, null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, [onImageChange]);
-
-  /* 크롭 모드 */
-  if (rawSrc) {
-    return (
-      <div className={cn("space-y-3", className)}>
-        <p className="text-xs uppercase tracking-widest text-text-secondary">이미지 영역을 선택하세요</p>
-        <div className="rounded-lg border border-border bg-bg-secondary p-2 flex justify-center">
+        <div className="flex justify-center">
           <ReactCrop
             crop={crop}
             onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -128,34 +88,87 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
               ref={imgRef}
               src={rawSrc}
               alt="크롭 원본"
-              className="max-h-[360px] object-contain"
+              className="max-h-[60vh] max-w-full object-contain"
             />
           </ReactCrop>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" onClick={handleCropConfirm} disabled={!crop}>
-            확정
-          </Button>
-          <Button size="sm" variant="ghost" onClick={handleCropCancel}>
+
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="ghost" onClick={onCancel}>
             취소
+          </Button>
+          <Button size="sm" onClick={handleConfirm} disabled={!crop}>
+            확정
           </Button>
         </div>
       </div>
-    );
-  }
+    </div>,
+    document.body,
+  );
+}
 
-  /* 미리보기 / 업로드 모드 */
+export function ImageCropper({ previewUrl, onImageChange, className }: ImageCropperProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [rawSrc, setRawSrc] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  /** 파일 선택 */
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setError("JPG, PNG, WebP만 가능");
+      return;
+    }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      setError(`${MAX_SIZE_MB}MB 초과`);
+      return;
+    }
+
+    setRawSrc(URL.createObjectURL(file));
+  }, []);
+
+  /** 크롭 확정 콜백 */
+  const handleCropConfirm = useCallback((file: File, url: string) => {
+    onImageChange(file, url);
+    setRawSrc(null);
+  }, [onImageChange]);
+
+  /** 크롭 취소 */
+  const handleCropCancel = useCallback(() => {
+    if (rawSrc) URL.revokeObjectURL(rawSrc);
+    setRawSrc(null);
+  }, [rawSrc]);
+
+  /** 이미지 제거 */
+  const handleRemove = useCallback(() => {
+    onImageChange(null, null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [onImageChange]);
+
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("shrink-0 flex flex-col", className)}>
+      {/* 크롭 모달 */}
+      {rawSrc && (
+        <CropModal
+          rawSrc={rawSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
+
+      {/* 미리보기 또는 업로드 버튼 — 부모 높이에 맞춤 */}
       {previewUrl ? (
-        <div className="space-y-2">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
             alt="프로필 미리보기"
-            className="w-40 h-40 rounded-md border border-border object-cover"
+            className="w-full flex-1 min-h-0 rounded-md border border-border object-cover"
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-1.5 shrink-0">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -177,7 +190,7 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className={cn(
-            "w-40 h-40 rounded-md border-2 border-dashed border-border",
+            "w-full flex-1 min-h-[120px] rounded-md border-2 border-dashed border-border",
             "flex flex-col items-center justify-center gap-1",
             "hover:border-primary/40 transition-colors cursor-pointer",
           )}
@@ -198,7 +211,7 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
         aria-label="프로필 이미지 업로드"
       />
 
-      {error && <p className="text-xs text-accent">{error}</p>}
+      {error && <p className="text-xs text-accent mt-1">{error}</p>}
     </div>
   );
 }

@@ -51,6 +51,17 @@
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-subtle);
   }
+
+  /* input/textarea 내부 스크롤바 숨김 */
+  input,
+  textarea {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  input::-webkit-scrollbar,
+  textarea::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ─── 노이즈 오버레이 (랜딩 대비 opacity 절반 — 대시보드는 가독성 우선) ─── */

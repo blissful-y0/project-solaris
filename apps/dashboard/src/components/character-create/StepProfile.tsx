@@ -38,13 +38,17 @@ export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }:
       <p className="hud-label mb-6">// 캐릭터 프로필을 입력하세요</p>
 
       {/* 상단: 이미지 (좌) + 기본 정보 (우) — 이력서 스타일 */}
-      <div className="flex gap-5">
-        {/* 좌측: 프로필 이미지 */}
-        <div className="shrink-0">
-          <ImageCropper
-            previewUrl={imagePreviewUrl}
-            onImageChange={onImageChange}
-          />
+      <div className="flex items-stretch gap-5">
+        {/* 좌측: 프로필 이미지 — 우측 입력 영역 높이에 맞춤 */}
+        <div className="w-32 shrink-0 flex flex-col">
+          <p className={labelClass}>프로필 이미지</p>
+          <div className="flex-1">
+            <ImageCropper
+              previewUrl={imagePreviewUrl}
+              onImageChange={onImageChange}
+              className="h-full"
+            />
+          </div>
         </div>
 
         {/* 우측: 이름 / 성별 / 나이 / 공명율 */}

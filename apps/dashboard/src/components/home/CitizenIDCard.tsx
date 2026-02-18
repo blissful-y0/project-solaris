@@ -290,10 +290,7 @@ function PendingCard({
           </p>
 
           <p className="text-xs text-text-secondary mt-3">
-            HELIOS 심사가 진행 중입니다.
-          </p>
-          <p className="text-[0.625rem] text-text-secondary mt-1">
-            승인까지 최대 48시간이 소요될 수 있습니다.
+            HELIOS 시스템이 신원을 확인하고 있습니다.
           </p>
         </div>
       </div>

@@ -16,11 +16,11 @@ import { StepProfile } from "./StepProfile";
 import { EMPTY_DRAFT, type CharacterDraft } from "./types";
 
 const STEP_LABELS = [
-  "팩션 선택",
-  "능력 계열",
-  "능력 설계",
-  "프로필",
-  "최종 확인",
+  "팩션 선택",      // 0
+  "능력 계열",      // 1
+  "프로필",         // 2 (구 3)
+  "능력 설계",      // 3 (구 2)
+  "최종 확인",      // 4
 ] as const;
 
 const TOTAL_STEPS = STEP_LABELS.length;
@@ -31,15 +31,18 @@ function isStepValid(step: number, draft: CharacterDraft): boolean {
       return draft.faction !== null;
     case 1:
       return draft.abilityClass !== null;
-    case 2:
+    case 2: {
+      // 프로필 — 이름 + 나이 필수
+      const age = Number(draft.age);
+      return draft.name.trim() !== "" && draft.age.trim() !== "" && age >= 15;
+    }
+    case 3:
+      // 능력 설계
       return (
         draft.abilityName.trim() !== "" &&
         draft.abilityDescription.trim() !== "" &&
         draft.abilityConstraint.trim() !== ""
       );
-    case 3:
-      const age = Number(draft.age);
-      return draft.name.trim() !== "" && draft.age.trim() !== "" && age >= 15;
     case 4:
       return true;
     default:
@@ -135,14 +138,16 @@ export function WizardShell() {
         try {
           const { createClient } = await import("@/lib/supabase/client");
           const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error("인증 필요");
           const ext = imageFile.name.split(".").pop() || "webp";
-          const path = `avatars/${Date.now()}.${ext}`;
+          const path = `${user.id}/${Date.now()}.${ext}`;
           const { error: uploadError } = await supabase.storage
-            .from("avatars")
+            .from("character-profile-images")
             .upload(path, imageFile, { contentType: imageFile.type });
 
           if (!uploadError) {
-            const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+            const { data: urlData } = supabase.storage.from("character-profile-images").getPublicUrl(path);
             payload.profileImageUrl = urlData.publicUrl;
           }
         } catch {
@@ -240,15 +245,15 @@ export function WizardShell() {
           />
         )}
         {step === 2 && (
-          <StepAbilityDesign draft={draft} onChange={updateDraft} />
-        )}
-        {step === 3 && (
           <StepProfile
             draft={draft}
             onChange={updateDraft}
             onImageChange={handleImageChange}
             imagePreviewUrl={imagePreviewUrl}
           />
+        )}
+        {step === 3 && (
+          <StepAbilityDesign draft={draft} onChange={updateDraft} />
         )}
         {step === 4 && (
           <StepConfirm
@@ -257,6 +262,7 @@ export function WizardShell() {
             onEditStep={handleEditStep}
             onLeaderChange={(checked) => updateDraft({ leaderApplication: checked })}
             submitting={submitting}
+            imagePreviewUrl={imagePreviewUrl}
           />
         )}
       </div>
