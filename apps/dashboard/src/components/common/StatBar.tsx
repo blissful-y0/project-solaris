@@ -21,7 +21,7 @@ export function StatBar({
   label,
   className,
 }: StatBarProps) {
-  const pct = Math.min(Math.max((current / max) * 100, 0), 100);
+  const pct = max > 0 ? Math.min(Math.max((current / max) * 100, 0), 100) : 0;
 
   return (
     <div className={cn("flex items-center gap-2", className)}>

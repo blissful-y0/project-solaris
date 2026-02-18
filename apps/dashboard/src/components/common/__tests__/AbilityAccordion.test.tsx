@@ -103,6 +103,17 @@ describe("AbilityAccordion", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("토글 버튼은 aria-expanded 상태를 제공한다", async () => {
+    const user = userEvent.setup();
+    render(<AbilityAccordion abilities={mockAbilities} />);
+
+    const trigger = screen.getByRole("button", { name: /역장 전개/ });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("빈 배열 → 빈 상태 메시지", () => {
     render(<AbilityAccordion abilities={[]} />);
     expect(screen.getByText("등록된 능력이 없습니다")).toBeInTheDocument();

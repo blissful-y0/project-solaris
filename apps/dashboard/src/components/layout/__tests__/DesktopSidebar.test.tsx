@@ -85,6 +85,7 @@ describe("DesktopSidebar", () => {
     const operationButton = screen.getByRole("button", { name: /operation/i });
     expect(operationButton).toBeInTheDocument();
     expect(operationButton).toHaveAttribute("aria-disabled", "true");
+    expect(operationButton).toHaveAttribute("aria-label", "Operation (캐릭터 승인 후 이용 가능)");
   });
 
   it("isCharacterApproved=false → Operation에 흐린 스타일", () => {

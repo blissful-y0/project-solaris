@@ -1,5 +1,7 @@
 "use server";
 
+import { z } from "zod";
+
 /**
  * 캐릭터 제출 Server Action — 스텁
  * 백엔드 통합 전까지 프론트엔드 빌드용 placeholder.
@@ -25,8 +27,21 @@ export async function submitCharacter(draft: {
     costWill: number;
   }[];
 }): Promise<{ characterId: string }> {
+  const schema = z.object({
+    name: z.string().trim().min(1, "INVALID_CHARACTER_NAME"),
+    abilities: z.array(
+      z.object({
+        name: z.string().trim().min(1, "INVALID_ABILITY_NAME"),
+        description: z.string().trim().min(1, "INVALID_ABILITY_DESCRIPTION"),
+      }),
+    ).min(1, "INVALID_ABILITIES"),
+  });
+  const parsed = schema.safeParse(draft);
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "INVALID_INPUT");
+  }
+
   // 스텁 — 통합 빌드에서 백엔드 구현으로 덮어씌워짐
-  console.log("[STUB] submitCharacter called", draft.name);
   return { characterId: "stub-" + Date.now() };
 }
 
@@ -34,7 +49,7 @@ export async function submitCharacter(draft: {
  * 캐릭터 취소 Server Action — 스텁
  */
 export async function cancelCharacter(): Promise<void> {
-  console.log("[STUB] cancelCharacter called");
+  return;
 }
 
 /**

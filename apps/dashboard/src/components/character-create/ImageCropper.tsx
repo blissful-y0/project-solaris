@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -68,8 +68,18 @@ function CropModal({
     onConfirm(croppedFile, croppedUrl);
   }, [crop, onConfirm]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onCancel]);
+
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
     >
@@ -127,14 +137,16 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
       return;
     }
 
+    if (rawSrc) URL.revokeObjectURL(rawSrc);
     setRawSrc(URL.createObjectURL(file));
-  }, []);
+  }, [rawSrc]);
 
   /** 크롭 확정 콜백 */
   const handleCropConfirm = useCallback((file: File, url: string) => {
+    if (rawSrc) URL.revokeObjectURL(rawSrc);
     onImageChange(file, url);
     setRawSrc(null);
-  }, [onImageChange]);
+  }, [onImageChange, rawSrc]);
 
   /** 크롭 취소 */
   const handleCropCancel = useCallback(() => {

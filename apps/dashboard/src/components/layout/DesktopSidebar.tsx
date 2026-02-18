@@ -46,7 +46,7 @@ export function DesktopSidebar({
                 key={item.href}
                 type="button"
                 aria-disabled="true"
-                aria-label={item.label}
+                aria-label={`${item.label} (캐릭터 승인 후 이용 가능)`}
                 className={cn(
                   "flex w-full items-center gap-3 px-4 py-3",
                   "text-text-secondary/40 cursor-not-allowed",

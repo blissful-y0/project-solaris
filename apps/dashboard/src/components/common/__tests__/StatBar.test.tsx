@@ -47,6 +47,13 @@ describe("StatBar", () => {
     expect(fill.style.width).toBe("100%");
   });
 
+  it("max=0이면 NaN 없이 0%로 처리한다", () => {
+    render(<StatBar current={10} max={0} variant="hp" />);
+    const bar = screen.getByRole("progressbar");
+    const fill = bar.firstElementChild as HTMLElement;
+    expect(fill.style.width).toBe("0%");
+  });
+
   it("variant='hp' → success→accent 그라데이션", () => {
     render(<StatBar current={50} max={100} variant="hp" />);
     const bar = screen.getByRole("progressbar");

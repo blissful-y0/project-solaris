@@ -3,13 +3,34 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { WizardShell } from "../WizardShell";
+import {
+  getSanitizedImageExtension,
+  isResonanceRateValidForFaction,
+} from "../WizardShell";
 
 // sonner mock
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), info: vi.fn() },
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
 describe("WizardShell", () => {
+  it("업로드 확장자에서 비영숫자를 제거한다", () => {
+    expect(getSanitizedImageExtension("avatar.png../../evil")).toBe("evil");
+  });
+
+  it("진영별 공명율 유효성 검사를 수행한다", () => {
+    expect(isResonanceRateValidForFaction("bureau", 79)).toBe(false);
+    expect(isResonanceRateValidForFaction("bureau", 80)).toBe(true);
+    expect(isResonanceRateValidForFaction("static", 16)).toBe(false);
+    expect(isResonanceRateValidForFaction("static", 15)).toBe(true);
+  });
+
   it("스텝 인디케이터를 표시한다", () => {
     render(<WizardShell />);
     expect(screen.getByText("1 / 5")).toBeInTheDocument();
@@ -83,15 +104,16 @@ describe("WizardShell", () => {
     await user.click(screen.getByText("Field"));
     await user.click(screen.getByRole("button", { name: /다음/ }));
 
-    // Step 3: 능력 설계 (필수 필드 입력)
+    // Step 3: 프로필 입력 (필수 필드 입력)
+    await user.type(screen.getByLabelText(/캐릭터 이름/), "카이");
+    await user.type(screen.getByLabelText(/나이/), "25");
+    await user.type(screen.getByLabelText(/공명율/), "80");
+    await user.click(screen.getByRole("button", { name: /다음/ }));
+
+    // Step 4: 능력 설계 (필수 필드 입력)
     await user.type(screen.getByLabelText(/능력 이름/), "테스트 능력");
     await user.type(screen.getByLabelText(/능력 설명/), "테스트 설명입니다");
     await user.type(screen.getByLabelText(/제약 사항/), "제약이 있다");
-    await user.click(screen.getByRole("button", { name: /다음/ }));
-
-    // Step 4: 프로필 입력 (필수 필드 입력)
-    await user.type(screen.getByLabelText(/캐릭터 이름/), "카이");
-    await user.type(screen.getByLabelText(/나이/), "25");
     await user.click(screen.getByRole("button", { name: /다음/ }));
 
     // Step 5: 확인

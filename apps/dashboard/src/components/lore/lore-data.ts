@@ -76,7 +76,7 @@ async function markdownToHtml(markdown: string): Promise<string> {
     "",
   );
 
-  const result = await remark().use(remarkHtml).process(cleaned);
+  const result = await remark().use(remarkHtml, { sanitize: true }).process(cleaned);
   return replaceRedactedMarkers(String(result));
 }
 
@@ -84,19 +84,23 @@ async function markdownToHtml(markdown: string): Promise<string> {
 async function loadCategoryContent(
   id: LoreCategoryId,
 ): Promise<string> {
-  const filename = CATEGORY_FILE_MAP[id];
-  const raw = await readMarkdownFile(filename);
+  try {
+    const filename = CATEGORY_FILE_MAP[id];
+    const raw = await readMarkdownFile(filename);
 
-  let markdown: string;
-  if (id === "abilities") {
-    markdown = extractSections(raw, ABILITIES_SECTIONS);
-  } else if (id === "battle-rules") {
-    markdown = extractSections(raw, BATTLE_SECTIONS);
-  } else {
-    markdown = raw;
+    let markdown: string;
+    if (id === "abilities") {
+      markdown = extractSections(raw, ABILITIES_SECTIONS);
+    } else if (id === "battle-rules") {
+      markdown = extractSections(raw, BATTLE_SECTIONS);
+    } else {
+      markdown = raw;
+    }
+
+    return markdownToHtml(markdown);
+  } catch {
+    return "";
   }
-
-  return markdownToHtml(markdown);
 }
 
 /** 모든 카테고리 콘텐츠를 병렬로 로드 */

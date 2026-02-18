@@ -25,6 +25,20 @@ const STEP_LABELS = [
 
 const TOTAL_STEPS = STEP_LABELS.length;
 
+export function isResonanceRateValidForFaction(
+  faction: CharacterDraft["faction"],
+  resonanceRate: number,
+) {
+  if (faction === "bureau") return resonanceRate >= 80 && resonanceRate <= 100;
+  if (faction === "static") return resonanceRate >= 0 && resonanceRate <= 15;
+  return true;
+}
+
+export function getSanitizedImageExtension(fileName: string): string {
+  const ext = fileName.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "") || "webp";
+  return ext.length > 0 ? ext : "webp";
+}
+
 function isStepValid(step: number, draft: CharacterDraft): boolean {
   switch (step) {
     case 0:
@@ -34,7 +48,15 @@ function isStepValid(step: number, draft: CharacterDraft): boolean {
     case 2: {
       // 프로필 — 이름 + 나이 필수
       const age = Number(draft.age);
-      return draft.name.trim() !== "" && draft.age.trim() !== "" && age >= 15;
+      const resonanceRate = Number(draft.resonanceRate);
+      return (
+        draft.name.trim() !== "" &&
+        draft.age.trim() !== "" &&
+        age >= 15 &&
+        draft.resonanceRate.trim() !== "" &&
+        Number.isFinite(resonanceRate) &&
+        isResonanceRateValidForFaction(draft.faction, resonanceRate)
+      );
     }
     case 3:
       // 능력 설계
@@ -140,7 +162,7 @@ export function WizardShell() {
           const supabase = createClient();
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) throw new Error("인증 필요");
-          const ext = imageFile.name.split(".").pop() || "webp";
+          const ext = getSanitizedImageExtension(imageFile.name);
           const path = `${user.id}/${Date.now()}.${ext}`;
           const { error: uploadError } = await supabase.storage
             .from("character-profile-images")

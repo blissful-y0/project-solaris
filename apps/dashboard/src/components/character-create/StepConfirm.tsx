@@ -75,7 +75,7 @@ export function StepConfirm({ draft, onSubmit, onEditStep, onLeaderChange, submi
           {/* 이미지 */}
           <div className="w-24 shrink-0">
             {imagePreviewUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
+              /* eslint-disable-next-line @next/next/no-img-element -- blob/data URL 미리보기라 next/image 최적화 대상 아님 */
               <img
                 src={imagePreviewUrl}
                 alt="프로필"
