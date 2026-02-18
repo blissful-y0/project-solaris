@@ -11,9 +11,12 @@ const FULL_DRAFT: CharacterDraft = {
   abilityName: "시공간 왜곡",
   abilityDescription: "공간을 접어 물체를 이동시킨다",
   abilityConstraint: "시야 내 대상만 가능",
-  abilityTierBasic: "소형 물체 이동",
-  abilityTierMid: "중형 물체 이동, 단거리 순간이동",
-  abilityTierAdvanced: "공간 자체를 왜곡, 대규모 이동",
+  abilityWeakness: "",
+  skills: {
+    basic: { name: "공간 압축", description: "소형 물체 이동", costHp: "0", costWill: "5" },
+    mid: { name: "단거리 도약", description: "중형 물체 이동, 단거리 순간이동", costHp: "0", costWill: "15" },
+    advanced: { name: "차원 왜곡", description: "공간 자체를 왜곡, 대규모 이동", costHp: "0", costWill: "40" },
+  },
   crossoverStyle: null,
   name: "카이 리",
   gender: "남성",
@@ -21,6 +24,7 @@ const FULL_DRAFT: CharacterDraft = {
   appearance: "은발에 날카로운 눈매",
   personality: "냉철하지만 동료에게는 따뜻하다",
   backstory: "관리국 소속이었으나 진실을 알고 탈출했다",
+  leaderApplication: false,
 };
 
 describe("StepConfirm", () => {

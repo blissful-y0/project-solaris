@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-import type { CharacterDraft, CrossoverStyle } from "./types";
+import type { CharacterDraft, CrossoverStyle, SkillTier } from "./types";
 
 type StepAbilityDesignProps = {
   draft: CharacterDraft;
@@ -13,6 +13,7 @@ const inputClass = cn(
   "focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-colors",
 );
 const textareaClass = cn(inputClass, "min-h-[80px] resize-y");
+const costInputClass = cn(inputClass, "min-h-[44px] w-full");
 
 /** Bureau 크로스오버 옵션 */
 const BUREAU_CROSSOVER = {
@@ -44,20 +45,140 @@ const STATIC_CROSSOVERS: { id: CrossoverStyle; label: string; sublabel: string; 
   },
 ];
 
+const TIER_LABELS = {
+  basic: "기본 스킬",
+  mid: "중급 스킬",
+  advanced: "상급 스킬",
+} as const;
+
+type TierKey = keyof typeof TIER_LABELS;
+
+/** 개별 스킬 티어 입력 블록 */
+function SkillTierBlock({
+  tier,
+  skill,
+  systemName,
+  isBureau,
+  hasCrossover,
+  onChange,
+}: {
+  tier: TierKey;
+  skill: SkillTier;
+  systemName: string;
+  isBureau: boolean;
+  hasCrossover: boolean;
+  onChange: (patch: Partial<SkillTier>) => void;
+}) {
+  const tierLabel = tier === "advanced"
+    ? `${TIER_LABELS[tier]} — ${systemName}`
+    : TIER_LABELS[tier];
+
+  /* 크로스오버 시 HP+WILL 둘 다 입력, 아니면 진영에 따라 한 쪽만 */
+  const showBothCosts = hasCrossover;
+  const primaryCost = isBureau ? "WILL" : "HP";
+
+  return (
+    <div className="rounded-lg border border-border bg-bg-secondary/30 p-4 space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-widest text-primary/80">
+        {tierLabel}
+      </p>
+
+      {/* 스킬 이름 */}
+      <div>
+        <label htmlFor={`skill-${tier}-name`} className={labelClass}>스킬 이름</label>
+        <input
+          id={`skill-${tier}-name`}
+          type="text"
+          maxLength={20}
+          value={skill.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+          placeholder={`${TIER_LABELS[tier]}의 이름`}
+          className={inputClass}
+        />
+      </div>
+
+      {/* 스킬 설명 */}
+      <div>
+        <label htmlFor={`skill-${tier}-desc`} className={labelClass}>스킬 설명</label>
+        <textarea
+          id={`skill-${tier}-desc`}
+          maxLength={300}
+          value={skill.description}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="이 스킬이 어떻게 작동하는지 서술하세요"
+          className={textareaClass}
+        />
+      </div>
+
+      {/* 코스트 입력 */}
+      <div className={cn("grid gap-3", showBothCosts ? "grid-cols-2" : "grid-cols-1")}>
+        {(showBothCosts || !isBureau) && (
+          <div>
+            <label htmlFor={`skill-${tier}-hp`} className={labelClass}>HP 소모</label>
+            <input
+              id={`skill-${tier}-hp`}
+              type="number"
+              min="0"
+              max="999"
+              value={skill.costHp}
+              onChange={(e) => onChange({ costHp: e.target.value })}
+              placeholder="HP 소모량"
+              className={costInputClass}
+            />
+          </div>
+        )}
+        {(showBothCosts || isBureau) && (
+          <div>
+            <label htmlFor={`skill-${tier}-will`} className={labelClass}>WILL 소모</label>
+            <input
+              id={`skill-${tier}-will`}
+              type="number"
+              min="0"
+              max="999"
+              value={skill.costWill}
+              onChange={(e) => onChange({ costWill: e.target.value })}
+              placeholder="WILL 소모량"
+              className={costInputClass}
+            />
+          </div>
+        )}
+      </div>
+
+      {!showBothCosts && (
+        <p className="text-[0.625rem] text-text-secondary/60">
+          {primaryCost} 소모 기반 — 크로스오버 선택 시 HP/WILL 이중 소모로 전환됩니다
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
   const isBureau = draft.faction === "bureau";
   const systemName = isBureau ? "하모닉스 프로토콜" : "오버드라이브";
-  const costType = isBureau ? "WILL" : "HP";
+  const hasCrossover = draft.crossoverStyle !== null;
+
+  /** 특정 티어의 스킬 데이터를 업데이트 */
+  function updateSkill(tier: TierKey, patch: Partial<SkillTier>) {
+    onChange({
+      skills: {
+        ...draft.skills,
+        [tier]: { ...draft.skills[tier], ...patch },
+      },
+    });
+  }
 
   return (
     <div className="space-y-5">
       <p className="hud-label mb-2">// 능력을 설계하세요</p>
       <p className="text-xs text-text-secondary mb-6">
         능력 체계: <span className={cn("font-semibold", isBureau ? "text-primary" : "text-accent")}>{systemName}</span>
-        {" "}— 비용: <span className="text-text">{costType}</span>
+        {hasCrossover && (
+          <span className="text-warning ml-2">⚠ 크로스오버: HP + WILL 이중 소모</span>
+        )}
       </p>
 
-      {/* 능력 이름 */}
+      {/* 능력 전체 이름 */}
       <div>
         <label htmlFor="abilityName" className={labelClass}>능력 이름</label>
         <input
@@ -110,61 +231,24 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
         />
       </div>
 
-      {/* 비용 수치 */}
-      <div>
-        <label htmlFor="abilityCostAmount" className={labelClass}>비용 수치</label>
-        <input
-          id="abilityCostAmount"
-          type="text"
-          maxLength={10}
-          value={draft.abilityCostAmount}
-          onChange={(e) => onChange({ abilityCostAmount: e.target.value })}
-          placeholder={`${costType} 소모량 (예: 15)`}
-          className={inputClass}
-        />
-      </div>
-
-      {/* 단계별 서술 */}
+      {/* 단계별 스킬 입력 */}
       <div className="space-y-4 border-t border-border pt-5 mt-5">
-        <p className="hud-label">// 단계별 서술</p>
+        <p className="hud-label">// 단계별 스킬</p>
+        <p className="text-xs text-text-secondary mb-2">
+          각 스킬의 이름, 설명, 소모 비용을 입력하세요.
+        </p>
 
-        <div>
-          <label htmlFor="abilityTierBasic" className={labelClass}>기본 스킬</label>
-          <textarea
-            id="abilityTierBasic"
-            maxLength={300}
-            value={draft.abilityTierBasic}
-            onChange={(e) => onChange({ abilityTierBasic: e.target.value })}
-            placeholder="가장 낮은 출력의 기본 사용"
-            className={textareaClass}
+        {(["basic", "mid", "advanced"] as const).map((tier) => (
+          <SkillTierBlock
+            key={tier}
+            tier={tier}
+            skill={draft.skills[tier]}
+            systemName={systemName}
+            isBureau={isBureau}
+            hasCrossover={hasCrossover}
+            onChange={(patch) => updateSkill(tier, patch)}
           />
-        </div>
-
-        <div>
-          <label htmlFor="abilityTierMid" className={labelClass}>중급 스킬</label>
-          <textarea
-            id="abilityTierMid"
-            maxLength={300}
-            value={draft.abilityTierMid}
-            onChange={(e) => onChange({ abilityTierMid: e.target.value })}
-            placeholder="일반적인 전투 상황에서의 사용"
-            className={textareaClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="abilityTierAdvanced" className={labelClass}>
-            상급 스킬 — {systemName}
-          </label>
-          <textarea
-            id="abilityTierAdvanced"
-            maxLength={300}
-            value={draft.abilityTierAdvanced}
-            onChange={(e) => onChange({ abilityTierAdvanced: e.target.value })}
-            placeholder="최대 출력, 큰 부담을 동반"
-            className={textareaClass}
-          />
-        </div>
+        ))}
       </div>
 
       {/* 크로스오버 전투 스타일 (선택사항) */}
@@ -172,7 +256,7 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
         <div className="mb-4">
           <p className="hud-label mb-1">// 크로스오버 전투 스타일 (선택사항)</p>
           <p className="text-xs text-text-secondary">
-            반대 진영의 전투 방식을 선택할 수 있습니다. 추가 대가가 따릅니다.
+            반대 진영의 전투 방식을 선택할 수 있습니다. 선택 시 모든 스킬에 HP + WILL 이중 소모가 적용됩니다.
           </p>
         </div>
 
