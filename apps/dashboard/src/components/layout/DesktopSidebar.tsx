@@ -26,10 +26,10 @@ export function DesktopSidebar({
       {/* 로고 영역 */}
       <div className="flex h-14 items-center px-5">
         <div>
-          <span className="hud-label text-primary font-semibold">
+          <span className="hud-label text-primary font-semibold text-glow-cyan">
             SOLARIS TERMINAL
           </span>
-          <div className="mt-1 h-px w-12 bg-primary/30" />
+          <div className="mt-1 h-px bg-gradient-to-r from-primary/50 to-transparent" />
         </div>
       </div>
 
@@ -74,10 +74,17 @@ export function DesktopSidebar({
                 "flex items-center gap-3 px-4 py-3 transition-colors",
                 isActive
                   ? "border-l-2 border-primary bg-primary/10 text-primary"
-                  : "text-text-secondary hover:bg-bg-tertiary hover:text-text",
+                  : "text-text-secondary hover:bg-bg-tertiary hover:text-text hover:border-l-2 hover:border-primary/30",
               )}
             >
-              <Icon className="h-5 w-5" />
+              <span
+                className={cn(
+                  isActive &&
+                    "drop-shadow-[0_0_6px_rgba(0,212,255,0.5)]",
+                )}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
               <span className="text-sm">{item.label}</span>
             </Link>
           );
@@ -85,7 +92,11 @@ export function DesktopSidebar({
       </nav>
 
       {/* 시스템 상태 표시 */}
-      <div className="border-t border-border px-5 py-3">
+      <div className="border-t border-border px-5 py-3 flex items-center gap-2">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-pulse rounded-full bg-success opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+        </span>
         <span className="hud-label text-success">SYS:ONLINE</span>
       </div>
     </aside>

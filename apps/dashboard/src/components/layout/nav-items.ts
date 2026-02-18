@@ -1,4 +1,4 @@
-import { Home, Radio, Swords, Users } from "lucide-react";
+import { Home, Radio, Crosshair, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -12,6 +12,6 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/core", label: "Helios Core", icon: Radio },
-  { href: "/operation", label: "Operation", icon: Swords, requireApproval: true },
+  { href: "/operation", label: "Operation", icon: Crosshair, requireApproval: true },
   { href: "/registry", label: "Registry", icon: Users },
 ] as const;
