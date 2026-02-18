@@ -26,11 +26,19 @@ describe("StepAbilityDesign", () => {
     expect(screen.getByLabelText(/제약 사항/)).toBeInTheDocument();
   });
 
-  it("단계별 textarea를 렌더링한다 (기본/중급/상급 스킬)", () => {
-    render(<StepAbilityDesign draft={bureauDraft} onChange={onChange} />);
-    expect(screen.getByLabelText("기본 스킬")).toBeInTheDocument();
-    expect(screen.getByLabelText("중급 스킬")).toBeInTheDocument();
-    expect(screen.getByLabelText(/상급 스킬/)).toBeInTheDocument();
+  it("단계별 스킬 블록을 렌더링한다 (기본/중급/상급)", () => {
+    const { container } = render(<StepAbilityDesign draft={bureauDraft} onChange={onChange} />);
+    // 각 티어 헤딩 텍스트
+    expect(screen.getByText("기본 스킬")).toBeInTheDocument();
+    expect(screen.getByText("중급 스킬")).toBeInTheDocument();
+    expect(screen.getByText(/상급 스킬/)).toBeInTheDocument();
+    // 각 티어에 스킬 이름/설명/코스트 입력 필드 존재
+    expect(container.querySelector("#skill-basic-name")).toBeInTheDocument();
+    expect(container.querySelector("#skill-basic-desc")).toBeInTheDocument();
+    expect(container.querySelector("#skill-mid-name")).toBeInTheDocument();
+    expect(container.querySelector("#skill-advanced-name")).toBeInTheDocument();
+    // Bureau이므로 WILL 소모 필드가 표시됨
+    expect(container.querySelector("#skill-basic-will")).toBeInTheDocument();
   });
 
   it("Bureau 선택 시 하모닉스 프로토콜 표시", () => {

@@ -75,4 +75,28 @@ describe("DashboardLayout", () => {
     );
     expect(screen.getByText("5")).toBeInTheDocument();
   });
+
+  // --- isCharacterApproved 전달 테스트 ---
+
+  it("isCharacterApproved를 MobileTabBar/DesktopSidebar에 전달한다", () => {
+    render(
+      <DashboardLayout isCharacterApproved={false}>
+        <div>Content</div>
+      </DashboardLayout>,
+    );
+    // isCharacterApproved=false → Operation 잠금 (Lock 아이콘 표시)
+    // MobileTabBar + DesktopSidebar 양쪽에 Lock 아이콘이 렌더링됨
+    const lockIcons = screen.getAllByTestId("lock-icon-/operation");
+    expect(lockIcons.length).toBe(2);
+  });
+
+  it("isCharacterApproved=true → Operation 잠금 해제", () => {
+    render(
+      <DashboardLayout isCharacterApproved>
+        <div>Content</div>
+      </DashboardLayout>,
+    );
+    const lockIcons = screen.queryAllByTestId("lock-icon-/operation");
+    expect(lockIcons.length).toBe(0);
+  });
 });

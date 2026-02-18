@@ -21,19 +21,19 @@ describe("DesktopSidebar", () => {
   });
 
   it("highlights active item based on currentPath", () => {
-    render(<DesktopSidebar currentPath="/characters" />);
+    render(<DesktopSidebar currentPath="/characters" isCharacterApproved />);
     const activeLink = screen.getByRole("link", { name: /registry/i });
     expect(activeLink).toHaveClass("text-primary");
   });
 
   it("does not highlight inactive items", () => {
-    render(<DesktopSidebar currentPath="/characters" />);
+    render(<DesktopSidebar currentPath="/characters" isCharacterApproved />);
     const homeLink = screen.getByRole("link", { name: /home/i });
     expect(homeLink).not.toHaveClass("text-primary");
   });
 
   it("활성 메뉴에 aria-current=page를 설정한다", () => {
-    render(<DesktopSidebar currentPath="/characters" />);
+    render(<DesktopSidebar currentPath="/characters" isCharacterApproved />);
     const activeLink = screen.getByRole("link", { name: /registry/i });
     const homeLink = screen.getByRole("link", { name: /home/i });
 
@@ -64,11 +64,51 @@ describe("DesktopSidebar", () => {
   });
 
   it("links to correct routes", () => {
-    render(<DesktopSidebar currentPath="/" />);
+    render(<DesktopSidebar currentPath="/" isCharacterApproved />);
     expect(screen.getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: /lore/i })).toHaveAttribute("href", "/world");
     expect(screen.getByRole("link", { name: /operation/i })).toHaveAttribute("href", "/operation");
     expect(screen.getByRole("link", { name: /registry/i })).toHaveAttribute("href", "/characters");
     expect(screen.getByRole("link", { name: /helios core/i })).toHaveAttribute("href", "/core");
+  });
+
+  // --- 잠금 UI 테스트 ---
+
+  it("isCharacterApproved=false → Operation에 Lock 아이콘 표시", () => {
+    render(<DesktopSidebar currentPath="/" isCharacterApproved={false} />);
+    const lockIcon = screen.getByTestId("lock-icon-/operation");
+    expect(lockIcon).toBeInTheDocument();
+  });
+
+  it("isCharacterApproved=false → Operation이 button으로 렌더링", () => {
+    render(<DesktopSidebar currentPath="/" isCharacterApproved={false} />);
+    const operationButton = screen.getByRole("button", { name: /operation/i });
+    expect(operationButton).toBeInTheDocument();
+    expect(operationButton).toHaveAttribute("aria-disabled", "true");
+    expect(operationButton).toHaveAttribute("aria-label", "Operation (캐릭터 승인 후 이용 가능)");
+  });
+
+  it("isCharacterApproved=false → Operation에 흐린 스타일", () => {
+    render(<DesktopSidebar currentPath="/" isCharacterApproved={false} />);
+    const operationButton = screen.getByRole("button", { name: /operation/i });
+    expect(operationButton.className).toContain("text-text-secondary/40");
+  });
+
+  it("isCharacterApproved=true → Operation에 정상 Link", () => {
+    render(<DesktopSidebar currentPath="/" isCharacterApproved />);
+    const operationLink = screen.getByRole("link", { name: /operation/i });
+    expect(operationLink).toHaveAttribute("href", "/operation");
+  });
+
+  it("isCharacterApproved=true → Lock 아이콘 없음", () => {
+    render(<DesktopSidebar currentPath="/" isCharacterApproved />);
+    const lockIcon = screen.queryByTestId("lock-icon-/operation");
+    expect(lockIcon).not.toBeInTheDocument();
+  });
+
+  it("isCharacterApproved 미전달 → requireApproval 항목 잠금", () => {
+    render(<DesktopSidebar currentPath="/" />);
+    const lockIcon = screen.getByTestId("lock-icon-/operation");
+    expect(lockIcon).toBeInTheDocument();
   });
 });

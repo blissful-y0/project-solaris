@@ -51,6 +51,17 @@
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-subtle);
   }
+
+  /* input/textarea 내부 스크롤바 숨김 */
+  input,
+  textarea {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  input::-webkit-scrollbar,
+  textarea::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ─── 노이즈 오버레이 (랜딩 대비 opacity 절반 — 대시보드는 가독성 우선) ─── */
@@ -216,6 +227,71 @@
     font-size: 0.75rem;
     color: var(--color-text-secondary);
     animation: ticker-marquee 28s linear infinite;
+  }
+}
+
+/* ─── Lore 콘텐츠 타이포그래피 (마크다운 렌더링) ─── */
+@layer components {
+  .lore-content {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.75;
+  }
+  .lore-content h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  .lore-content h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .lore-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .lore-content h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: color-mix(in oklab, var(--color-primary) 70%, var(--color-text));
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+  }
+  .lore-content p {
+    margin-bottom: 0.75rem;
+  }
+  .lore-content ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .lore-content li {
+    margin-bottom: 0.25rem;
+  }
+  .lore-content strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  .lore-content blockquote {
+    border-left: 2px solid var(--color-primary);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--color-text-secondary);
+    font-style: italic;
+  }
+  .lore-content hr {
+    border-color: var(--color-border);
+    margin: 1.5rem 0;
   }
 }
 

@@ -1,6 +1,9 @@
 /** 시민 ID 카드 데이터 인터페이스 */
 type ISODateString = `${number}-${number}-${number}`;
 
+/** 시민 등록 상태 */
+export type CitizenStatus = "pending" | "approved" | "rejected";
+
 export interface CitizenData {
   name: string;
   faction: "Bureau" | "Static";
@@ -11,6 +14,7 @@ export interface CitizenData {
   avatarUrl: string | null;
   abilityClass: string; // 뒷면 표시용 — 역장/감응/변환/연산
   joinDate: ISODateString; // YYYY-MM-DD
+  status?: CitizenStatus; // 미지정 시 approved 취급
 }
 
 /** 개발/테스트용 목 시민 데이터 */

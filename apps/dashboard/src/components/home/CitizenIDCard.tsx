@@ -243,17 +243,166 @@ function EmptyCard() {
   );
 }
 
+/* ─── 승인 대기 카드 ─── */
+function PendingCard({
+  citizen,
+  onCancel,
+}: {
+  citizen: CitizenData;
+  onCancel?: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-warning/40 bg-bg-secondary/80 p-4 hud-corners">
+      {/* 헤더: 대기 상태 라벨 */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="hud-label text-warning">APPROVAL PENDING</div>
+        <div className="hud-label tracking-[0.2em]">{citizen.citizenId}</div>
+      </div>
+
+      {/* 본문: 캐릭터 요약 */}
+      <div className="flex gap-4">
+        {/* 아바타 */}
+        <div className="w-24 h-28 rounded-md overflow-hidden bg-bg-tertiary border border-border flex-shrink-0">
+          {citizen.avatarUrl ? (
+            <Image
+              src={citizen.avatarUrl}
+              alt={`${citizen.name} 아바타`}
+              width={96}
+              height={112}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-warning font-bold text-2xl">
+              {citizen.name.charAt(0)}
+            </div>
+          )}
+        </div>
+
+        {/* 우측 정보 */}
+        <div className="flex flex-col flex-1 min-w-0">
+          <span className="text-lg font-bold text-text truncate leading-tight block">
+            {citizen.name}
+          </span>
+          <p className="text-[0.65rem] text-text-secondary mt-0.5">
+            {citizen.faction === "Bureau"
+              ? "Solaris Bureau of Civic Security"
+              : "The Static"}
+          </p>
+
+          <p className="text-xs text-text-secondary mt-3">
+            HELIOS 시스템이 신원을 확인하고 있습니다.
+          </p>
+        </div>
+      </div>
+
+      {/* 하단: 신청 취소 */}
+      <div className="mt-3 pt-3 border-t border-border flex items-center justify-end">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-xs text-text-secondary hover:text-accent transition-colors"
+          aria-label="신청 취소"
+        >
+          신청 취소
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 반려 카드 ─── */
+function RejectedCard({ citizen }: { citizen: CitizenData }) {
+  return (
+    <div className="rounded-lg border border-accent/40 bg-bg-secondary/80 p-4 hud-corners">
+      {/* 헤더: 반려 상태 라벨 */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="hud-label text-accent">REGISTRATION DENIED</div>
+        <div className="hud-label tracking-[0.2em]">{citizen.citizenId}</div>
+      </div>
+
+      {/* 본문: 캐릭터 요약 */}
+      <div className="flex gap-4">
+        {/* 아바타 */}
+        <div className="w-24 h-28 rounded-md overflow-hidden bg-bg-tertiary border border-accent/20 flex-shrink-0">
+          {citizen.avatarUrl ? (
+            <Image
+              src={citizen.avatarUrl}
+              alt={`${citizen.name} 아바타`}
+              width={96}
+              height={112}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-accent/60 font-bold text-2xl">
+              {citizen.name.charAt(0)}
+            </div>
+          )}
+        </div>
+
+        {/* 우측 정보 */}
+        <div className="flex flex-col flex-1 min-w-0">
+          <span className="text-lg font-bold text-text truncate leading-tight block">
+            {citizen.name}
+          </span>
+          <p className="text-[0.65rem] text-text-secondary mt-0.5">
+            {citizen.faction === "Bureau"
+              ? "Solaris Bureau of Civic Security"
+              : "The Static"}
+          </p>
+
+          <p className="text-xs text-accent mt-3">
+            등록이 반려되었습니다.
+          </p>
+          <p className="text-[0.625rem] text-text-secondary mt-1">
+            캐릭터 정보를 수정하여 다시 신청할 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+      {/* 하단: 재신청 CTA */}
+      <div className="mt-3 pt-3 border-t border-border">
+        <Link
+          href="/character/create"
+          className="text-xs text-primary hover:text-primary/80 transition-colors"
+          aria-label="재신청하기"
+        >
+          재신청하기 &rarr;
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 /* ─── 메인 컴포넌트 ─── */
 type CitizenIDCardProps = {
   citizen: CitizenData | null;
   className?: string;
+  onCancel?: () => void;
 };
 
-export function CitizenIDCard({ citizen, className }: CitizenIDCardProps) {
+export function CitizenIDCard({ citizen, className, onCancel }: CitizenIDCardProps) {
   if (!citizen) {
     return (
       <div className={cn("w-full", className)}>
         <EmptyCard />
+      </div>
+    );
+  }
+
+  const status = citizen.status ?? "approved";
+
+  if (status === "pending") {
+    return (
+      <div className={cn("w-full", className)}>
+        <PendingCard citizen={citizen} onCancel={onCancel} />
+      </div>
+    );
+  }
+
+  if (status === "rejected") {
+    return (
+      <div className={cn("w-full", className)}>
+        <RejectedCard citizen={citizen} />
       </div>
     );
   }
