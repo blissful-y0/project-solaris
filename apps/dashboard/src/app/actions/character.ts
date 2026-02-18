@@ -15,6 +15,7 @@ interface CharacterDraft {
     gender?: string;
     personality?: string;
   };
+  profileImageUrl?: string;
   appearance?: string;
   backstory?: string;
   leaderApplication: boolean;
@@ -84,6 +85,7 @@ export async function submitCharacter(draft: CharacterDraft) {
     p_will_max: stats.will,
     p_will_current: stats.will,
     p_resonance_rate: draft.resonanceRate,
+    p_profile_image_url: draft.profileImageUrl ?? null,
     p_profile_data: draft.profileData,
     p_appearance: draft.appearance ?? null,
     p_backstory: draft.backstory ?? null,

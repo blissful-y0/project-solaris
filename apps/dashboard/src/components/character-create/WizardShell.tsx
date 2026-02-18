@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useDraftSave } from "@/hooks/useDraftSave";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 import { StepAbilityClass } from "./StepAbilityClass";
 import { StepAbilityDesign } from "./StepAbilityDesign";
@@ -49,6 +50,7 @@ function isStepValid(step: number, draft: CharacterDraft): boolean {
 export function WizardShell() {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<CharacterDraft>(() => EMPTY_DRAFT);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const { isSaved, restored, clear } = useDraftSave(draft);
 
   // 복원 확인 상태: "pending" → "ask" → "done"
@@ -78,6 +80,49 @@ export function WizardShell() {
   const updateDraft = useCallback((patch: Partial<CharacterDraft>) => {
     setDraft((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  const handleProfileImageUpload = useCallback(async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("이미지 파일만 업로드할 수 있습니다");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("프로필 이미지는 5MB 이하여야 합니다");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const supabase = createSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error("로그인 후 이미지를 업로드할 수 있습니다");
+        return;
+      }
+
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const objectPath = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const bucket = "character-profile-images";
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(objectPath, file, { upsert: false, cacheControl: "3600" });
+
+      if (uploadError) {
+        toast.error("프로필 이미지 업로드에 실패했습니다");
+        return;
+      }
+
+      const { data } = supabase.storage.from(bucket).getPublicUrl(objectPath);
+      updateDraft({ profileImageUrl: data.publicUrl });
+      toast.success("프로필 이미지 업로드 완료");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }, [updateDraft]);
 
   const handleNext = () => {
     if (step < TOTAL_STEPS - 1) setStep((s) => s + 1);
@@ -156,7 +201,12 @@ export function WizardShell() {
           <StepAbilityDesign draft={draft} onChange={updateDraft} />
         )}
         {step === 3 && (
-          <StepProfile draft={draft} onChange={updateDraft} />
+          <StepProfile
+            draft={draft}
+            onChange={updateDraft}
+            onImageUpload={handleProfileImageUpload}
+            isUploading={isUploadingImage}
+          />
         )}
         {step === 4 && (
           <StepConfirm

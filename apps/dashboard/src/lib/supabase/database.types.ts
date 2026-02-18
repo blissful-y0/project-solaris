@@ -451,6 +451,7 @@ export type Database = {
               p_leader_application: boolean
               p_name: string
               p_profile_data: Json
+              p_profile_image_url: string
               p_resonance_rate: number
               p_user_id: string
               p_will_current: number
