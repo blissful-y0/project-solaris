@@ -1,5 +1,14 @@
 # PROJECT SOLARIS - Database Schema
 
+> **TODO (Operation 통합):** SERVICE-SPEC 4-5~4-7이 통합 Operation 모델로 변경됨.
+> 구현 단계에서 아래 변경 반영 필요:
+> - `battles` + `battle_turns` + `battle_ooc` → **operations + operation_turns** 통합
+> - `rooms` + `room_participants` + `room_messages` → operations 테이블에 type='downtime'으로 통합
+> - operations 테이블: type ENUM('operation', 'downtime'), status ENUM('waiting', 'live', 'completed')
+> - operation_participants: team ENUM('ally', 'enemy') — 오퍼레이션만 해당
+> - 기존 1v1 (challenger/defender) → 2v2 팀 모델 (max 4)
+> - feat/operation-backend 브랜치의 operation_encounters 등과 reconcile 필요
+
 > 설계 이유(비개발자용): `docs/project/DB-ARCHITECTURE-RATIONALE.md`
 
 **Version:** 1.0  

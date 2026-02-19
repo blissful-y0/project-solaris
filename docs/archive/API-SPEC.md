@@ -1,5 +1,14 @@
 # PROJECT SOLARIS API Specification
 
+> **TODO (Operation 통합):** SERVICE-SPEC 4-5~4-7이 통합 Operation 모델로 변경됨.
+> 구현 단계에서 아래 변경 반영 필요:
+> - `Battles API` (L668~) + `Rooms API` (L1206~) → **Operations API**로 통합
+> - 라우트: `/api/operations` (목록/생성), `/api/operations/[id]` (상세/참가/관전)
+> - 접근 제어: `characters.status = 'approved'` 확인 필수
+> - 오퍼레이션 생성: admin 전용 / 다운타임 생성: 승인 유저 누구나
+> - 관전: 모든 승인 유저 읽기 전용 접근 가능 (live/completed)
+> - 기존 1v1 battle 모델 → 2v2 팀전 모델로 변경 (max 4명)
+
 ## 개요
 
 PROJECT SOLARIS는 도시 배경의 롤플레이 전투 시스템을 제공하는 웹서비스입니다.

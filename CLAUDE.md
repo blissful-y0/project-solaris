@@ -3,7 +3,7 @@
 ## 0. 이 문서의 성격
 
 이 문서는 "프로젝트 소개"가 아니라 **에이전트 운영 규약**이다.
-작업 중 충돌이 생기면 이 문서와 `docs/project/*.md`를 우선 참조한다.
+작업 중 충돌이 생기면 이 문서와 `docs/specs/*.md`를 우선 참조한다.
 
 ---
 
@@ -12,16 +12,24 @@
 아래 순서대로 읽고 시작한다.
 
 1. `docs/WORLDBUILDING.md`
-2. `docs/project/SERVICE-SPEC.md`
-3. `docs/project/API-SPEC.md`
-4. `docs/project/DB-SCHEMA.md`
-5. `docs/project/ADMIN-SPEC.md`
-6. `docs/project/folder-governance.md`
+2. `docs/specs/_overview.md` — 프로젝트 구조, 공통 규칙, 디자인 시스템
+3. 작업 대상 기능의 스펙 파일:
+   - `docs/specs/auth.md` — 인증/세션
+   - `docs/specs/home.md` — 홈, 뉴스, 알림
+   - `docs/specs/character.md` — 캐릭터 생성/프로필/레지스트리
+   - `docs/specs/operation.md` — 작전(전투 RP/다운타임 RP)
+   - `docs/specs/faction.md` — 진영 게시판
+   - `docs/specs/mypage.md` — 마이페이지
+   - `docs/specs/admin.md` — 관리자 패널, 배치 서버
+4. `docs/folder-governance.md`
 
 보충 자료:
 
-- `docs/LANDING-SPEC.md`
-- `docs/LANDING-COPY.md`
+- `docs/landing/LANDING-SPEC.md`
+- `docs/landing/LANDING-COPY.md`
+
+> 구 스펙 파일(`SERVICE-SPEC.md`, `API-SPEC.md`, `DB-SCHEMA.md`)은 `docs/archive/`로 이동됨.
+> 기능별 스펙 파일(`specs/*.md`)이 프론트+백엔드+DB를 통합 관리한다.
 
 ---
 
@@ -51,11 +59,11 @@
 
 ## 4. IA/용어 규칙
 
-- 메뉴 라벨, 화면 명칭, 사용자 노출 용어는 **항상 최신 `SERVICE-SPEC` 기준**으로 맞춘다.
+- 메뉴 라벨, 화면 명칭, 사용자 노출 용어는 **항상 최신 기능별 스펙 파일(`specs/*.md`) 기준**으로 맞춘다.
 - 과거 문서의 구 라벨(예: 탭/화면 옛 이름)은 새 작업에서 재도입하지 않는다.
 - 문서 간 용어 불일치 발견 시:
-  1) `SERVICE-SPEC` 우선
-  2) `API-SPEC`/`DB-SCHEMA` 정합성 확인
+  1) 해당 기능 스펙 파일 우선 (`specs/*.md`)
+  2) 프론트/API/DB 섹션 간 정합성 확인
   3) 필요 시 계획 문서에 충돌 메모 추가
 
 ---
@@ -113,11 +121,10 @@
 ## 9. 문서 충돌 해결 규칙
 
 - 우선순위:
-  1. `docs/project/SERVICE-SPEC.md`
-  2. `docs/project/API-SPEC.md`
-  3. `docs/project/DB-SCHEMA.md`
-  4. `docs/project/ADMIN-SPEC.md`
-  5. `docs/plans/*.md`
+  1. `docs/specs/*.md` (기능별 통합 스펙)
+  2. `docs/folder-governance.md`
+  3. `docs/plans/*.md`
+- 각 스펙 파일 내부에서는: 화면 정의 → API 정의 → DB 스키마 순으로 우선
 - 충돌 발견 시 즉시 메모하고, 같은 PR/브랜치에서 동기화한다.
 
 ---
