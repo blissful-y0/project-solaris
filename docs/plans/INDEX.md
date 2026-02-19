@@ -5,6 +5,10 @@
 
 | 날짜 | 문서 | 상태 | 메모 |
 |---|---|---|---|
+| 2026-02-18 | `operation-hub-design.md` | 기록 | Operation 통합 UI/UX 설계 |
+| 2026-02-18 | `operation-implementation-plan.md` | 기록 | Operation 3-에이전트 병렬 구현 계획 |
+| 2026-02-18 | `2026-02-18-simple-combat-resolution-plan.md` | 기록 | 심플 전투 경합 처리(MVP) 계획 |
+| 2026-02-18 | `2026-02-18-daily-summary.md` | 기록 | 일일 작업 요약 |
 | 2026-02-18 | `2026-02-18-discord-secrets-webhook-runbook.md` | 운영 | 시크릿/웹훅 운영 런북 |
 | 2026-02-18 | `2026-02-18-db-architecture-rationale.md` | 기록 | DB 설계 의사결정 근거 |
 | 2026-02-17 | `2026-02-17-dashboard-impl-plan.md` | 기록 | 대시보드 구현 마스터 플랜 |
