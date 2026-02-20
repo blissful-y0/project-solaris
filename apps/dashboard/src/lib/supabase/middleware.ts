@@ -32,13 +32,19 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+  const isApiPath = pathname.startsWith("/api/");
 
   const isPublicPath =
     pathname === "/login" ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/_next");
 
-  // 미인증 + 비공개 경로 → 로그인으로
+  // 미인증 API 요청은 리다이렉트 대신 401 JSON
+  if (!user && isApiPath && !pathname.startsWith("/api/auth")) {
+    return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+  }
+
+  // 미인증 + 비공개 페이지 경로 → 로그인으로
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     const redirectPath = `${pathname}${request.nextUrl.search}`;

@@ -69,4 +69,17 @@ describe("updateSession", () => {
     expect(response.headers.get("location")).toBeNull();
     expect(response.status).toBe(200);
   });
+
+  it("미인증 API 요청은 로그인 리다이렉트가 아니라 401 JSON을 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
+    const request = new NextRequest("https://solaris.local/api/notifications");
+
+    const { updateSession } = await import("../middleware");
+    const response = await updateSession(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("location")).toBeNull();
+    expect(body).toEqual({ error: "UNAUTHENTICATED" });
+  });
 });

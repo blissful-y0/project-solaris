@@ -23,6 +23,9 @@ export async function POST(
       );
     }
 
+    // 정책 의도: 관리자 재판정 허용.
+    // 이미 approved/rejected 상태인 캐릭터도 필요 시 다시 reject 할 수 있다.
+    // (재신청/재심 운영 흐름을 지원하기 위해 pending 조건을 고정하지 않음)
     const { data, error } = await supabase
       .from("characters")
       .update({ status: "rejected", rejection_reason: reason })
