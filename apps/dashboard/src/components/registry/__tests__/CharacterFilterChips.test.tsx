@@ -15,7 +15,7 @@ describe("CharacterFilterChips", () => {
       />,
     );
     expect(screen.getByText("전체")).toBeInTheDocument();
-    expect(screen.getByText("Bureau")).toBeInTheDocument();
+    expect(screen.getByText("Enforcer")).toBeInTheDocument();
     expect(screen.getByText("Static")).toBeInTheDocument();
     /* 전향자 제거됨 — bureau/static만 표시 */
   });
@@ -32,7 +32,7 @@ describe("CharacterFilterChips", () => {
       />,
     );
 
-    await user.click(screen.getByText("Bureau"));
+    await user.click(screen.getByText("Enforcer"));
     expect(onFactionChange).toHaveBeenCalledWith("bureau");
   });
 

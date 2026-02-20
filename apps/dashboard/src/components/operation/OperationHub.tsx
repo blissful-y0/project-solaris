@@ -1,49 +1,67 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { FilterChips } from "@/components/ui";
+import { Button, FilterChips } from "@/components/ui";
 import type { FilterChipOption } from "@/components/ui/FilterChips";
 
+import { CreateOperationModal } from "./CreateOperationModal";
+import { MainStoryBanner } from "./MainStoryBanner";
 import { OperationCard } from "./OperationCard";
-import type {
-  OperationItem,
-  OperationStatusFilter,
-  OperationTabValue,
-} from "./types";
+import type { OperationItem, StatusFilter, TypeFilter } from "./types";
 
 type OperationHubProps = {
   operations: OperationItem[];
 };
 
-const TAB_OPTIONS: FilterChipOption[] = [
-  { label: "전체", value: "전체" },
-  { label: "전투", value: "전투" },
-  { label: "RP", value: "RP" },
+const TYPE_OPTIONS: FilterChipOption<TypeFilter>[] = [
+  { label: "ALL", value: "all" },
+  { label: "OPERATION", value: "operation" },
+  { label: "DOWNTIME", value: "downtime" },
 ];
 
-const STATUS_OPTIONS: FilterChipOption[] = [
-  { label: "전체", value: "전체" },
-  { label: "대기중", value: "대기중" },
-  { label: "진행중", value: "진행중" },
-  { label: "완료", value: "완료" },
+const STATUS_OPTIONS: FilterChipOption<StatusFilter>[] = [
+  { label: "전체", value: "all" },
+  { label: "대기", value: "waiting" },
+  { label: "LIVE", value: "live" },
+  { label: "완료", value: "completed" },
 ];
 
-/** 작전 허브 — 탭 + 상태 필터 + 카드 그리드 */
+/** 작전 허브 — MAIN STORY 배너 + 타입/상태 필터 + 카드 그리드 */
 export function OperationHub({ operations }: OperationHubProps) {
-  const [activeTab, setActiveTab] = useState<OperationTabValue>("전체");
-  const [statusFilter, setStatusFilter] = useState<OperationStatusFilter>("전체");
+  const router = useRouter();
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [modalOpen, setModalOpen] = useState(false);
 
+  /** 카드/배너 클릭 → 세션 페이지 이동 */
+  const handleNavigate = useCallback(
+    (item: OperationItem) => {
+      router.push(`/operation/${item.id}`);
+    },
+    [router],
+  );
+
+  /* MAIN STORY 이벤트 추출 (LIVE만) */
+  const mainStory = useMemo(
+    () => operations.find((op) => op.isMainStory && op.status === "live") ?? null,
+    [operations],
+  );
+
+  /* 일반 목록 (MAIN STORY 제외) + 필터 적용 */
   const filtered = useMemo(() => {
-    return operations.filter((op) => {
-      if (activeTab !== "전체" && op.type !== activeTab) return false;
-      if (statusFilter !== "전체" && op.status !== statusFilter) return false;
-      return true;
-    });
-  }, [operations, activeTab, statusFilter]);
+    return operations
+      .filter((op) => !op.isMainStory)
+      .filter((op) => {
+        if (typeFilter !== "all" && op.type !== typeFilter) return false;
+        if (statusFilter !== "all" && op.status !== statusFilter) return false;
+        return true;
+      });
+  }, [operations, typeFilter, statusFilter]);
 
   return (
-    <section className="py-6 space-y-6">
+    <section className="space-y-6 py-6">
       {/* 헤더 */}
       <div className="flex items-end justify-between">
         <div>
@@ -53,32 +71,70 @@ export function OperationHub({ operations }: OperationHubProps) {
         <p className="text-xs text-text-secondary">{operations.length}개 채널</p>
       </div>
 
-      {/* 탭 필터: 전체/전투/RP */}
-      <FilterChips
-        options={TAB_OPTIONS}
-        selected={activeTab}
-        onChange={(v) => setActiveTab(v as OperationTabValue)}
-      />
+      {/* MAIN STORY 배너 */}
+      <MainStoryBanner event={mainStory} onJoin={handleNavigate} />
 
-      {/* 상태 필터: 전체/대기중/진행중/완료 */}
+      {/* 타입 필터 + 생성 CTA */}
+      <div className="flex items-center justify-between gap-2">
+        <FilterChips
+          options={TYPE_OPTIONS}
+          selected={typeFilter}
+          onChange={setTypeFilter}
+        />
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setModalOpen(true)}
+        >
+          + 새 작전
+        </Button>
+      </div>
+
+      {/* 상태 필터 */}
       <FilterChips
         options={STATUS_OPTIONS}
         selected={statusFilter}
-        onChange={(v) => setStatusFilter(v as OperationStatusFilter)}
+        onChange={setStatusFilter}
       />
 
       {/* 카드 그리드 */}
       {filtered.length === 0 ? (
-        <p className="py-12 text-center text-sm text-text-secondary">
-          등록된 작전이 없습니다.
-        </p>
+        <div className="py-12 text-center">
+          <p className="text-sm text-text-secondary">
+            {typeFilter === "all" && statusFilter === "all"
+              ? "등록된 작전이 없습니다."
+              : "조건에 맞는 작전이 없습니다."}
+          </p>
+          {typeFilter === "all" && statusFilter === "all" && (
+            <>
+              <p className="mt-1 text-xs text-text-secondary/60">
+                새 작전을 생성해 보세요.
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-4"
+                onClick={() => setModalOpen(true)}
+              >
+                + 새 작전
+              </Button>
+            </>
+          )}
+        </div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-2">
           {filtered.map((item) => (
-            <OperationCard key={item.id} item={item} />
+            <OperationCard key={item.id} item={item} onClick={handleNavigate} />
           ))}
         </div>
       )}
+
+      {/* 생성 모달 */}
+      <CreateOperationModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={() => setModalOpen(false)}
+      />
     </section>
   );
 }

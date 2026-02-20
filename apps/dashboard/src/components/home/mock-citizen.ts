@@ -7,7 +7,7 @@ export type CitizenStatus = "pending" | "approved" | "rejected";
 export interface CitizenData {
   characterId?: string; // DB characters.id — 아바타 업로드용
   name: string;
-  faction: "Bureau" | "Static";
+  faction: "Enforcer" | "Static";
   resonanceRate: number; // 0-100
   hp: { current: number; max: number };
   will: { current: number; max: number };
@@ -21,7 +21,7 @@ export interface CitizenData {
 /** 개발/테스트용 목 시민 데이터 */
 export const mockCitizen: CitizenData = {
   name: "아마츠키 레이",
-  faction: "Bureau",
+  faction: "Enforcer",
   resonanceRate: 87,
   hp: { current: 64, max: 80 },
   will: { current: 198, max: 250 },

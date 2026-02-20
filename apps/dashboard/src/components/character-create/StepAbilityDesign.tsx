@@ -196,10 +196,10 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
       <p className="text-xs text-text-secondary mb-6">
         능력 체계: <span className={cn("font-semibold", isBureau ? "text-primary" : "text-accent")}>{systemName}</span>
         {hasCrossover && (
-          <span className="text-warning ml-2">⚠ 크로스오버: HP + WILL 이중 소모</span>
+          <span className="text-warning ml-2">크로스오버: HP + WILL 이중 소모</span>
         )}
         {isStaticCompute && !hasCrossover && (
-          <span className="text-warning ml-2">⚠ 연산 계열: HP + WILL 이중 소모</span>
+          <span className="text-warning ml-2">연산 계열: HP + WILL 이중 소모</span>
         )}
       </p>
 

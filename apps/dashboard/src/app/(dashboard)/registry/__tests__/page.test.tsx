@@ -50,7 +50,7 @@ const mockDetailData = {
   will_max: 250,
   will_current: 190,
   appearance: "은발 단발.",
-  backstory: "Bureau 에이스.",
+  backstory: "Enforcer 에이스.",
   profile_image_url: "https://example.com/avatar.jpg",
   is_leader: true,
   resonance_rate: 87,

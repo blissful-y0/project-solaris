@@ -30,8 +30,8 @@ const ABILITY_CLASS_LABELS: Record<string, string> = {
 };
 
 /** 팩션 매핑 */
-const FACTION_MAP: Record<string, "Bureau" | "Static"> = {
-  bureau: "Bureau",
+const FACTION_MAP: Record<string, "Enforcer" | "Static"> = {
+  bureau: "Enforcer",
   static: "Static",
   civilian: "Static",
   defector: "Static",

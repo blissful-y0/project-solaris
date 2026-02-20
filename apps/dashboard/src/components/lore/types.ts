@@ -69,7 +69,7 @@ export const LORE_CATEGORIES: LoreCategory[] = [
     id: "factions",
     label: "대립 구도",
     codeName: "FACTION-INTEL",
-    description: "Bureau와 The Static — 진영 간 긴장 관계",
+    description: "Enforcer와 The Static — 진영 간 긴장 관계",
     clearanceLevel: 1,
   },
   {

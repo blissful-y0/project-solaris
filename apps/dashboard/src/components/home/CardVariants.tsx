@@ -54,7 +54,7 @@ export function RegisteredCard({
               {citizen.name}
             </span>
             <p className="text-[0.6rem] text-text-secondary mt-0.5 truncate">
-              {citizen.faction === "Bureau"
+              {citizen.faction === "Enforcer"
                 ? "Solaris Bureau of Civic Security"
                 : "The Static"}
             </p>
@@ -166,8 +166,9 @@ export function PendingCard({
               <Image
                 src={citizen.avatarUrl}
                 alt={`${citizen.name} 아바타`}
-                width={128}
-                height={160}
+                width={256}
+                height={320}
+                sizes="(min-width: 640px) 128px, 112px"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -183,7 +184,7 @@ export function PendingCard({
                 {citizen.name}
               </span>
               <p className="text-[0.6rem] text-text-secondary mt-0.5">
-                {citizen.faction === "Bureau"
+                {citizen.faction === "Enforcer"
                   ? "Solaris Bureau of Civic Security"
                   : "The Static"}
               </p>
@@ -230,8 +231,9 @@ export function RejectedCard({ citizen }: { citizen: CitizenData }) {
               <Image
                 src={citizen.avatarUrl}
                 alt={`${citizen.name} 아바타`}
-                width={128}
-                height={160}
+                width={256}
+                height={320}
+                sizes="(min-width: 640px) 128px, 112px"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -247,7 +249,7 @@ export function RejectedCard({ citizen }: { citizen: CitizenData }) {
                 {citizen.name}
               </span>
               <p className="text-[0.6rem] text-text-secondary mt-0.5">
-                {citizen.faction === "Bureau"
+                {citizen.faction === "Enforcer"
                   ? "Solaris Bureau of Civic Security"
                   : "The Static"}
               </p>

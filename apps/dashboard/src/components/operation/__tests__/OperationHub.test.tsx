@@ -1,9 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { OperationHub } from "../OperationHub";
 import { mockOperations } from "../mock-operation-data";
+
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+/** MAIN STORY를 제외한 일반 목록 */
+const regularOps = mockOperations.filter((op) => !op.isMainStory);
 
 describe("OperationHub", () => {
   it("OPERATION // TACTICAL HUB 라벨을 표시한다", () => {
@@ -18,83 +26,104 @@ describe("OperationHub", () => {
 
   it("작전 개수를 표시한다", () => {
     render(<OperationHub operations={mockOperations} />);
-    expect(screen.getByText(`${mockOperations.length}개 채널`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`${mockOperations.length}개 채널`),
+    ).toBeInTheDocument();
   });
 
-  it("초기 상태에서 모든 작전 카드를 표시한다", () => {
+  it("MAIN STORY 배너를 표시한다", () => {
+    render(<OperationHub operations={mockOperations} />);
+    expect(screen.getByText(/MAIN STORY/)).toBeInTheDocument();
+  });
+
+  it("일반 목록 카드를 표시한다 (MAIN STORY 제외)", () => {
     render(<OperationHub operations={mockOperations} />);
     const articles = screen.getAllByRole("article");
-    expect(articles).toHaveLength(mockOperations.length);
+    expect(articles).toHaveLength(regularOps.length);
   });
 
-  it("전투 탭 클릭 시 전투 작전만 표시한다", async () => {
+  it("+ 새 작전 버튼을 표시한다", () => {
+    render(<OperationHub operations={mockOperations} />);
+    expect(screen.getByText("+ 새 작전")).toBeInTheDocument();
+  });
+
+  it("OPERATION 필터 클릭 시 OPERATION 카드만 표시한다", async () => {
     const user = userEvent.setup();
     render(<OperationHub operations={mockOperations} />);
 
-    /* 탭 필터 영역에서 '전투' 버튼 클릭 */
-    const tabs = screen.getAllByRole("button", { pressed: false });
-    const battleTab = tabs.find((btn) => btn.textContent === "전투");
-    expect(battleTab).toBeDefined();
-    await user.click(battleTab!);
+    const opFilter = screen.getByRole("button", { name: "OPERATION" });
+    await user.click(opFilter);
 
     const articles = screen.getAllByRole("article");
-    const battleCount = mockOperations.filter((op) => op.type === "전투").length;
-    expect(articles).toHaveLength(battleCount);
+    const opCount = regularOps.filter((op) => op.type === "operation").length;
+    expect(articles).toHaveLength(opCount);
   });
 
-  it("RP 탭 클릭 시 RP 작전만 표시한다", async () => {
+  it("DOWNTIME 필터 클릭 시 DOWNTIME 카드만 표시한다", async () => {
     const user = userEvent.setup();
     render(<OperationHub operations={mockOperations} />);
 
-    const tabs = screen.getAllByRole("button", { pressed: false });
-    const rpTab = tabs.find((btn) => btn.textContent === "RP");
-    expect(rpTab).toBeDefined();
-    await user.click(rpTab!);
+    const dtFilter = screen.getByRole("button", { name: "DOWNTIME" });
+    await user.click(dtFilter);
 
     const articles = screen.getAllByRole("article");
-    const rpCount = mockOperations.filter((op) => op.type === "RP").length;
-    expect(articles).toHaveLength(rpCount);
+    const dtCount = regularOps.filter((op) => op.type === "downtime").length;
+    expect(articles).toHaveLength(dtCount);
   });
 
-  it("상태 필터로 대기중 작전만 필터링한다", async () => {
+  it("LIVE 상태 필터로 필터링한다", async () => {
     const user = userEvent.setup();
     render(<OperationHub operations={mockOperations} />);
 
-    const statusFilters = screen.getAllByRole("button");
-    const waitingFilter = statusFilters.find((btn) => btn.textContent === "대기중");
-    expect(waitingFilter).toBeDefined();
-    await user.click(waitingFilter!);
+    const liveFilter = screen.getByRole("button", { name: "LIVE" });
+    await user.click(liveFilter);
 
     const articles = screen.getAllByRole("article");
-    const waitingCount = mockOperations.filter((op) => op.status === "대기중").length;
-    expect(articles).toHaveLength(waitingCount);
+    const liveCount = regularOps.filter((op) => op.status === "live").length;
+    expect(articles).toHaveLength(liveCount);
   });
 
-  it("탭 + 상태 필터 조합이 동작한다", async () => {
+  it("대기 상태 필터로 필터링한다", async () => {
     const user = userEvent.setup();
     render(<OperationHub operations={mockOperations} />);
 
-    /* 전투 탭 선택 */
-    const allButtons = screen.getAllByRole("button");
-    const battleTab = allButtons.find((btn) => btn.textContent === "전투");
-    await user.click(battleTab!);
-
-    /* 진행중 상태 필터 선택 */
-    const updatedButtons = screen.getAllByRole("button");
-    const activeFilter = updatedButtons.find((btn) => btn.textContent === "진행중");
-    await user.click(activeFilter!);
+    const waitFilter = screen.getByRole("button", { name: "대기" });
+    await user.click(waitFilter);
 
     const articles = screen.getAllByRole("article");
-    const filtered = mockOperations.filter(
-      (op) => op.type === "전투" && op.status === "진행중",
-    );
-    expect(articles).toHaveLength(filtered.length);
+    const waitCount = regularOps.filter((op) => op.status === "waiting").length;
+    expect(articles).toHaveLength(waitCount);
   });
 
-  it("필터 결과 없을 때 빈 메시지를 표시한다", async () => {
-    const user = userEvent.setup();
-    /* 전투 + 완료 조합에서 데이터가 1건 있을 수 있으므로 빈 데이터 직접 전달 */
+  it("빈 목록에서 빈 메시지를 표시한다", () => {
     render(<OperationHub operations={[]} />);
     expect(screen.getByText(/등록된 작전이 없습니다/)).toBeInTheDocument();
+  });
+
+  it("필터 결과 0건 시 다른 빈 메시지를 표시한다", async () => {
+    const user = userEvent.setup();
+    /* 모든 데이터가 operation인 목록으로 테스트 */
+    const onlyOps = mockOperations.filter(
+      (op) => op.type === "operation" && !op.isMainStory,
+    );
+    render(<OperationHub operations={onlyOps} />);
+
+    /* DOWNTIME 필터 클릭 → 결과 0건 */
+    const dtFilter = screen.getByRole("button", { name: "DOWNTIME" });
+    await user.click(dtFilter);
+
+    expect(screen.getByText(/조건에 맞는 작전이 없습니다/)).toBeInTheDocument();
+  });
+
+  it("+ 새 작전 클릭 시 생성 모달이 열린다", async () => {
+    const user = userEvent.setup();
+    render(<OperationHub operations={mockOperations} />);
+
+    /* '+ 새 작전' 버튼은 2개 (헤더 + 빈 상태) 중 첫 번째 */
+    const newBtn = screen.getAllByText("+ 새 작전")[0];
+    await user.click(newBtn);
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("NEW OPERATION // 작전 생성")).toBeInTheDocument();
   });
 });

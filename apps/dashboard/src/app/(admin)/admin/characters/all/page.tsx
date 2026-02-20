@@ -7,12 +7,13 @@ import { toast } from "sonner";
 import { AdminAccessDenied } from "@/components/common";
 import type { AdminCharacter } from "@/components/admin/types";
 import { Badge, Button, Card, FilterChips } from "@/components/ui";
+import type { FilterChipOption } from "@/components/ui/FilterChips";
 
 type LoadState = "loading" | "ready" | "forbidden" | "error";
 
 type StatusFilter = "all" | "approved" | "rejected" | "pending";
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: FilterChipOption<StatusFilter>[] = [
   { label: "전체", value: "all" },
   { label: "승인됨", value: "approved" },
   { label: "심사 대기", value: "pending" },
@@ -20,7 +21,7 @@ const STATUS_OPTIONS = [
 ];
 
 function factionLabel(faction: AdminCharacter["faction"]) {
-  if (faction === "bureau") return "Bureau";
+  if (faction === "bureau") return "Enforcer";
   if (faction === "static") return "Static";
   if (faction === "civilian") return "Civilian";
   return "Defector";
@@ -75,9 +76,8 @@ export default function AdminCharactersAllPage() {
     void loadAll(statusFilter);
   }, [statusFilter, loadAll]);
 
-  const handleFilterChange = (value: string | string[]) => {
-    const v = (Array.isArray(value) ? value[0] : value) as StatusFilter;
-    setStatusFilter(v);
+  const handleFilterChange = (value: StatusFilter) => {
+    setStatusFilter(value);
   };
 
   const handleLeaderToggle = async (row: AdminCharacter) => {

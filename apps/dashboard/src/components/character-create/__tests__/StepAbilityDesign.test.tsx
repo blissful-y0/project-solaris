@@ -37,11 +37,11 @@ describe("StepAbilityDesign", () => {
     expect(container.querySelector("#skill-basic-desc")).toBeInTheDocument();
     expect(container.querySelector("#skill-mid-name")).toBeInTheDocument();
     expect(container.querySelector("#skill-advanced-name")).toBeInTheDocument();
-    // Bureau이므로 WILL 소모 필드가 표시됨
+    // Enforcer이므로 WILL 소모 필드가 표시됨
     expect(container.querySelector("#skill-basic-will")).toBeInTheDocument();
   });
 
-  it("Bureau 선택 시 하모닉스 프로토콜 표시", () => {
+  it("Enforcer 선택 시 하모닉스 프로토콜 표시", () => {
     render(<StepAbilityDesign draft={bureauDraft} onChange={onChange} />);
     expect(screen.getAllByText(/하모닉스 프로토콜/).length).toBeGreaterThan(0);
   });
@@ -51,7 +51,7 @@ describe("StepAbilityDesign", () => {
     expect(screen.getAllByText(/오버드라이브/).length).toBeGreaterThan(0);
   });
 
-  it("Bureau에서 리미터 해제 크로스오버를 표시한다", () => {
+  it("Enforcer에서 리미터 해제 크로스오버를 표시한다", () => {
     render(<StepAbilityDesign draft={bureauDraft} onChange={onChange} />);
     expect(screen.getByTestId("crossover-limiter-override")).toBeInTheDocument();
   });

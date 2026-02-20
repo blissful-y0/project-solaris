@@ -47,7 +47,7 @@ describe("StepAbilityDesign — 확장 필드", () => {
 
   it("각 스킬 티어에 코스트 입력 필드를 렌더링한다", () => {
     const { container } = render(<StepAbilityDesign draft={BASE_DRAFT} onChange={vi.fn()} />);
-    // Bureau이므로 WILL 소모 필드가 각 티어에 표시됨
+    // Enforcer이므로 WILL 소모 필드가 각 티어에 표시됨
     expect(container.querySelector("#skill-basic-will")).toBeInTheDocument();
     expect(container.querySelector("#skill-mid-will")).toBeInTheDocument();
     expect(container.querySelector("#skill-advanced-will")).toBeInTheDocument();
@@ -117,7 +117,7 @@ describe("StepConfirm — 리더 신청", () => {
 
   it("스킬 코스트를 요약에 표시한다", () => {
     render(<StepConfirm {...defaultProps} />);
-    // Bureau draft의 기본 스킬: costWill="5" → "WILL 5" 형식으로 표시됨
+    // Enforcer draft의 기본 스킬: costWill="5" → "WILL 5" 형식으로 표시됨
     expect(screen.getByText("WILL 5")).toBeInTheDocument();
     expect(screen.getByText("WILL 15")).toBeInTheDocument();
     expect(screen.getByText("WILL 40")).toBeInTheDocument();

@@ -57,7 +57,7 @@ describe("CharacterCard", () => {
     expect(screen.getByText("역장")).toBeInTheDocument();
   });
 
-  it("Bureau 소속 풀네임을 표시한다", () => {
+  it("Enforcer 소속 풀네임을 표시한다", () => {
     render(<CharacterCard character={bureau} onSelect={() => {}} />);
     expect(screen.getByText("Solaris Bureau of Civic Security")).toBeInTheDocument();
   });

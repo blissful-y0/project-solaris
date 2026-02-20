@@ -20,7 +20,7 @@ const baseBriefing: Briefing = {
   timestamp: new Date().toISOString(),
   category: "전투",
   title: "구역 7-B 교전 보고",
-  content: "Bureau 소속 능력자 2명과 Static 잔존 세력 간 교전 발생.",
+  content: "Enforcer 소속 능력자 2명과 Static 잔존 세력 간 교전 발생.",
   source: "HELIOS COMBAT SYSTEM",
 };
 
@@ -33,7 +33,7 @@ describe("BriefingCard", () => {
   it("본문을 렌더링한다", () => {
     render(<BriefingCard briefing={baseBriefing} />);
     expect(
-      screen.getByText("Bureau 소속 능력자 2명과 Static 잔존 세력 간 교전 발생."),
+      screen.getByText("Enforcer 소속 능력자 2명과 Static 잔존 세력 간 교전 발생."),
     ).toBeInTheDocument();
   });
 

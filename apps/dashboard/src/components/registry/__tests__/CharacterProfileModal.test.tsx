@@ -44,7 +44,7 @@ const bureau: RegistryCharacter = {
   hpCurrent: 72,
   willMax: 250,
   willCurrent: 190,
-  appearance: "은발 단발. 왼쪽 눈 아래 작은 흉터. Bureau 정규 전투복 착용.",
+  appearance: "은발 단발. 왼쪽 눈 아래 작은 흉터. Enforcer 정규 전투복 착용.",
   backstory: "헬리오스 코어 제1 경비대의 에이스.",
   avatarUrl: "https://example.com/avatar.jpg",
   isLeader: true,
@@ -65,8 +65,8 @@ const noAbilities: RegistryCharacter = {
   hpCurrent: 90,
   willMax: 200,
   willCurrent: 180,
-  appearance: "긴 코트. Bureau 시절 흉터.",
-  backstory: "Bureau 이탈자.",
+  appearance: "긴 코트. Enforcer 시절 흉터.",
+  backstory: "Enforcer 이탈자.",
   avatarUrl: "https://example.com/defector.jpg",
   isLeader: false,
   resonanceRate: 72,
@@ -88,7 +88,7 @@ describe("CharacterProfileModal", () => {
     expect(screen.getByText("아마츠키 레이")).toBeInTheDocument();
   });
 
-  it("도시어 태그를 표시한다 (Bureau → SOLARIS CITIZEN DOSSIER)", () => {
+  it("도시어 태그를 표시한다 (Enforcer → SOLARIS CITIZEN DOSSIER)", () => {
     render(
       <CharacterProfileModal character={bureau} open onClose={() => {}} />,
     );

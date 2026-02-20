@@ -60,7 +60,7 @@ vi.mock("next/link", () => ({
 /* ─── 테스트용 시민 데이터 ─── */
 const baseCitizen: CitizenData = {
   name: "아마츠키 레이",
-  faction: "Bureau",
+  faction: "Enforcer",
   resonanceRate: 87,
   hp: { current: 64, max: 80 },
   will: { current: 198, max: 250 },
@@ -93,7 +93,7 @@ describe("CitizenIDCard", () => {
       expect(screen.getByText("SOLARIS CITIZEN ID")).toBeInTheDocument();
     });
 
-    it("Bureau 소속 풀네임을 표시한다", () => {
+    it("Enforcer 소속 풀네임을 표시한다", () => {
       render(<CitizenIDCard citizen={baseCitizen} />);
       expect(screen.getByText("Solaris Bureau of Civic Security")).toBeInTheDocument();
     });
@@ -231,8 +231,9 @@ describe("CitizenIDCard", () => {
 
       expect(mockNextImage).toHaveBeenCalledWith(
         expect.objectContaining({
-          quality: 100,
-          unoptimized: true,
+          width: 256,
+          height: 320,
+          sizes: "(min-width: 640px) 128px, 112px",
         }),
         undefined,
       );

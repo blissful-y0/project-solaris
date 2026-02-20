@@ -11,7 +11,7 @@ describe("CorePage", () => {
 
   it("스토리 브리핑 타임라인을 렌더링한다", () => {
     render(<CorePage />);
-    expect(screen.getByText("제3구역 검문 강화 — Bureau 긴급 배치")).toBeInTheDocument();
+    expect(screen.getByText("제3구역 검문 강화 — Enforcer 긴급 배치")).toBeInTheDocument();
   });
 
   it("SYSTEM NOTICE 공지판을 렌더링한다", () => {

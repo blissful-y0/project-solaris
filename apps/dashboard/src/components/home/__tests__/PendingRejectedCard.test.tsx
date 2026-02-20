@@ -31,7 +31,7 @@ vi.mock("next/link", () => ({
 
 const baseCitizen: CitizenData = {
   name: "아마츠키 레이",
-  faction: "Bureau",
+  faction: "Enforcer",
   resonanceRate: 87,
   hp: { current: 64, max: 80 },
   will: { current: 198, max: 250 },

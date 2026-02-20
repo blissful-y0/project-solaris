@@ -24,7 +24,7 @@ describe("StepFaction", () => {
     expect(screen.getByText(/저항과 자유/)).toBeInTheDocument();
   });
 
-  it("Bureau 선택 시 onChange 콜백을 호출한다", async () => {
+  it("Enforcer 선택 시 onChange 콜백을 호출한다", async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
 

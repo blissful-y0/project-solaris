@@ -1,41 +1,52 @@
 import { cn } from "@/lib/utils";
 
-export interface FilterChipOption {
+export interface FilterChipOption<T extends string = string> {
   label: string;
-  value: string;
+  value: T;
 }
 
-interface FilterChipsProps {
-  options: FilterChipOption[];
-  selected: string | string[];
-  onChange: (value: string | string[]) => void;
-  multiSelect?: boolean;
+type SingleSelectProps<T extends string> = {
+  options: readonly FilterChipOption<T>[];
+  selected: T;
+  onChange: (value: T) => void;
+  multiSelect?: false;
   className?: string;
-}
+};
+
+type MultiSelectProps<T extends string> = {
+  options: readonly FilterChipOption<T>[];
+  selected: T[];
+  onChange: (value: T[]) => void;
+  multiSelect: true;
+  className?: string;
+};
+
+type FilterChipsProps<T extends string> =
+  | SingleSelectProps<T>
+  | MultiSelectProps<T>;
 
 /** 범용 필터 칩 컴포넌트 */
-export function FilterChips({
-  options,
-  selected,
-  onChange,
-  multiSelect = false,
-  className,
-}: FilterChipsProps) {
-  const isSelected = (value: string): boolean => {
+export function FilterChips<T extends string>({
+  ...props
+}: FilterChipsProps<T>) {
+  const { options, className } = props;
+
+  const isSelected = (value: T): boolean => {
+    const { selected } = props;
     if (Array.isArray(selected)) return selected.includes(value);
     return selected === value;
   };
 
-  const handleClick = (value: string) => {
-    if (multiSelect) {
-      const selectedArr = Array.isArray(selected) ? selected : [selected];
+  const handleClick = (value: T) => {
+    if (props.multiSelect) {
+      const selectedArr = props.selected;
       if (selectedArr.includes(value)) {
-        onChange(selectedArr.filter((v) => v !== value));
+        props.onChange(selectedArr.filter((v) => v !== value));
       } else {
-        onChange([...selectedArr, value]);
+        props.onChange([...selectedArr, value]);
       }
     } else {
-      onChange(value);
+      props.onChange(value);
     }
   };
 

@@ -27,7 +27,7 @@ export function CharacterFilterChips({
       <FilterChips
         options={[...FACTION_OPTIONS]}
         selected={factionFilter}
-        onChange={(v) => onFactionChange(v as string)}
+        onChange={onFactionChange}
       />
 
       {/* 능력 계열 서브필터 */}
@@ -35,7 +35,7 @@ export function CharacterFilterChips({
         <FilterChips
           options={[...ABILITY_OPTIONS]}
           selected={abilityFilter}
-          onChange={(v) => onAbilityChange(v as string)}
+          onChange={onAbilityChange}
           className="mt-2"
         />
       )}

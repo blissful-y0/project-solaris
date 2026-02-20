@@ -31,7 +31,7 @@ export interface RegistryCharacter extends RegistryCharacterSummary {
 /* ─── 필터 옵션 ─── */
 export const FACTION_OPTIONS = [
   { label: "전체", value: "all" },
-  { label: "Bureau", value: "bureau" },
+  { label: "Enforcer", value: "bureau" },
   { label: "Static", value: "static" },
 ] as const;
 

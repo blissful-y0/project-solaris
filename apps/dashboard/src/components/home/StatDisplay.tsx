@@ -1,6 +1,6 @@
 /* ─── 팩션 스타일 매핑 ─── */
 export const factionStyle = {
-  Bureau: { stripe: "bg-primary", label: "BUREAU", color: "text-primary", cardTitle: "SOLARIS CITIZEN ID" },
+  Enforcer: { stripe: "bg-primary", label: "ENFORCER", color: "text-primary", cardTitle: "SOLARIS CITIZEN ID" },
   Static: { stripe: "bg-accent", label: "STATIC", color: "text-accent", cardTitle: "UNREGISTERED ENTITY" },
 } as const;
 

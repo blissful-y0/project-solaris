@@ -44,7 +44,7 @@ export const mockBriefings: Briefing[] = [
     category: "전투",
     title: "구역 7-B 다자간 교전 종결",
     content:
-      "Bureau 제3기동반과 Static 잔존 세력 간 48시간 교전이 종결되었다. Bureau 측 능력자 2명 경상, Static 잔당 4명 무력화. 해당 구역은 현재 봉쇄 상태로 전환.",
+      "Enforcer 제3기동반과 Static 잔존 세력 간 48시간 교전이 종결되었다. Enforcer 측 능력자 2명 경상, Static 잔당 4명 무력화. 해당 구역은 현재 봉쇄 상태로 전환.",
     source: "HELIOS COMBAT SYSTEM",
   },
   {
@@ -84,7 +84,7 @@ export const mockBriefings: Briefing[] = [
     category: "정보",
     title: "신규 능력자 식별 — 코드네임 미지정",
     content:
-      "구역 12 폐건물에서 미등록 능력 반응이 감지되었다. 예상 공명율 62~71%. Bureau 접촉반 파견 승인 대기 중.",
+      "구역 12 폐건물에서 미등록 능력 반응이 감지되었다. 예상 공명율 62~71%. Enforcer 접촉반 파견 승인 대기 중.",
     source: "HELIOS INTELLIGENCE",
   },
   {
