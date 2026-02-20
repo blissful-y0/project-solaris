@@ -11,12 +11,12 @@ describe("SolarisTicker", () => {
     expect(screen.getAllByText(/헬리오스 코어 정기 점검 완료/).length).toBeGreaterThan(0);
   });
 
-  it("TopBar 아래 고정 배치를 사용한다", () => {
+  it("상대 위치로 배치된다", () => {
     render(<SolarisTicker />);
 
     const ticker = screen.getByTestId("solaris-ticker");
-    expect(ticker.className).toMatch(/fixed/);
-    expect(ticker.className).toMatch(/top-14/);
+    expect(ticker.className).toMatch(/relative/);
+    expect(ticker.className).toMatch(/w-full/);
   });
 
   it("모션 축소 환경 대응 클래스를 포함한다", () => {

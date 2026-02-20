@@ -28,8 +28,6 @@ vi.mock("@/components/home", () => ({
     <div data-testid="citizen-id-card">{citizen ? citizen.name : "미등록"}</div>
   ),
   mockCitizen: { name: "목시민", faction: "Bureau", resonanceRate: 87 },
-  ResonanceTasks: () => <div data-testid="resonance-tasks" />,
-  mockTasks: [],
 }));
 
 vi.mock("@/lib/supabase/client", () => ({

@@ -44,18 +44,8 @@ describe("DashboardLayout", () => {
         <div>Content</div>
       </DashboardLayout>,
     );
-    // MobileTabBar renders nav items — check for one
     const allHome = screen.getAllByText("Home");
     expect(allHome.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("renders DesktopSidebar", () => {
-    render(
-      <DashboardLayout>
-        <div>Content</div>
-      </DashboardLayout>,
-    );
-    expect(screen.getByText("SOLARIS TERMINAL")).toBeInTheDocument();
   });
 
   it("has main landmark role for content area", () => {
@@ -76,16 +66,14 @@ describe("DashboardLayout", () => {
     expect(screen.getByText("5")).toBeInTheDocument();
   });
 
-  // --- isCharacterApproved 전달 테스트 ---
-
-  it("isCharacterApproved를 MobileTabBar/DesktopSidebar에 전달한다", () => {
+  it("isCharacterApproved를 MobileTabBar/TopBar에 전달한다", () => {
     render(
       <DashboardLayout isCharacterApproved={false}>
         <div>Content</div>
       </DashboardLayout>,
     );
     // isCharacterApproved=false → Operation 잠금 (Lock 아이콘 표시)
-    // MobileTabBar + DesktopSidebar 양쪽에 Lock 아이콘이 렌더링됨
+    // MobileTabBar + TopBar 양쪽에 Lock 아이콘이 렌더링됨
     const lockIcons = screen.getAllByTestId("lock-icon-/operation");
     expect(lockIcons.length).toBe(2);
   });
