@@ -16,11 +16,11 @@ type NarrativeVoteCardProps = {
 function voteIcon(status: string): string {
   switch (status) {
     case "reflect":
-      return "✔";
+      return "+";
     case "skip":
-      return "✖";
+      return "-";
     default:
-      return "⏳";
+      return "·";
   }
 }
 
@@ -70,7 +70,6 @@ export function NarrativeVoteCard({
     >
       {/* 헤더 */}
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-base">📋</span>
         <span className="text-xs font-semibold uppercase tracking-widest text-primary">
           서사 반영 요청
         </span>
@@ -131,7 +130,7 @@ export function NarrativeVoteCard({
               onClick={() => onVote("reflect")}
               data-testid="vote-reflect-btn"
             >
-              ✔ 반영
+              반영
             </Button>
             <Button
               variant="danger"
@@ -139,7 +138,7 @@ export function NarrativeVoteCard({
               onClick={() => onVote("skip")}
               data-testid="vote-skip-btn"
             >
-              ✖ 미반영
+              미반영
             </Button>
           </div>
         )}

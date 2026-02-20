@@ -67,7 +67,7 @@ export function JudgmentCard({ judgment, className }: JudgmentCardProps) {
       {/* 헤더 */}
       <div className="px-4 py-2 border-b border-primary/20 bg-primary/5">
         <span className="hud-label text-primary">
-          ⚡ HELIOS COMBAT SYSTEM // TURN {turn}
+          HELIOS COMBAT SYSTEM // TURN {turn}
         </span>
       </div>
 

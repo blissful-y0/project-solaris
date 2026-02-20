@@ -18,8 +18,10 @@ describe("OperationPage", () => {
     vi.unstubAllEnvs();
   });
 
-  it("초기 상태(승인)에서 OperationHub를 표시한다", () => {
+  it("승인 상태로 전환하면 OperationHub를 표시한다", async () => {
+    const user = userEvent.setup();
     render(<OperationPage />);
+    await user.click(screen.getByText("[DEV] 승인"));
     expect(screen.getByText("OPERATION // TACTICAL HUB")).toBeInTheDocument();
     expect(screen.getByText("통합 작전 목록")).toBeInTheDocument();
   });

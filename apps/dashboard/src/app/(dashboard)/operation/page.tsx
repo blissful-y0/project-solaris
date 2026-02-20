@@ -10,7 +10,7 @@ type CharacterStatus = "approved" | "pending" | "rejected" | null;
 
 export default function OperationPage() {
   /* TODO: 프로필 API 연동 후 실제 캐릭터 상태로 대체 */
-  const [characterStatus, setCharacterStatus] = useState<CharacterStatus>("approved");
+  const [characterStatus, setCharacterStatus] = useState<CharacterStatus>(null);
   const isApproved = characterStatus === "approved";
 
   return (

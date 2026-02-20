@@ -12,7 +12,7 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/core", label: "Helios Core", icon: Radio },
-  { href: "/operation", label: "Operation", icon: Crosshair },
+  { href: "/operation", label: "Operation", icon: Crosshair, requireApproval: true },
   { href: "/registry", label: "Registry", icon: Users },
   { href: "/lore", label: "Lore", icon: BookOpen },
 ] as const;

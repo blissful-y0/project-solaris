@@ -32,7 +32,7 @@ export function MainStoryBanner({ event, onJoin }: MainStoryBannerProps) {
     >
       {/* 라벨 */}
       <p className="hud-label mb-2 text-primary">
-        ⚡ MAIN STORY // ACTIVE
+        MAIN STORY // ACTIVE
       </p>
 
       {/* 제목 */}

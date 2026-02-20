@@ -133,6 +133,7 @@ export function OperationHub({ operations }: OperationHubProps) {
       <CreateOperationModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        onSubmit={() => setModalOpen(false)}
       />
     </section>
   );
