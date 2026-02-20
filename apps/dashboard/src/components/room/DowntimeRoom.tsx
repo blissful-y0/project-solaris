@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui";
 
 import type { RoomMessage, RoomParticipant } from "./types";
 import { RoomChatLog } from "./RoomChatLog";
+import { useRoomMessages } from "./use-room-messages";
 
 type DowntimeRoomProps = {
   /** 실제 operation id가 있을 때만 API/Realtime를 활성화한다. */
@@ -29,9 +30,8 @@ export function DowntimeRoom({
   className,
 }: DowntimeRoomProps) {
   const router = useRouter();
-  const [messages, setMessages] = useState<RoomMessage[]>(initialMessages);
+  const { messages, upsertMessage } = useRoomMessages(operationId, initialMessages);
   const [inputText, setInputText] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* ── 서사 반영 범위 선택 상태 ── */
   const [selectingRange, setSelectingRange] = useState(false);
@@ -67,21 +67,13 @@ export function DowntimeRoom({
                 ? "narrative_request"
                 : "narration";
 
-          setMessages((prev) => {
-            // 이미 같은 id를 추가했다면 Realtime 중복 이벤트를 무시한다.
-            if (prev.some((item) => item.id === row.id)) return prev;
-
-            return [
-              ...prev,
-              {
-                id: row.id,
-                type,
-                sender,
-                content: row.content ?? "",
-                timestamp: row.created_at ?? new Date().toISOString(),
-                isMine: row.sender_character_id === currentUserId,
-              },
-            ];
+          upsertMessage({
+            id: row.id,
+            type,
+            sender,
+            content: row.content ?? "",
+            timestamp: row.created_at ?? new Date().toISOString(),
+            isMine: row.sender_character_id === currentUserId,
           });
         },
       )
@@ -90,7 +82,7 @@ export function DowntimeRoom({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [operationId, participants, currentUserId]);
+  }, [operationId, participants, currentUserId, upsertMessage]);
 
   // 메시지 전송
   const handleSend = useCallback(async () => {
@@ -114,19 +106,22 @@ export function DowntimeRoom({
           const sent = body?.data;
 
           if (sent?.id) {
-            setMessages((prev) => {
-              if (prev.some((item) => item.id === sent.id)) return prev;
-              return [
-                ...prev,
-                {
-                  id: sent.id,
-                  type: "narration",
-                  sender: currentUser,
-                  content: sent.content ?? text,
-                  timestamp: sent.timestamp ?? new Date().toISOString(),
-                  isMine: true,
-                },
-              ];
+            const sender: RoomParticipant | undefined =
+              sent.senderId
+                ? {
+                    id: sent.senderId,
+                    name: sent.senderName ?? currentUser?.name ?? "알 수 없음",
+                    avatarUrl: sent.senderAvatarUrl ?? currentUser?.avatarUrl,
+                  }
+                : currentUser;
+
+            upsertMessage({
+              id: sent.id,
+              type: "narration",
+              sender,
+              content: sent.content ?? text,
+              timestamp: sent.timestamp ?? new Date().toISOString(),
+              isMine: true,
             });
             return;
           }
@@ -147,17 +142,19 @@ export function DowntimeRoom({
       timestamp: new Date().toISOString(),
       isMine: true,
     };
-    setMessages((prev) => [...prev, newMessage]);
+    upsertMessage(newMessage);
 
-    // textarea 높이 리셋
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  }, [inputText, participants, currentUserId, operationId]);
+  }, [inputText, participants, currentUserId, operationId, upsertMessage]);
 
   // Enter 키로 전송 (Shift+Enter = 줄바꿈)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // 한글/일본어 IME 조합 중 Enter는 확정 키이므로 전송으로 처리하면 안 된다.
+      // keyCode 229는 일부 브라우저에서 조합 중 키 이벤트로 들어오는 값이다.
+      if (e.nativeEvent.isComposing || (e as unknown as { keyCode?: number }).keyCode === 229) {
+        return;
+      }
+
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();
@@ -166,13 +163,10 @@ export function DowntimeRoom({
     [handleSend],
   );
 
-  // textarea 자동 높이 조절
+  // 입력값만 갱신한다. (높이 자동 변경은 레이아웃 흔들림 이슈로 제거)
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setInputText(e.target.value);
-      const el = e.target;
-      el.style.height = "auto";
-      el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
     },
     [],
   );
@@ -229,10 +223,10 @@ export function DowntimeRoom({
       },
     };
 
-    setMessages((prev) => [...prev, requestMessage]);
+    upsertMessage(requestMessage);
     setSelectingRange(false);
     setSelectedRange(null);
-  }, [selectedRange, participants, currentUserId]);
+  }, [selectedRange, participants, currentUserId, upsertMessage]);
 
   const rangeComplete = selectedRange?.start && selectedRange?.end;
 
@@ -313,7 +307,6 @@ export function DowntimeRoom({
         <div className="border-t border-border bg-bg-secondary/80 backdrop-blur-sm p-3">
           <div className="flex items-end gap-2">
             <textarea
-              ref={textareaRef}
               value={inputText}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
@@ -324,7 +317,7 @@ export function DowntimeRoom({
                 "flex-1 resize-none overflow-y-auto rounded-lg bg-bg-tertiary border border-border px-3 py-2",
                 "text-sm text-text placeholder:text-text-secondary/50",
                 "focus:outline-none focus:border-primary/40 transition-colors",
-                "min-h-[72px] max-h-[180px]",
+                "h-[96px]",
               )}
             />
             <Button
