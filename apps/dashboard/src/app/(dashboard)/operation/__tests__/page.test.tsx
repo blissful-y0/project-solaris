@@ -4,6 +4,11 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 import OperationPage from "../page";
 
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 describe("OperationPage", () => {
   beforeEach(() => {
     vi.stubEnv("NODE_ENV", "development");
@@ -28,12 +33,12 @@ describe("OperationPage", () => {
     expect(rooms.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("승인 상태에서 전투/RP 모두 표시한다", async () => {
+  it("승인 상태에서 OPERATION/DOWNTIME 모두 표시한다", async () => {
     const user = userEvent.setup();
     render(<OperationPage />);
     await user.click(screen.getByText("[DEV] 승인"));
-    expect(screen.getAllByText("전투").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("RP").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("OPERATION").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("DOWNTIME").length).toBeGreaterThanOrEqual(1);
   });
 
   it("미승인 상태에서 AccessDenied를 표시한다", () => {

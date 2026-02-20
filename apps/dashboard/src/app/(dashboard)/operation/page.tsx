@@ -8,7 +8,7 @@ import { OperationHub, mockOperations } from "@/components/operation";
 
 export default function OperationPage() {
   /* DEV 모드: 0=미승인, 1=승인 */
-  const [isApproved, setIsApproved] = useState(false);
+  const [isApproved, setIsApproved] = useState(true);
 
   return (
     <div className="py-6">

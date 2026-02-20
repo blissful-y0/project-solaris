@@ -4,6 +4,11 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 import OperationPage from "@/app/(dashboard)/operation/page";
 
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 describe("OperationPage", () => {
   beforeEach(() => {
     vi.stubEnv("NODE_ENV", "development");
