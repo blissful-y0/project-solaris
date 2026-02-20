@@ -108,7 +108,7 @@ export function LorePageClient({ contents }: LorePageClientProps) {
           )}
 
           {activeTab === "incident-log" && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 px-4">
+            <div className="flex flex-col items-center justify-center h-full min-h-[200px] gap-3 px-4">
               <p className="font-mono text-xs text-text-secondary tracking-wider">
                 INCIDENT LOG — NO RECORDS AVAILABLE
               </p>
