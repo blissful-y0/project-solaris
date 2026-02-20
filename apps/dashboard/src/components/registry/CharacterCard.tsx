@@ -5,7 +5,7 @@ import type { RegistryCharacterSummary } from "./registry-data";
 import { ABILITY_CLASS_LABEL, FACTION_FULL_NAME } from "./registry-data";
 
 const factionDossier = {
-  bureau: { stripe: "bg-primary", label: "BUREAU", labelClass: "text-primary" },
+  bureau: { stripe: "bg-primary", label: "ENFORCER", labelClass: "text-primary" },
   static: { stripe: "bg-accent", label: "STATIC", labelClass: "text-accent" },
 } as const;
 

@@ -14,7 +14,7 @@ export default function AdminSettingsPage() {
         <h2 className="text-sm font-semibold text-text">진영 밸런스 기준</h2>
         <div className="grid gap-2 text-sm text-text-secondary">
           <div className="flex justify-between border-b border-border/40 pb-2">
-            <span>Bureau HP 기본값</span>
+            <span>Enforcer HP 기본값</span>
             <span className="text-text">80</span>
           </div>
           <div className="flex justify-between border-b border-border/40 pb-2">
@@ -26,7 +26,7 @@ export default function AdminSettingsPage() {
             <span className="text-text">100</span>
           </div>
           <div className="flex justify-between border-b border-border/40 pb-2">
-            <span>Bureau WILL 기본값</span>
+            <span>Enforcer WILL 기본값</span>
             <span className="text-text">250</span>
           </div>
           <div className="flex justify-between border-b border-border/40 pb-2">
@@ -54,7 +54,7 @@ export default function AdminSettingsPage() {
         <div className="grid gap-2 text-sm text-text-secondary">
           <p>• 능력 계열: 역장(Field), 감응(Empathy), 변환(Shift), 연산(Compute)</p>
           <p>• 능력 단계: 기본 스킬, 중급 스킬, 상급 스킬</p>
-          <p>• Bureau: 하모닉스 프로토콜 (WILL 소모)</p>
+          <p>• Enforcer: 하모닉스 프로토콜 (WILL 소모)</p>
           <p>• Static: 오버드라이브 (HP 소모)</p>
         </div>
       </Card>
@@ -62,7 +62,7 @@ export default function AdminSettingsPage() {
       <Card hud className="space-y-3">
         <h2 className="text-sm font-semibold text-text">크로스오버 스타일</h2>
         <div className="grid gap-2 text-sm text-text-secondary">
-          <p>• Bureau → 리미터 해제</p>
+          <p>• Enforcer → 리미터 해제</p>
           <p>• Static → 외장형 / 오버클럭 / 전향자</p>
           <p>• 크로스오버 시 HP/WILL 이중 코스트 적용</p>
         </div>

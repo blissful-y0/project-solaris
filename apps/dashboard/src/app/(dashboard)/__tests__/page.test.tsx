@@ -27,7 +27,7 @@ vi.mock("@/components/home", () => ({
   CitizenIDCard: ({ citizen }: any) => (
     <div data-testid="citizen-id-card">{citizen ? citizen.name : "미등록"}</div>
   ),
-  mockCitizen: { name: "목시민", faction: "Bureau", resonanceRate: 87 },
+  mockCitizen: { name: "목시민", faction: "Enforcer", resonanceRate: 87 },
 }));
 
 vi.mock("@/lib/supabase/client", () => ({

@@ -35,7 +35,7 @@ export const CORE_TIMELINE: readonly TimelineEntry[] = [
   {
     id: "tl-1",
     timestamp: "2026-02-18 22:14",
-    title: "제3구역 검문 강화 — Bureau 긴급 배치",
+    title: "제3구역 검문 강화 — Enforcer 긴급 배치",
     summary:
       "남서 외곽 경계선에서 비인가 공명 반응이 연속 감지됨. SBCS 제2분대가 검문 강화 명령을 수신했습니다.",
     severity: "critical",
@@ -67,7 +67,7 @@ export const CORE_TIMELINE: readonly TimelineEntry[] = [
   {
     id: "tl-5",
     timestamp: "2026-02-18 18:00",
-    title: "Bureau 순찰대 야간 교대 완료",
+    title: "Enforcer 순찰대 야간 교대 완료",
     summary:
       "야간 경비 프로토콜로 전환됩니다. 제1~제4 순찰 경로 정상 가동 중.",
     severity: "info",
@@ -139,14 +139,14 @@ export const BATTLE_HIGHLIGHTS: readonly BattleHighlight[] = [
   {
     id: "battle-2",
     participants: "제2분대 vs Static 유격조",
-    result: "Bureau 승리 (작전 성공)",
+    result: "Enforcer 승리 (작전 성공)",
     gmSummary:
       "코어 외곽 침투 시도를 제압. 연산 계열 지원 사격이 결정적 역할.",
     date: "02.17",
   },
   {
     id: "battle-3",
-    participants: "유키하라 사쿠 vs Bureau 경비원 2명",
+    participants: "유키하라 사쿠 vs Enforcer 경비원 2명",
     result: "유키하라 사쿠 탈출 성공",
     gmSummary:
       "변환 계열 능력으로 추적을 교란하며 퇴로 확보. HP 40% 소모.",

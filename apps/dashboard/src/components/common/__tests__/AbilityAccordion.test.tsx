@@ -58,7 +58,7 @@ describe("AbilityAccordion", () => {
     expect(screen.getByText("상급 스킬")).toBeInTheDocument();
   });
 
-  it("bureau → 상급 스킬이 '하모닉스 프로토콜'로 표시된다", () => {
+  it("Enforcer → 상급 스킬이 '하모닉스 프로토콜'로 표시된다", () => {
     render(<AbilityAccordion abilities={mockAbilities} faction="bureau" />);
     expect(screen.getByText("기본 스킬")).toBeInTheDocument();
     expect(screen.getByText("중급 스킬")).toBeInTheDocument();

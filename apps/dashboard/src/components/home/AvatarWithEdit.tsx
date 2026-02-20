@@ -162,11 +162,10 @@ export function AvatarWithEdit({
           <Image
             src={avatarUrl}
             alt={`${name} 아바타`}
-            width={128}
-            height={160}
+            width={256}
+            height={320}
+            sizes="(min-width: 640px) 128px, 112px"
             priority
-            quality={100}
-            unoptimized
             className="w-full h-full object-cover"
           />
         ) : (
