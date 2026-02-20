@@ -1,71 +1,66 @@
-import Link from "next/link";
+"use client";
 
-import { Badge } from "@/components/ui/Badge";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 
-import type { ResonanceTask } from "./mock-tasks";
-import { taskTypeVariant } from "./mock-tasks";
+const STORAGE_KEY = "helios_personal_directives";
 
-type ResonanceTasksProps = {
-  tasks: ResonanceTask[];
-};
+export function ResonanceTasks() {
+  const [memo, setMemo] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
-export function ResonanceTasks({ tasks }: ResonanceTasksProps) {
+  // 컴포넌트 마운트 후 로컬 스토리지에서 데이터 불러오기
+  useEffect(() => {
+    setIsMounted(true);
+    const savedMemo = localStorage.getItem(STORAGE_KEY);
+    if (savedMemo) {
+      setMemo(savedMemo);
+    }
+  }, []);
+
+  // 메모 변경 시 상태 관리 및 로컬 스토리지 저장
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newVal = e.target.value;
+    setMemo(newVal);
+    localStorage.setItem(STORAGE_KEY, newVal);
+  };
+
   return (
-    <section>
-      {/* 헤더 */}
-      <div className="mb-4">
-        <p className="hud-label mb-1">MY RESONANCE TASKS</p>
-        <p className="hud-label text-text-secondary">DIRECTIVE FROM HELIOS</p>
+    <Card hud className="relative group overflow-hidden bg-bg-secondary/40 border-border/50 transition-colors hover:border-primary/30 p-0 flex-1 flex flex-col h-full">
+      <label htmlFor="directives-memo" className="sr-only">Personal Directives Memo</label>
+
+      {/* 시스템 상태 저장 표시 */}
+      <div className="absolute top-2 right-3 z-10 pointer-events-none">
+        <span
+          className={cn(
+            "text-[0.6rem] font-mono tracking-widest uppercase transition-colors",
+            isMounted ? "text-success/40" : "text-text-secondary/20",
+          )}
+        >
+          {isMounted ? "SYNC: OK" : "SYNC: INIT"}
+        </span>
       </div>
 
-      <Card hud>
-        {tasks.length === 0 ? (
-          <p className="text-sm text-text-secondary py-2">
-            수신된 지시가 없습니다.
-          </p>
-        ) : (
-          <ul role="list">
-            {tasks.map((task, index) => (
-              <li
-                key={task.id}
-                className={cn(
-                  index < tasks.length - 1 && "border-b border-border",
-                )}
-              >
-                <Link
-                  href={task.route}
-                  className="flex items-center gap-3 py-3 px-1 group transition-colors hover:bg-white/[0.03] rounded"
-                >
-                  {/* 타입 뱃지 */}
-                  <Badge variant={taskTypeVariant[task.type]}>
-                    {task.type}
-                  </Badge>
-
-                  {/* 메시지 + 건수 */}
-                  <span className="flex-1 text-sm text-text truncate">
-                    {task.message}
-                    {task.count != null && (
-                      <span className="ml-1 text-text-secondary">
-                        ({task.count}건)
-                      </span>
-                    )}
-                  </span>
-
-                  {/* 화살표 */}
-                  <span
-                    className="text-text-secondary group-hover:text-primary transition-colors shrink-0"
-                    aria-hidden="true"
-                  >
-                    →
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+      <textarea
+        id="directives-memo"
+        value={memo}
+        onChange={handleChange}
+        placeholder={isMounted ? "> ENTER DIRECTIVE...\\\n> _" : "LOADING SYSTEM..."}
+        disabled={!isMounted}
+        spellCheck={false}
+        className={cn(
+          "w-full flex-1 h-full min-h-[220px] bg-transparent border-none resize-none px-4 py-4 focus:outline-none focus:ring-0",
+          "font-mono text-sm tracking-widest text-text-secondary placeholder:text-text-secondary/30",
+          "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden transition-colors duration-200",
+          "focus:text-text focus:bg-primary/[0.02]",
         )}
-      </Card>
-    </section>
+      />
+
+      {/* 우측 하단 장식 요소 */}
+      <div className="absolute right-2 bottom-2 font-mono text-[10px] text-text-secondary/20 pointer-events-none">
+        {memo.length} BYTES
+      </div>
+    </Card>
   );
 }

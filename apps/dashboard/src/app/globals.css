@@ -293,6 +293,10 @@
     border-color: var(--color-border);
     margin: 1.5rem 0;
   }
+  /* 모달 내부 등 첫 번째 헤딩 상단 마진 제거 */
+  .first-heading-no-mt > :first-child {
+    margin-top: 0;
+  }
 }
 
 /* ─── 접근성: 모션 축소 대응 (@layer 안에서 선언하여 Tailwind 유틸리티 보존) ─── */

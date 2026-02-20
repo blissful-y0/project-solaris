@@ -27,7 +27,7 @@ export function SolarisTicker() {
   return (
     <div
       data-testid="solaris-ticker"
-      className="fixed top-14 left-0 right-0 z-30 h-8 border-b border-border bg-bg-secondary/95 md:left-[220px]"
+      className="relative z-30 w-full h-8 border-b border-border bg-bg-secondary/95"
     >
       <div className="flex h-full items-center gap-3 overflow-hidden px-4 md:px-6">
         <span className="hud-label shrink-0 text-primary">HELIOS ALERT</span>

@@ -7,8 +7,6 @@ import {
   BriefingFeed,
   mockBriefings,
   CitizenIDCard,
-  ResonanceTasks,
-  mockTasks,
 } from "@/components/home";
 import type { CitizenData, CitizenStatus } from "@/components/home/mock-citizen";
 import type { User } from "@supabase/supabase-js";
@@ -138,8 +136,9 @@ export default function HomePage() {
         )}
       </div>
 
+      {/* 접속자 정보 에러 */}
       {loadError && (
-        <Card hud className="max-w-md border border-red-500/40">
+        <Card hud className="max-w-md border border-red-500/40 mb-6">
           <p className="text-sm text-text">사용자 정보를 불러오지 못했습니다.</p>
           <button
             type="button"
@@ -151,19 +150,26 @@ export default function HomePage() {
         </Card>
       )}
 
-      {/* 상단: ID 카드 + Tasks (데스크탑에서 나란히) */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* 1단 연속 레이아웃: ID 카드 헤더 -> 인텔리전스 피드 스트림 연결 */}
+      <div className="w-full flex flex-col relative">
         <CitizenIDCard
           citizen={citizenData}
           onAvatarChange={(url) => {
             setCitizenData((prev) => prev ? { ...prev, avatarUrl: url } : prev);
           }}
+          className="relative z-10"
         />
-        <ResonanceTasks tasks={mockTasks} />
-      </div>
 
-      {/* 하단: 뉴스 피드 */}
-      <BriefingFeed briefings={mockBriefings} />
+        {/* 장식용 연결 요소: ID 카드에서 타임라인으로 이어지는 데이터 라인 */}
+        <div className="flex items-center ml-8 sm:ml-12 h-8 relative z-0">
+          <div className="w-px h-full bg-border border-r border-primary/20 shadow-[1px_0_5px_rgba(0,212,255,0.3)]" />
+          <div className="ml-3 font-mono text-[0.6rem] text-primary/60 tracking-widest uppercase">
+            ESTABLISHING SECURE CONNECTION_
+          </div>
+        </div>
+
+        <BriefingFeed briefings={mockBriefings} />
+      </div>
     </div>
   );
 }
