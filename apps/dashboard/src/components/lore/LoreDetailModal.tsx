@@ -48,7 +48,7 @@ export function LoreDetailModal({
     if (nextCategory) onNavigate(nextCategory.id);
   }, [nextCategory, onNavigate]);
 
-  if (!category) return null;
+  if (!open || !category) return null;
 
   return (
     <Modal
