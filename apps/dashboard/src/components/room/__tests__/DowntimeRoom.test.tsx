@@ -5,6 +5,24 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
 }));
 
+const {
+  mockCreateClient,
+  mockChannel,
+  mockOn,
+  mockSubscribe,
+  mockRemoveChannel,
+} = vi.hoisted(() => ({
+  mockCreateClient: vi.fn(),
+  mockChannel: vi.fn(),
+  mockOn: vi.fn(),
+  mockSubscribe: vi.fn(),
+  mockRemoveChannel: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: mockCreateClient,
+}));
+
 import { DowntimeRoom } from "../DowntimeRoom";
 import {
   mockParticipants,
@@ -18,6 +36,13 @@ describe("DowntimeRoom", () => {
     initialMessages: mockRoomMessages,
     currentUserId: "p2",
   };
+
+  mockOn.mockReturnValue({ subscribe: mockSubscribe });
+  mockChannel.mockReturnValue({ on: mockOn, subscribe: mockSubscribe });
+  mockCreateClient.mockReturnValue({
+    channel: mockChannel,
+    removeChannel: mockRemoveChannel,
+  });
 
   it("상단 바에 방 제목을 표시한다", () => {
     render(<DowntimeRoom {...defaultProps} />);
@@ -130,5 +155,22 @@ describe("DowntimeRoom", () => {
     render(<DowntimeRoom {...defaultProps} />);
     expect(screen.getByTestId("narrative-request-card")).toBeInTheDocument();
     expect(screen.getByText("관리자 검토 대기중")).toBeInTheDocument();
+  });
+
+  it("operationId가 있으면 operation_messages INSERT를 operation_id 필터로 구독한다", () => {
+    render(<DowntimeRoom {...defaultProps} operationId="op-1" />);
+
+    expect(mockCreateClient).toHaveBeenCalledTimes(1);
+    expect(mockChannel).toHaveBeenCalledWith("operation-messages:op-1");
+    expect(mockOn).toHaveBeenCalledWith(
+      "postgres_changes",
+      expect.objectContaining({
+        event: "INSERT",
+        schema: "public",
+        table: "operation_messages",
+        filter: "operation_id=eq.op-1",
+      }),
+      expect.any(Function),
+    );
   });
 });
