@@ -1,17 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { mockOperations } from "@/components/operation";
 import { BattleSession, mockBattleSession } from "@/components/operation/session";
 import type { TurnPhase, BattleSessionData } from "@/components/operation/session";
 import { DowntimeRoom } from "@/components/room";
-import {
-  mockParticipants,
-  mockRoomMessages,
-} from "@/components/room/mock-room-data";
+import type { RoomParticipant, RoomMessage } from "@/components/room/types";
 
 const phases: { value: TurnPhase; label: string }[] = [
   { value: "my_turn", label: "MY TURN" },
@@ -22,7 +18,7 @@ const phases: { value: TurnPhase; label: string }[] = [
 
 /**
  * 작전 세션 페이지 — /operation/[id]
- * mock 데이터에서 타입(operation/downtime)을 감지해
+ * API에서 작전 타입(operation/downtime)을 로드해
  * BattleSession 또는 DowntimeRoom을 렌더링한다.
  */
 export default function OperationSessionPage() {
@@ -32,14 +28,67 @@ export default function OperationSessionPage() {
   const isPhaseSwitcherEnabled =
     process.env.NEXT_PUBLIC_ENABLE_OPERATION_PHASE_SWITCHER === "true";
 
-  /* mock 데이터에서 작전 찾기 */
-  const operation = mockOperations.find((op) => op.id === operationId);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [operation, setOperation] = useState<{
+    id: string;
+    title: string;
+    type: string;
+    status: string;
+    myParticipantId: string | null;
+    participants: Array<{
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    }>;
+    messages: RoomMessage[];
+  } | null>(null);
 
   /* 전투 세션 dev 페이즈 스위처 */
   const [phase, setPhase] = useState<TurnPhase>(mockBattleSession.phase);
 
-  /* 작전을 찾지 못한 경우 */
-  if (!operation) {
+  const loadOperation = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`/api/operations/${operationId}`, { cache: "no-store" });
+      if (!res.ok) {
+        setError("FAILED_TO_FETCH_OPERATION");
+        return;
+      }
+      const body = await res.json();
+      setOperation(body.data);
+    } catch (e) {
+      console.error("[operation/[id]] 상세 조회 실패:", e);
+      setError("FAILED_TO_FETCH_OPERATION");
+    } finally {
+      setLoading(false);
+    }
+  }, [operationId]);
+
+  useEffect(() => {
+    void loadOperation();
+  }, [loadOperation]);
+
+  const participants: RoomParticipant[] = useMemo(
+    () =>
+      (operation?.participants ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        avatarUrl: item.avatarUrl ?? undefined,
+      })),
+    [operation?.participants],
+  );
+
+  if (loading) {
+    return (
+      <div className="py-12 text-center text-sm text-text-secondary">
+        작전 정보를 불러오는 중...
+      </div>
+    );
+  }
+
+  if (!operation || error) {
     return (
       <div className="py-12 text-center space-y-4">
         <p className="text-sm text-text-secondary">
@@ -63,16 +112,16 @@ export default function OperationSessionPage() {
         <div className="w-full max-w-7xl mx-auto h-full">
           <DowntimeRoom
             roomTitle={operation.title}
-            participants={mockParticipants}
-            initialMessages={mockRoomMessages}
-            currentUserId="p2"
+            participants={participants}
+            initialMessages={operation.messages}
+            currentUserId={operation.myParticipantId ?? ""}
           />
         </div>
       </div>
     );
   }
 
-  /* ── OPERATION (전투) ── */
+  /* ── OPERATION (전투) — 실연동은 task #9에서 진행 ── */
   const sessionData: BattleSessionData = {
     ...mockBattleSession,
     id: operation.id,

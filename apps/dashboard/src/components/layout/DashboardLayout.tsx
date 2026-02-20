@@ -32,7 +32,7 @@ export function DashboardLayout({
           isCharacterApproved={isCharacterApproved} 
         />
         
-        <main className="flex-1 pt-6 px-4 pb-16 md:pb-0 md:px-6 w-full">
+        <main className="flex-1 pt-6 px-4 pb-16 md:pt-3 md:pb-0 md:px-6 w-full">
           {children}
         </main>
 

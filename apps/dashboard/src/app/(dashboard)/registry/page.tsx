@@ -96,7 +96,7 @@ export default function CharactersPage() {
   }, []);
 
   return (
-    <section className="py-6">
+    <section className="pb-6">
       {/* 헤더 */}
       <div className="mb-6">
         <h1 className="hud-label text-lg">REGISTRY // CITIZEN DATABASE</h1>

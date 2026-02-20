@@ -4,6 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 import { OperationCard } from "../OperationCard";
 import type { OperationItem } from "../types";
 
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 /** OPERATION 타입 LIVE 상태 */
 const liveOperation: OperationItem = {
   id: "op-001",
@@ -86,7 +91,7 @@ describe("OperationCard", () => {
   });
 
   /* --- 상태 인디케이터 --- */
-  it("LIVE 상태에 '● LIVE' 텍스트를 표시한다", () => {
+  it("LIVE 상태에 'LIVE' 텍스트를 표시한다", () => {
     render(<OperationCard item={liveOperation} />);
     expect(screen.getByText(/LIVE/)).toBeInTheDocument();
   });
@@ -133,20 +138,24 @@ describe("OperationCard", () => {
     expect(screen.getByText(/3\/4명/)).toBeInTheDocument();
   });
 
-  /* --- CTA 텍스트 --- */
-  it("LIVE 상태에 '입장 ▸' CTA를 표시한다", () => {
+  /* --- CTA 버튼 --- */
+  it("LIVE 상태에 '관전'과 '입장 ▸' 버튼을 표시한다", () => {
     render(<OperationCard item={liveOperation} />);
+    expect(screen.getByText("관전")).toBeInTheDocument();
     expect(screen.getByText("입장 ▸")).toBeInTheDocument();
   });
 
-  it("대기 상태에 '참가 ▸' CTA를 표시한다", () => {
+  it("대기 상태에 '관전'과 '입장 ▸' 버튼을 표시한다", () => {
     render(<OperationCard item={waitingDowntime} />);
-    expect(screen.getByText("참가 ▸")).toBeInTheDocument();
+    expect(screen.getByText("관전")).toBeInTheDocument();
+    expect(screen.getByText("입장 ▸")).toBeInTheDocument();
   });
 
-  it("완료 상태에 '열람 ▸' CTA를 표시한다", () => {
+  it("완료 상태에 '열람 ▸' 버튼만 표시한다", () => {
     render(<OperationCard item={completedOperation} />);
     expect(screen.getByText("열람 ▸")).toBeInTheDocument();
+    expect(screen.queryByText("관전")).not.toBeInTheDocument();
+    expect(screen.queryByText("입장 ▸")).not.toBeInTheDocument();
   });
 
   /* --- 완료 카드 opacity --- */
@@ -160,16 +169,5 @@ describe("OperationCard", () => {
     render(<OperationCard item={liveOperation} />);
     const article = screen.getByRole("article");
     expect(article).not.toHaveClass("opacity-60");
-  });
-
-  /* --- 클릭 핸들러 --- */
-  it("onClick 콜백을 전달받아 호출한다", async () => {
-    const onClick = vi.fn();
-    const { getByRole } = render(
-      <OperationCard item={liveOperation} onClick={onClick} />,
-    );
-    const article = getByRole("article");
-    article.click();
-    expect(onClick).toHaveBeenCalledWith(liveOperation);
   });
 });

@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 import { Button, FilterChips } from "@/components/ui";
 import type { FilterChipOption } from "@/components/ui/FilterChips";
@@ -13,6 +12,8 @@ import type { OperationItem, StatusFilter, TypeFilter } from "./types";
 
 type OperationHubProps = {
   operations: OperationItem[];
+  /** 작전 생성 성공 후 목록 새로고침 콜백 */
+  onOperationCreated?: () => void;
 };
 
 const TYPE_OPTIONS: FilterChipOption<TypeFilter>[] = [
@@ -29,19 +30,10 @@ const STATUS_OPTIONS: FilterChipOption<StatusFilter>[] = [
 ];
 
 /** 작전 허브 — MAIN STORY 배너 + 타입/상태 필터 + 카드 그리드 */
-export function OperationHub({ operations }: OperationHubProps) {
-  const router = useRouter();
+export function OperationHub({ operations, onOperationCreated }: OperationHubProps) {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [modalOpen, setModalOpen] = useState(false);
-
-  /** 카드/배너 클릭 → 세션 페이지 이동 */
-  const handleNavigate = useCallback(
-    (item: OperationItem) => {
-      router.push(`/operation/${item.id}`);
-    },
-    [router],
-  );
 
   /* MAIN STORY 이벤트 추출 (LIVE만) */
   const mainStory = useMemo(
@@ -61,7 +53,7 @@ export function OperationHub({ operations }: OperationHubProps) {
   }, [operations, typeFilter, statusFilter]);
 
   return (
-    <section className="space-y-6 py-6">
+    <section className="space-y-6 pb-6">
       {/* 헤더 */}
       <div className="flex items-end justify-between">
         <div>
@@ -72,7 +64,7 @@ export function OperationHub({ operations }: OperationHubProps) {
       </div>
 
       {/* MAIN STORY 배너 */}
-      <MainStoryBanner event={mainStory} onJoin={handleNavigate} />
+      <MainStoryBanner event={mainStory} />
 
       {/* 타입 필터 + 생성 CTA */}
       <div className="flex items-center justify-between gap-2">
@@ -124,7 +116,7 @@ export function OperationHub({ operations }: OperationHubProps) {
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {filtered.map((item) => (
-            <OperationCard key={item.id} item={item} onClick={handleNavigate} />
+            <OperationCard key={item.id} item={item} />
           ))}
         </div>
       )}
@@ -133,7 +125,7 @@ export function OperationHub({ operations }: OperationHubProps) {
       <CreateOperationModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSubmit={() => setModalOpen(false)}
+        onCreated={onOperationCreated}
       />
     </section>
   );

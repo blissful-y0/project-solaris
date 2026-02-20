@@ -85,36 +85,15 @@ describe("TopBar", () => {
 
   // --- 잠금 UI ---
 
-  it("isCharacterApproved=false → Operation에 Lock 아이콘 표시", () => {
-    render(<TopBar isCharacterApproved={false} />);
-    const lockIcon = screen.getByTestId("lock-icon-/operation");
-    expect(lockIcon).toBeInTheDocument();
-  });
-
-  it("isCharacterApproved=false → Operation이 button으로 렌더링", () => {
-    render(<TopBar isCharacterApproved={false} />);
-    const operationButton = screen.getByRole("button", { name: /operation/i });
-    expect(operationButton).toBeInTheDocument();
-    expect(operationButton).toHaveAttribute("aria-disabled", "true");
-    expect(operationButton).toHaveAttribute("aria-label", "Operation (캐릭터 승인 후 이용 가능)");
-  });
-
-  it("isCharacterApproved=true → Operation에 정상 Link", () => {
-    render(<TopBar isCharacterApproved />);
+  it("Operation은 항상 정상 Link로 렌더링한다", () => {
+    render(<TopBar />);
     const operationLink = screen.getByRole("link", { name: /operation/i });
     expect(operationLink).toHaveAttribute("href", "/operation");
   });
 
-  it("isCharacterApproved=true → Lock 아이콘 없음", () => {
-    render(<TopBar isCharacterApproved />);
-    const lockIcon = screen.queryByTestId("lock-icon-/operation");
-    expect(lockIcon).not.toBeInTheDocument();
-  });
-
-  it("isCharacterApproved 미전달 → requireApproval 항목 잠금", () => {
+  it("Operation에 Lock 아이콘 없음", () => {
     render(<TopBar />);
-    const lockIcon = screen.getByTestId("lock-icon-/operation");
-    expect(lockIcon).toBeInTheDocument();
+    expect(screen.queryByTestId("lock-icon-/operation")).not.toBeInTheDocument();
   });
 
   // --- 마이페이지 ---

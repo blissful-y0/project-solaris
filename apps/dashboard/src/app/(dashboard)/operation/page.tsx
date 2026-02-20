@@ -1,43 +1,85 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { cn } from "@/lib/utils";
 import { AccessDenied } from "@/components/common";
-import { OperationHub, mockOperations } from "@/components/operation";
+import { OperationHub } from "@/components/operation";
+import type { OperationItem } from "@/components/operation";
 
 type CharacterStatus = "approved" | "pending" | "rejected" | null;
 
 export default function OperationPage() {
-  /* TODO: 프로필 API 연동 후 실제 캐릭터 상태로 대체 */
   const [characterStatus, setCharacterStatus] = useState<CharacterStatus>(null);
+  const [operations, setOperations] = useState<OperationItem[]>([]);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [operationsLoading, setOperationsLoading] = useState(false);
+
   const isApproved = characterStatus === "approved";
 
-  return (
-    <div className="py-6">
-      {/* DEV: 승인 상태 토글 — 배포 전 제거 */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mb-6 flex gap-2">
-          {(["미승인", "승인"] as const).map((label, i) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => setCharacterStatus(i === 1 ? "approved" : null)}
-              className={cn(
-                "rounded border px-2 py-1 text-[0.625rem] transition-colors",
-                (isApproved ? 1 : 0) === i
-                  ? "border-primary text-primary"
-                  : "border-border text-text-secondary hover:border-primary hover:text-primary",
-              )}
-            >
-              [DEV] {label}
-            </button>
-          ))}
-        </div>
-      )}
+  /* 캐릭터 승인 여부 — /api/me */
+  useEffect(() => {
+    let mounted = true;
+    setStatusLoading(true);
+    fetch("/api/me", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((body) => {
+        if (!mounted) return;
+        const status: CharacterStatus = body?.character?.status ?? null;
+        setCharacterStatus(status);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setCharacterStatus(null);
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setStatusLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
 
+  /* 작전 목록 — 승인된 경우만 */
+  const loadOperations = useCallback(() => {
+    let mounted = true;
+    setOperationsLoading(true);
+    fetch("/api/operations", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((body) => {
+        if (!mounted) return;
+        setOperations(body?.data ?? []);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setOperations([]);
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setOperationsLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!isApproved) return;
+    return loadOperations();
+  }, [isApproved, loadOperations]);
+
+  if (statusLoading) {
+    return (
+      <div className="py-12 text-center text-sm text-text-secondary">
+        확인 중...
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-6">
       {isApproved ? (
-        <OperationHub operations={mockOperations} />
+        operationsLoading ? (
+          <div className="text-sm text-text-secondary py-8">작전 목록을 불러오는 중...</div>
+        ) : (
+          <OperationHub operations={operations} onOperationCreated={loadOperations} />
+        )
       ) : (
         <AccessDenied characterStatus={characterStatus} />
       )}
