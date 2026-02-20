@@ -29,6 +29,8 @@ export default function OperationSessionPage() {
   const params = useParams();
   const router = useRouter();
   const operationId = params.id as string;
+  const isPhaseSwitcherEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_OPERATION_PHASE_SWITCHER === "true";
 
   /* mock 데이터에서 작전 찾기 */
   const operation = mockOperations.find((op) => op.id === operationId);
@@ -81,24 +83,26 @@ export default function OperationSessionPage() {
   return (
     <div className="fixed top-22 bottom-16 left-0 right-0 md:bottom-0">
       <div className="w-full max-w-7xl mx-auto h-full relative">
-        {/* dev: 페이즈 스위처 */}
-        <div className="absolute top-0 right-0 z-50 flex gap-0.5 p-1 bg-bg-secondary/90 border-b border-l border-border rounded-bl-md">
-          {phases.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              onClick={() => setPhase(p.value)}
-              className={cn(
-                "px-1.5 py-0.5 text-[0.5rem] font-mono rounded transition-colors",
-                phase === p.value
-                  ? "bg-primary/20 text-primary"
-                  : "text-text-secondary hover:text-text hover:bg-bg-tertiary/60",
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        {/* QA/개발용 플래그: true일 때만 페이즈 강제 전환 UI 노출 */}
+        {isPhaseSwitcherEnabled && (
+          <div className="absolute top-0 right-0 z-50 flex gap-0.5 p-1 bg-bg-secondary/90 border-b border-l border-border rounded-bl-md">
+            {phases.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPhase(p.value)}
+                className={cn(
+                  "px-1.5 py-0.5 text-[0.5rem] font-mono rounded transition-colors",
+                  phase === p.value
+                    ? "bg-primary/20 text-primary"
+                    : "text-text-secondary hover:text-text hover:bg-bg-tertiary/60",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <BattleSession key={phase} initialData={sessionData} className="!h-full" />
       </div>

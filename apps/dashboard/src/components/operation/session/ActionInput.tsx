@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui";
 import type {
   ActionType,
+  BattleAbility,
   BattleParticipant,
   TurnPhase,
 } from "./types";
@@ -23,7 +24,7 @@ const actionTypes: {
 ];
 
 /* ── 능력 티어 표시 ── */
-const tierLabel: Record<string, string> = {
+const tierLabel: Record<BattleAbility["tier"], string> = {
   basic: "I",
   mid: "II",
   advanced: "III",

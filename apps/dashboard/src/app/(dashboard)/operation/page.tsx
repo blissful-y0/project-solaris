@@ -6,9 +6,12 @@ import { cn } from "@/lib/utils";
 import { AccessDenied } from "@/components/common";
 import { OperationHub, mockOperations } from "@/components/operation";
 
+type CharacterStatus = "approved" | "pending" | "rejected" | null;
+
 export default function OperationPage() {
-  /* DEV 모드: 0=미승인, 1=승인 */
-  const [isApproved, setIsApproved] = useState(true);
+  /* TODO: 프로필 API 연동 후 실제 캐릭터 상태로 대체 */
+  const [characterStatus, setCharacterStatus] = useState<CharacterStatus>("approved");
+  const isApproved = characterStatus === "approved";
 
   return (
     <div className="py-6">
@@ -19,7 +22,7 @@ export default function OperationPage() {
             <button
               key={label}
               type="button"
-              onClick={() => setIsApproved(i === 1)}
+              onClick={() => setCharacterStatus(i === 1 ? "approved" : null)}
               className={cn(
                 "rounded border px-2 py-1 text-[0.625rem] transition-colors",
                 (isApproved ? 1 : 0) === i
@@ -36,7 +39,7 @@ export default function OperationPage() {
       {isApproved ? (
         <OperationHub operations={mockOperations} />
       ) : (
-        <AccessDenied characterStatus={null} />
+        <AccessDenied characterStatus={characterStatus} />
       )}
     </div>
   );

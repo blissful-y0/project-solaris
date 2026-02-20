@@ -15,13 +15,13 @@ type OperationHubProps = {
   operations: OperationItem[];
 };
 
-const TYPE_OPTIONS: FilterChipOption[] = [
+const TYPE_OPTIONS: FilterChipOption<TypeFilter>[] = [
   { label: "ALL", value: "all" },
   { label: "OPERATION", value: "operation" },
   { label: "DOWNTIME", value: "downtime" },
 ];
 
-const STATUS_OPTIONS: FilterChipOption[] = [
+const STATUS_OPTIONS: FilterChipOption<StatusFilter>[] = [
   { label: "전체", value: "all" },
   { label: "대기", value: "waiting" },
   { label: "LIVE", value: "live" },
@@ -79,7 +79,7 @@ export function OperationHub({ operations }: OperationHubProps) {
         <FilterChips
           options={TYPE_OPTIONS}
           selected={typeFilter}
-          onChange={(v) => setTypeFilter(v as TypeFilter)}
+          onChange={setTypeFilter}
         />
         <Button
           variant="secondary"
@@ -94,7 +94,7 @@ export function OperationHub({ operations }: OperationHubProps) {
       <FilterChips
         options={STATUS_OPTIONS}
         selected={statusFilter}
-        onChange={(v) => setStatusFilter(v as StatusFilter)}
+        onChange={setStatusFilter}
       />
 
       {/* 카드 그리드 */}
