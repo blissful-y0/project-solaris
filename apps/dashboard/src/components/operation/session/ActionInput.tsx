@@ -11,16 +11,14 @@ import type {
   TurnPhase,
 } from "./types";
 
-/* ── 행동 유형 설정 ── */
 const actionTypes: {
   type: ActionType;
   label: string;
   shortLabel: string;
-  targetType: "enemy" | "ally";
 }[] = [
-  { type: "attack", label: "공격", shortLabel: "ATK", targetType: "enemy" },
-  { type: "defend", label: "방어", shortLabel: "DEF", targetType: "ally" },
-  { type: "support", label: "지원", shortLabel: "SUP", targetType: "ally" },
+  { type: "attack", label: "공격", shortLabel: "ATK" },
+  { type: "defend", label: "방어", shortLabel: "DEF" },
+  { type: "support", label: "지원", shortLabel: "SUP" },
 ];
 
 /* ── 능력 티어 표시 ── */
@@ -71,9 +69,14 @@ export function ActionInput({
     [myParticipant.abilities, selectedAbilityId],
   );
 
-  /* 대상 후보 목록 */
-  const targetType = actionTypes.find((a) => a.type === selectedAction)?.targetType ?? "enemy";
-  const targetCandidates = targetType === "enemy" ? enemies : allies;
+  /* 대상 후보 목록: 행동 유형과 무관하게 현재 참가자 전원 */
+  const targetCandidates = useMemo(() => {
+    const map = new Map<string, BattleParticipant>();
+    for (const participant of [...allies, ...enemies]) {
+      map.set(participant.id, participant);
+    }
+    return Array.from(map.values());
+  }, [allies, enemies]);
 
   /* 코스트 부족 체크 */
   const costShortage = useMemo(() => {
@@ -90,26 +93,33 @@ export function ActionInput({
     if (!selectedAbility) return null;
     const parts: string[] = [];
     if (selectedAbility.costHp > 0) {
-      parts.push(`HP ${myParticipant.hp.current} → ${myParticipant.hp.current - selectedAbility.costHp}`);
+      parts.push(
+        `HP ${myParticipant.hp.current} → ${myParticipant.hp.current - selectedAbility.costHp}`,
+      );
     }
     if (selectedAbility.costWill > 0) {
-      parts.push(`WILL ${myParticipant.will.current} → ${myParticipant.will.current - selectedAbility.costWill}`);
+      parts.push(
+        `WILL ${myParticipant.will.current} → ${myParticipant.will.current - selectedAbility.costWill}`,
+      );
     }
     return parts.length > 0 ? parts.join("  /  ") : null;
   }, [selectedAbility, myParticipant.hp.current, myParticipant.will.current]);
 
   /* 제출 가능 여부 */
-  const canSubmit = isMyTurn
-    && selectedAbilityId !== ""
-    && selectedTargetId !== ""
-    && narration.trim() !== ""
-    && costShortage === null;
+  const canSubmit =
+    isMyTurn &&
+    selectedAbilityId !== "" &&
+    selectedTargetId !== "" &&
+    narration.trim() !== "" &&
+    costShortage === null;
 
   /* 선택 요약 텍스트 (config 접힘 시 표시) */
   const selectionSummary = useMemo(() => {
-    const actionLabel = actionTypes.find((a) => a.type === selectedAction)?.label ?? "";
+    const actionLabel =
+      actionTypes.find((a) => a.type === selectedAction)?.label ?? "";
     const abilityName = selectedAbility?.name ?? "--";
-    const targetName = targetCandidates.find((t) => t.id === selectedTargetId)?.name ?? "--";
+    const targetName =
+      targetCandidates.find((t) => t.id === selectedTargetId)?.name ?? "--";
     return `${actionLabel} / ${abilityName} / ${targetName}`;
   }, [selectedAction, selectedAbility, targetCandidates, selectedTargetId]);
 
@@ -122,7 +132,14 @@ export function ActionInput({
       narration: narration.trim(),
     });
     setNarration("");
-  }, [canSubmit, onSubmit, selectedAction, selectedAbilityId, selectedTargetId, narration]);
+  }, [
+    canSubmit,
+    onSubmit,
+    selectedAction,
+    selectedAbilityId,
+    selectedTargetId,
+    narration,
+  ]);
 
   /* textarea 자동 높이 조절 */
   useEffect(() => {
@@ -158,10 +175,12 @@ export function ActionInput({
   /* ── 비활성 상태: 대기 ── */
   if (phase === "waiting") {
     return (
-      <div className={cn(
-        "border-t border-border bg-bg-secondary/80 backdrop-blur-sm",
-        className,
-      )}>
+      <div
+        className={cn(
+          "border-t border-border bg-bg-secondary/80 backdrop-blur-sm",
+          className,
+        )}
+      >
         <div className="flex items-center justify-center gap-3 px-4 py-4">
           <div className="flex gap-1">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/60 animate-pulse" />
@@ -179,10 +198,12 @@ export function ActionInput({
   /* ── 양측 제출 완료 ── */
   if (phase === "both_submitted") {
     return (
-      <div className={cn(
-        "border-t border-border bg-bg-secondary/80 backdrop-blur-sm",
-        className,
-      )}>
+      <div
+        className={cn(
+          "border-t border-border bg-bg-secondary/80 backdrop-blur-sm",
+          className,
+        )}
+      >
         <div className="flex items-center justify-between px-4 py-3">
           <p className="text-xs text-text-secondary">
             양측 서술 완료. 판정을 진행하세요.
@@ -198,10 +219,12 @@ export function ActionInput({
   /* ── 판정 중 ── */
   if (phase === "judging") {
     return (
-      <div className={cn(
-        "border-t border-primary/30 bg-bg-secondary/80 backdrop-blur-sm",
-        className,
-      )}>
+      <div
+        className={cn(
+          "border-t border-primary/30 bg-bg-secondary/80 backdrop-blur-sm",
+          className,
+        )}
+      >
         <div className="flex items-center justify-center gap-2.5 px-4 py-4">
           <div className="h-3.5 w-3.5 border-[1.5px] border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-xs text-primary tracking-wider font-medium">
@@ -255,10 +278,12 @@ export function ActionInput({
           </span>
 
           {/* 접기/펼치기 화살표 */}
-          <span className={cn(
-            "text-[0.6rem] text-text-secondary transition-transform",
-            configExpanded ? "rotate-180" : "rotate-0",
-          )}>
+          <span
+            className={cn(
+              "text-[0.6rem] text-text-secondary transition-transform",
+              configExpanded ? "rotate-180" : "rotate-0",
+            )}
+          >
             ▼
           </span>
         </button>
@@ -267,7 +292,9 @@ export function ActionInput({
         <div
           className={cn(
             "transition-all duration-200 ease-out",
-            configExpanded ? "max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden",
+            configExpanded
+              ? "max-h-40 opacity-100"
+              : "max-h-0 opacity-0 overflow-hidden",
           )}
         >
           {/* 행동 유형 칩 4개 */}
@@ -342,15 +369,21 @@ export function ActionInput({
 
       {/* ── 코스트 프리뷰 (인라인, 능력 선택 시만) ── */}
       {selectedAbility && (costPreview || costShortage) && (
-        <div className={cn(
-          "mx-3 mb-1 px-2.5 py-1 rounded-md text-[0.6rem] tabular-nums",
-          "flex items-center gap-2",
-          costShortage
-            ? "bg-accent/8 border border-accent/20"
-            : "bg-primary/5 border border-primary/10",
-        )}>
+        <div
+          className={cn(
+            "mx-3 mb-1 px-2.5 py-1 rounded-md text-[0.6rem] tabular-nums",
+            "flex items-center gap-2",
+            costShortage
+              ? "bg-accent/8 border border-accent/20"
+              : "bg-primary/5 border border-primary/10",
+          )}
+        >
           {costPreview && (
-            <span className={costShortage ? "text-accent/80" : "text-text-secondary"}>
+            <span
+              className={
+                costShortage ? "text-accent/80" : "text-text-secondary"
+              }
+            >
               {costPreview}
             </span>
           )}

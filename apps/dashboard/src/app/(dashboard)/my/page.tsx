@@ -13,7 +13,10 @@ export default function MyPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user ?? null);
+    })();
   }, []);
 
   const handleLogout = async () => {
@@ -29,7 +32,7 @@ export default function MyPage() {
     "Operator";
 
   return (
-    <section className="py-6">
+    <section className="pb-6">
       <div className="mb-6">
         <p className="hud-label mb-2">MY PAGE</p>
         <h1 className="text-xl font-bold text-text">마이페이지</h1>

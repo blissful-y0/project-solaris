@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -8,8 +8,11 @@ import { Button } from "@/components/ui";
 
 import type { RoomMessage, RoomParticipant } from "./types";
 import { RoomChatLog } from "./RoomChatLog";
+import { useRoomMessages } from "./use-room-messages";
 
 type DowntimeRoomProps = {
+  operationId: string;
+  isParticipant: boolean;
   roomTitle: string;
   participants: RoomParticipant[];
   initialMessages: RoomMessage[];
@@ -18,6 +21,8 @@ type DowntimeRoomProps = {
 };
 
 export function DowntimeRoom({
+  operationId,
+  isParticipant,
   roomTitle,
   participants,
   initialMessages,
@@ -25,9 +30,14 @@ export function DowntimeRoom({
   className,
 }: DowntimeRoomProps) {
   const router = useRouter();
-  const [messages, setMessages] = useState<RoomMessage[]>(initialMessages);
   const [inputText, setInputText] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const { messages, upsertMessage } = useRoomMessages(
+    operationId,
+    initialMessages,
+    participants,
+    currentUserId,
+  );
 
   /* ── 서사 반영 범위 선택 상태 ── */
   const [selectingRange, setSelectingRange] = useState(false);
@@ -36,48 +46,82 @@ export function DowntimeRoom({
     end?: string;
   } | null>(null);
 
-  // 메시지 전송
-  const handleSend = useCallback(() => {
+  // 메시지 전송 — API 응답으로 즉시 반영하고, Realtime은 다른 클라이언트 동기화에 사용한다.
+  const handleSend = useCallback(async () => {
     const text = inputText.trim();
     if (!text) return;
 
     const currentUser = participants.find((p) => p.id === currentUserId);
-    const newMessage: RoomMessage = {
+    setInputText("");
+
+    try {
+      const response = await fetch(`/api/operations/${operationId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text }),
+      });
+
+      if (response.ok) {
+        const body = await response.json();
+        const sent = body?.data;
+
+        if (sent?.id) {
+          const sender: RoomParticipant | undefined =
+            sent.senderId
+              ? {
+                  id: sent.senderId,
+                  name: sent.senderName ?? currentUser?.name ?? "알 수 없음",
+                  avatarUrl: sent.senderAvatarUrl ?? currentUser?.avatarUrl,
+                }
+              : currentUser;
+
+          upsertMessage({
+            id: sent.id,
+            type: "narration",
+            sender,
+            content: sent.content ?? text,
+            timestamp: sent.timestamp ?? new Date().toISOString(),
+            isMine: true,
+          });
+          return;
+        }
+      }
+      return;
+    } catch (e) {
+      console.error("[DowntimeRoom] 메시지 전송 실패:", e);
+    }
+
+    // 응답 파싱 실패/네트워크 오류시 최소한 로컬에 표시해 UX 지연을 줄인다.
+    upsertMessage({
       id: `msg-${Date.now()}`,
       type: "narration",
       sender: currentUser,
       content: text,
       timestamp: new Date().toISOString(),
       isMine: true,
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setInputText("");
-
-    // textarea 높이 리셋
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  }, [inputText, participants, currentUserId]);
+    });
+  }, [inputText, operationId, participants, currentUserId, upsertMessage]);
 
   // Enter 키로 전송 (Shift+Enter = 줄바꿈)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // IME 조합 중 Enter는 전송 키가 아니라 조합 확정 키다.
+      if (e.nativeEvent.isComposing || (e as unknown as { keyCode?: number }).keyCode === 229) {
+        return;
+      }
+
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        handleSend();
+        void handleSend();
       }
     },
     [handleSend],
   );
 
-  // textarea 자동 높이 조절
+  // 입력값만 갱신한다. 자동 높이 조절은 타이핑 중 레이아웃 재계산으로 버벅임을 유발한다.
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setInputText(e.target.value);
-      const el = e.target;
-      el.style.height = "auto";
-      el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
     },
     [],
   );
@@ -100,20 +144,17 @@ export function DowntimeRoom({
       if (!selectingRange) return;
 
       if (!selectedRange?.start) {
-        // 시작 메시지 선택
         setSelectedRange({ start: messageId });
       } else if (!selectedRange.end) {
-        // 끝 메시지 선택
         setSelectedRange({ start: selectedRange.start, end: messageId });
       } else {
-        // 이미 양쪽 선택됨 → 리셋 후 새 시작
         setSelectedRange({ start: messageId });
       }
     },
     [selectingRange, selectedRange],
   );
 
-  /* ── 서사 반영: 요청 확정 (관리자에게 전송) ── */
+  /* ── 서사 반영: 요청 확정 (로컬 메시지로 추가) ── */
   const handleConfirmRequest = useCallback(() => {
     if (!selectedRange?.start || !selectedRange.end) return;
 
@@ -127,17 +168,20 @@ export function DowntimeRoom({
       timestamp: new Date().toISOString(),
       isMine: false,
       narrativeRequest: {
+        id: `nr-${Date.now()}`,
         requesterId: currentUserId,
         rangeStart: selectedRange.start,
-        rangeEnd: selectedRange.end,
-        status: "pending",
+        rangeEnd: selectedRange.end ?? selectedRange.start,
+        status: "voting",
+        votes: {},
+        totalParticipants: participants.length,
       },
     };
 
-    setMessages((prev) => [...prev, requestMessage]);
+    upsertMessage(requestMessage);
     setSelectingRange(false);
     setSelectedRange(null);
-  }, [selectedRange, participants, currentUserId]);
+  }, [selectedRange, participants, currentUserId, upsertMessage]);
 
   const rangeComplete = selectedRange?.start && selectedRange?.end;
 
@@ -162,18 +206,20 @@ export function DowntimeRoom({
         >
           {participants.length}명
         </span>
-        <button
-          onClick={selectingRange ? handleCancelSelection : handleStartSelection}
-          className={cn(
-            "text-[0.65rem] font-medium transition-colors",
-            selectingRange
-              ? "text-accent/80 hover:text-accent"
-              : "text-primary/70 hover:text-primary",
-          )}
-          data-testid={selectingRange ? "cancel-selection-btn" : "narrative-request-btn"}
-        >
-          {selectingRange ? "취소" : "서사반영"}
-        </button>
+        {isParticipant && (
+          <button
+            onClick={selectingRange ? handleCancelSelection : handleStartSelection}
+            className={cn(
+              "text-[0.65rem] font-medium transition-colors",
+              selectingRange
+                ? "text-accent/80 hover:text-accent"
+                : "text-primary/70 hover:text-primary",
+            )}
+            data-testid={selectingRange ? "cancel-selection-btn" : "narrative-request-btn"}
+          >
+            {selectingRange ? "취소" : "서사반영"}
+          </button>
+        )}
         <button
           aria-label="메뉴"
           className="text-text-secondary hover:text-text transition-colors"
@@ -194,7 +240,7 @@ export function DowntimeRoom({
       />
 
       {/* ── 범위 선택 모드: 하단 바 ── */}
-      {selectingRange && (
+      {isParticipant && selectingRange && (
         <div className="border-t border-primary/30 bg-bg-secondary/90 backdrop-blur-sm px-4 py-3 flex items-center gap-3">
           <span className="flex-1 text-xs text-text-secondary">
             {rangeComplete
@@ -214,11 +260,10 @@ export function DowntimeRoom({
       )}
 
       {/* ── 일반 입력 영역 (범위 선택 중이면 숨김) ── */}
-      {!selectingRange && (
+      {!selectingRange && isParticipant && (
         <div className="border-t border-border bg-bg-secondary/80 backdrop-blur-sm p-3">
           <div className="flex items-end gap-2">
             <textarea
-              ref={textareaRef}
               value={inputText}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
@@ -229,13 +274,13 @@ export function DowntimeRoom({
                 "flex-1 resize-none overflow-y-auto rounded-lg bg-bg-tertiary border border-border px-3 py-2",
                 "text-sm text-text placeholder:text-text-secondary/50",
                 "focus:outline-none focus:border-primary/40 transition-colors",
-                "min-h-[72px] max-h-[180px]",
+                "h-[96px]",
               )}
             />
             <Button
               variant="primary"
               size="sm"
-              onClick={handleSend}
+              onClick={() => void handleSend()}
               disabled={!inputText.trim()}
               data-testid="send-button"
               className="shrink-0 mb-0.5"

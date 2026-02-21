@@ -13,7 +13,7 @@ import {
 
 export default function CorePage() {
   return (
-    <section className="py-6 space-y-6">
+    <section className="pb-6 space-y-6">
       {/* 페이지 헤더 */}
       <div>
         <p className="hud-label">HELIOS CORE // COMMAND CENTER</p>

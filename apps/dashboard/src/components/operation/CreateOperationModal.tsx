@@ -10,40 +10,64 @@ import type { OperationType } from "./types";
 type CreateOperationModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit?: (data: CreateOperationData) => void;
+  /** 생성 성공 후 호출 — 목록 새로고침 등 */
+  onCreated?: () => void;
 };
-
-/** 모달에서 수집하는 생성 데이터 */
-export interface CreateOperationData {
-  type: OperationType;
-  title: string;
-  summary: string;
-}
 
 /** 작전 생성 모달 — OPERATION/DOWNTIME 타입 선택 + 기본 필드 */
 export function CreateOperationModal({
   open,
   onClose,
-  onSubmit,
+  onCreated,
 }: CreateOperationModalProps) {
   const [selectedType, setSelectedType] = useState<OperationType | null>(null);
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    if (!selectedType || !title.trim()) return;
-    onSubmit?.({
-      type: selectedType,
-      title: title.trim(),
-      summary: summary.trim(),
-    });
+  const handleSubmit = async () => {
+    if (!selectedType || !title.trim() || submitting) return;
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: selectedType,
+          title: title.trim(),
+          summary: summary.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        setError(body?.error ?? "작전 생성에 실패했습니다.");
+        return;
+      }
+
+      // 성공 — 폼 초기화 후 콜백
+      setSelectedType(null);
+      setTitle("");
+      setSummary("");
+      onClose();
+      onCreated?.();
+    } catch {
+      setError("네트워크 오류가 발생했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
-    /* 폼 초기화 */
+    if (submitting) return;
     setSelectedType(null);
     setTitle("");
     setSummary("");
+    setError(null);
     onClose();
   };
 
@@ -131,18 +155,23 @@ export function CreateOperationModal({
           </div>
         )}
 
+        {/* 에러 메시지 */}
+        {error && (
+          <p className="text-xs text-accent">{error}</p>
+        )}
+
         {/* 하단 버튼 */}
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" size="sm" onClick={handleClose}>
+          <Button variant="ghost" size="sm" onClick={handleClose} disabled={submitting}>
             취소
           </Button>
           <Button
             variant="primary"
             size="sm"
-            disabled={!selectedType || !title.trim()}
+            disabled={!selectedType || !title.trim() || submitting}
             onClick={handleSubmit}
           >
-            작전 생성
+            {submitting ? "생성 중..." : "작전 생성"}
           </Button>
         </div>
       </div>

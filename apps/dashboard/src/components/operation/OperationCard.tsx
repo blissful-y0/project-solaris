@@ -1,3 +1,9 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 import { Badge, Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -5,7 +11,6 @@ import type { OperationItem } from "./types";
 
 type OperationCardProps = {
   item: OperationItem;
-  onClick?: (item: OperationItem) => void;
 };
 
 /** 상태별 stripe 색상 */
@@ -35,20 +40,13 @@ function StatusIndicator({ status }: { status: OperationItem["status"] }) {
   );
 }
 
-/** CTA 버튼 텍스트 */
-function ctaText(status: OperationItem["status"]): string {
-  if (status === "live") return "입장 ▸";
-  if (status === "waiting") return "참가 ▸";
-  return "열람 ▸";
-}
-
 /** 참가자 총 인원 계산 */
 function participantCount(item: OperationItem): number {
-  if (item.type === "operation") {
-    return item.teamA.length + item.teamB.length;
+  const uniqueIds = new Set<string>();
+  for (const member of [...item.teamA, ...item.teamB]) {
+    if (member.id) uniqueIds.add(member.id);
   }
-  /* downtime: host 1명 기본 */
-  return 1;
+  return uniqueIds.size;
 }
 
 /** 경과시간 포맷 */
@@ -65,32 +63,64 @@ function timeAgo(isoDate: string): string {
 /** 참가자 표시 */
 function ParticipantsLine({ item }: { item: OperationItem }) {
   if (item.type === "operation") {
-    const teamANames = item.teamA.map((m) => m.name).join(", ");
-    const teamBNames = item.teamB.map((m) => m.name).join(", ");
+    const teamANames = item.teamA.map((m) => m.name).join(", ") || "팀 A 미정";
+    const teamBNames = item.teamB.map((m) => m.name).join(", ") || "팀 B 미정";
     return (
       <p className="truncate text-xs text-text-secondary">
         {teamANames} <span className="text-primary/60">vs</span> {teamBNames}
       </p>
     );
   }
+
+  const names = [...item.teamA, ...item.teamB].map((m) => m.name).join(", ");
+
   return (
     <p className="truncate text-xs text-text-secondary">
-      <span className="text-text-secondary/80">호스트:</span> {item.host.name}
+      {names || "참여자 없음"}
     </p>
   );
 }
 
-/** 작전 카드 — 도시어 스타일 */
-export function OperationCard({ item, onClick }: OperationCardProps) {
+/** 작전 카드 — 관전/입장 분리 */
+export function OperationCard({ item }: OperationCardProps) {
+  const router = useRouter();
+  const [joining, setJoining] = useState(false);
+
+  /** 관전: 참가 없이 방으로 이동 */
+  const handleSpectate = useCallback(() => {
+    router.push(`/operation/${item.id}`);
+  }, [router, item.id]);
+
+  /** 입장: join API 호출 후 방으로 이동 */
+  const handleJoin = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (joining) return;
+      setJoining(true);
+      try {
+        const response = await fetch(`/api/operations/${item.id}/join`, {
+          method: "POST",
+        });
+        if (response.ok) {
+          router.push(`/operation/${item.id}`);
+        } else {
+          const body = await response.json().catch(() => null);
+          toast.error(body?.error ?? "JOIN_FAILED");
+        }
+      } finally {
+        setJoining(false);
+      }
+    },
+    [joining, item.id, router],
+  );
+
   return (
     <article
       role="article"
-      onClick={() => onClick?.(item)}
       className={cn(
-        "group flex cursor-pointer overflow-hidden rounded-lg",
+        "flex overflow-hidden rounded-lg",
         "bg-bg-secondary/80 border border-border backdrop-blur-sm",
-        "transition-all duration-200",
-        "hover:border-primary/30",
+        "transition-all duration-200 hover:border-primary/30",
         item.status === "completed" && "opacity-60",
       )}
     >
@@ -102,7 +132,7 @@ export function OperationCard({ item, onClick }: OperationCardProps) {
 
       {/* 카드 본문 */}
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-3">
-        {/* 1행: 상태 인디케이터 + 타입 뱃지 + 제목 */}
+        {/* 1행: 상태 + 타입 뱃지 + 제목 */}
         <div className="flex items-center gap-2">
           <StatusIndicator status={item.status} />
           <Badge variant={item.type === "operation" ? "info" : "warning"}>
@@ -128,9 +158,26 @@ export function OperationCard({ item, onClick }: OperationCardProps) {
             <span className="mx-1.5 text-text-secondary/40">·</span>
             {timeAgo(item.createdAt)}
           </p>
-          <Button variant="secondary" size="sm" tabIndex={-1}>
-            {ctaText(item.status)}
-          </Button>
+
+          {item.status === "completed" ? (
+            <Button variant="ghost" size="sm" onClick={handleSpectate}>
+              열람 ▸
+            </Button>
+          ) : (
+            <div className="flex gap-1.5">
+              <Button variant="ghost" size="sm" onClick={handleSpectate}>
+                관전
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleJoin}
+                disabled={joining}
+              >
+                {joining ? "..." : "입장 ▸"}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </article>

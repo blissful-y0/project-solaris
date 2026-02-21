@@ -4,6 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 import { MainStoryBanner } from "../MainStoryBanner";
 import type { OperationItem } from "../types";
 
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 const mainStory: OperationItem = {
   id: "op-main-001",
   title: "시즌 1 — 심층 구역 이상 징후",
@@ -38,9 +43,7 @@ describe("MainStoryBanner", () => {
 
   it("이벤트 제목을 표시한다", () => {
     render(<MainStoryBanner event={mainStory} />);
-    expect(
-      screen.getByText("시즌 1 — 심층 구역 이상 징후"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("시즌 1 — 심층 구역 이상 징후")).toBeInTheDocument();
   });
 
   it("이벤트 설명을 표시한다", () => {
@@ -50,7 +53,7 @@ describe("MainStoryBanner", () => {
 
   it("참가자 수를 표시한다", () => {
     render(<MainStoryBanner event={mainStory} />);
-    /* teamA(2) + teamB(2) = 4명 / maxParticipants 12 */
+    /* teamA(2) + teamB(2) = 4명 */
     expect(screen.getByText(/참가자 4\/12/)).toBeInTheDocument();
   });
 
@@ -59,16 +62,10 @@ describe("MainStoryBanner", () => {
     expect(screen.getByText(/2026\.02\.15 개설/)).toBeInTheDocument();
   });
 
-  it("CTA 버튼을 표시한다", () => {
+  it("'관전'과 '입장 ▸' 버튼을 표시한다", () => {
     render(<MainStoryBanner event={mainStory} />);
-    expect(screen.getByText("작전 참가 ▸")).toBeInTheDocument();
-  });
-
-  it("onJoin 콜백을 전달받아 호출한다", async () => {
-    const onJoin = vi.fn();
-    render(<MainStoryBanner event={mainStory} onJoin={onJoin} />);
-    screen.getByText("작전 참가 ▸").click();
-    expect(onJoin).toHaveBeenCalledWith(mainStory);
+    expect(screen.getByText("관전")).toBeInTheDocument();
+    expect(screen.getByText("입장 ▸")).toBeInTheDocument();
   });
 
   it("hud-corners 클래스를 적용한다", () => {
