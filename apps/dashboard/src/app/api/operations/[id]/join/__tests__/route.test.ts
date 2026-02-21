@@ -273,7 +273,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "civilian" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
-      data: { id: "op-1", type: "operation", created_by: "ch-host" },
+      data: { id: "op-1", type: "operation", status: "waiting", created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
@@ -286,6 +286,25 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(422);
     expect(body).toEqual({ error: "INVALID_FACTION" });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("완료된 작전에는 참가할 수 없다 (409)", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "operation", status: "completed", created_by: "ch-host" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toEqual({ error: "OPERATION_CLOSED" });
     expect(mockInsert).not.toHaveBeenCalled();
   });
 });

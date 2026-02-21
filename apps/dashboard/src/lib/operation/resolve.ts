@@ -55,14 +55,22 @@ export async function computeResolution(
 ) {
   const states: Record<string, EncounterParticipantState> = {};
 
-  for (const participant of context.participants) {
-    const { data, error } = await supabase
-      .from("characters")
-      .select("id, hp_current, will_current")
-      .eq("id", participant.character_id)
-      .single();
+  const participantIds = context.participants.map((p) => p.character_id);
 
-    if (error || !data) {
+  const { data: characterRows, error: characterError } = await supabase
+    .from("characters")
+    .select("id, hp_current, will_current")
+    .in("id", participantIds);
+
+  if (characterError || !characterRows) {
+    throw new Error("CHARACTER_NOT_FOUND");
+  }
+
+  const characterMap = new Map(characterRows.map((c) => [c.id, c]));
+
+  for (const participant of context.participants) {
+    const data = characterMap.get(participant.character_id);
+    if (!data) {
       throw new Error("CHARACTER_NOT_FOUND");
     }
 

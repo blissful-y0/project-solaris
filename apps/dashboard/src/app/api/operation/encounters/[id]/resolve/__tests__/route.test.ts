@@ -143,11 +143,9 @@ describe("POST /api/operation/encounters/[id]/resolve", () => {
       if (table === "characters") {
         return {
           select: () => ({
-            eq: (_: string, id: string) => ({
-              single: vi.fn().mockResolvedValue({
-                data: { id, ...characterRows[id] },
-                error: null,
-              }),
+            in: vi.fn().mockResolvedValue({
+              data: Object.entries(characterRows).map(([id, stats]) => ({ id, ...stats })),
+              error: null,
             }),
           }),
         };
