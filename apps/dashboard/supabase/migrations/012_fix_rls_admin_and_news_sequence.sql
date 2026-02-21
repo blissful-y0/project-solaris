@@ -128,7 +128,7 @@ CREATE SEQUENCE IF NOT EXISTS public.news_bulletin_number_seq;
 
 SELECT setval(
   'public.news_bulletin_number_seq',
-  GREATEST(COALESCE((SELECT MAX(bulletin_number) FROM public.news), 0), 1)
+  COALESCE((SELECT MAX(bulletin_number) FROM public.news), 0)
 );
 
 ALTER TABLE public.news

@@ -19,16 +19,13 @@ export interface RoomMessage {
   narrativeRequest?: NarrativeRequest;
 }
 
-/** 서사 반영 요청 상태 */
-export type NarrativeRequestStatus = "voting" | "approved" | "rejected";
+/** 서사 반영 요청 상태 (관리자 검토) */
+export type NarrativeRequestStatus = "pending" | "approved" | "rejected";
 
 /** 서사 반영 요청 */
 export interface NarrativeRequest {
-  id: string;
   requesterId: string;
   rangeStart: string;
   rangeEnd: string;
   status: NarrativeRequestStatus;
-  votes: Record<string, "reflect" | "skip">;
-  totalParticipants: number;
 }

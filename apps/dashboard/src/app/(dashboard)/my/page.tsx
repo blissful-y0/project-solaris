@@ -1,15 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/client";
-import { useDashboardSession } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
 
 export default function MyPage() {
   const router = useRouter();
-  const { me } = useDashboardSession();
-  const user = me?.user ?? null;
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -18,7 +23,9 @@ export default function MyPage() {
   };
 
   const displayName =
-    user?.displayName ??
+    user?.user_metadata?.full_name ??
+    user?.user_metadata?.name ??
+    user?.user_metadata?.user_name ??
     "Operator";
 
   return (

@@ -20,13 +20,6 @@ const nextConfig = {
         hostname: "jasjvfkbprkzxhsnxstd.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
-      // 로컬 Supabase Storage (supabase start)
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-        port: "54321",
-        pathname: "/storage/v1/object/public/**",
-      },
     ],
   },
 };
