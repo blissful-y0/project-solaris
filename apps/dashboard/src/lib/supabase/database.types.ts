@@ -320,6 +320,305 @@ export type Database = {
           },
         ]
       }
+      operation_encounter_participants: {
+        Row: {
+          character_id: string
+          created_at: string
+          encounter_id: string
+          id: number
+          is_active: boolean
+          submission_order: number
+          team: string
+        }
+        Insert: {
+          character_id: string
+          created_at?: string
+          encounter_id: string
+          id?: number
+          is_active?: boolean
+          submission_order: number
+          team: string
+        }
+        Update: {
+          character_id?: string
+          created_at?: string
+          encounter_id?: string
+          id?: number
+          is_active?: boolean
+          submission_order?: number
+          team?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_encounter_participants_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_encounter_participants_encounter_id_fkey"
+            columns: ["encounter_id"]
+            isOneToOne: false
+            referencedRelation: "operation_encounters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operation_encounters: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_turn: number
+          deleted_at: string | null
+          ended_at: string | null
+          gm_closed_by: string | null
+          id: string
+          result: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_turn?: number
+          deleted_at?: string | null
+          ended_at?: string | null
+          gm_closed_by?: string | null
+          id: string
+          result?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_turn?: number
+          deleted_at?: string | null
+          ended_at?: string | null
+          gm_closed_by?: string | null
+          id?: string
+          result?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_encounters_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_encounters_gm_closed_by_fkey"
+            columns: ["gm_closed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operation_turn_effects: {
+        Row: {
+          created_at: string
+          delta: number
+          id: number
+          reason: string
+          source_character_id: string | null
+          target_character_id: string
+          target_stat: string
+          turn_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: number
+          reason: string
+          source_character_id?: string | null
+          target_character_id: string
+          target_stat: string
+          turn_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: number
+          reason?: string
+          source_character_id?: string | null
+          target_character_id?: string
+          target_stat?: string
+          turn_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_turn_effects_source_character_id_fkey"
+            columns: ["source_character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_turn_effects_target_character_id_fkey"
+            columns: ["target_character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_turn_effects_turn_id_fkey"
+            columns: ["turn_id"]
+            isOneToOne: false
+            referencedRelation: "operation_turns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operation_turn_submissions: {
+        Row: {
+          ability_id: string | null
+          ability_tier: string | null
+          action_type: string
+          base_damage: number
+          cost_hp: number
+          cost_will: number
+          created_at: string
+          id: string
+          is_auto_fail: boolean
+          multiplier: number
+          narrative: string | null
+          participant_character_id: string
+          submitted_at: string
+          target_character_id: string | null
+          target_stat: string | null
+          turn_id: string
+          updated_at: string
+        }
+        Insert: {
+          ability_id?: string | null
+          ability_tier?: string | null
+          action_type: string
+          base_damage?: number
+          cost_hp?: number
+          cost_will?: number
+          created_at?: string
+          id: string
+          is_auto_fail?: boolean
+          multiplier?: number
+          narrative?: string | null
+          participant_character_id: string
+          submitted_at?: string
+          target_character_id?: string | null
+          target_stat?: string | null
+          turn_id: string
+          updated_at?: string
+        }
+        Update: {
+          ability_id?: string | null
+          ability_tier?: string | null
+          action_type?: string
+          base_damage?: number
+          cost_hp?: number
+          cost_will?: number
+          created_at?: string
+          id?: string
+          is_auto_fail?: boolean
+          multiplier?: number
+          narrative?: string | null
+          participant_character_id?: string
+          submitted_at?: string
+          target_character_id?: string | null
+          target_stat?: string | null
+          turn_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_turn_submissions_ability_id_fkey"
+            columns: ["ability_id"]
+            isOneToOne: false
+            referencedRelation: "abilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_turn_submissions_participant_character_id_fkey"
+            columns: ["participant_character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_turn_submissions_target_character_id_fkey"
+            columns: ["target_character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_turn_submissions_turn_id_fkey"
+            columns: ["turn_id"]
+            isOneToOne: false
+            referencedRelation: "operation_turns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operation_turns: {
+        Row: {
+          action_results: Json | null
+          created_at: string
+          deleted_at: string | null
+          encounter_id: string
+          execution_summary: Json | null
+          id: string
+          judgement: Json | null
+          resolution_idempotency_key: string | null
+          resolved_at: string | null
+          status: string
+          turn_number: number
+          updated_at: string
+        }
+        Insert: {
+          action_results?: Json | null
+          created_at?: string
+          deleted_at?: string | null
+          encounter_id: string
+          execution_summary?: Json | null
+          id: string
+          judgement?: Json | null
+          resolution_idempotency_key?: string | null
+          resolved_at?: string | null
+          status?: string
+          turn_number: number
+          updated_at?: string
+        }
+        Update: {
+          action_results?: Json | null
+          created_at?: string
+          deleted_at?: string | null
+          encounter_id?: string
+          execution_summary?: Json | null
+          id?: string
+          judgement?: Json | null
+          resolution_idempotency_key?: string | null
+          resolved_at?: string | null
+          status?: string
+          turn_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_turns_encounter_id_fkey"
+            columns: ["encounter_id"]
+            isOneToOne: false
+            referencedRelation: "operation_encounters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           ai_model_routing: Json
@@ -459,6 +758,31 @@ export type Database = {
             }
             Returns: string
           }
+      apply_operation_resolution: {
+        Args: {
+          p_action_results: Json
+          p_close_result?: string
+          p_closed_by?: string
+          p_effects: Json
+          p_execution_summary: Json
+          p_idempotency_key: string
+          p_turn_id: string
+        }
+        Returns: Json
+      }
+      submit_operation_action: {
+        Args: {
+          p_ability_id: string
+          p_action_type: string
+          p_base_damage: number
+          p_encounter_id: string
+          p_multiplier: number
+          p_narrative: string
+          p_target_character_id: string
+          p_target_stat: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
