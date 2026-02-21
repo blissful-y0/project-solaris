@@ -5,6 +5,24 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
 }));
 
+const {
+  mockCreateClient,
+  mockChannel,
+  mockOn,
+  mockSubscribe,
+  mockRemoveChannel,
+} = vi.hoisted(() => ({
+  mockCreateClient: vi.fn(),
+  mockChannel: vi.fn(),
+  mockOn: vi.fn(),
+  mockSubscribe: vi.fn(),
+  mockRemoveChannel: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: mockCreateClient,
+}));
+
 import { DowntimeRoom } from "../DowntimeRoom";
 import {
   mockParticipants,
@@ -18,6 +36,36 @@ describe("DowntimeRoom", () => {
     initialMessages: mockRoomMessages,
     currentUserId: "p2",
   };
+
+  mockOn.mockReturnValue({ subscribe: mockSubscribe });
+  mockChannel.mockReturnValue({ on: mockOn, subscribe: mockSubscribe });
+  mockCreateClient.mockReturnValue({
+    channel: mockChannel,
+    removeChannel: mockRemoveChannel,
+  });
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: "msg-api-1",
+            senderId: "p2",
+            senderName: "루시엘 린",
+            senderAvatarUrl: undefined,
+            content: "안녕하세요",
+            timestamp: "2026-02-20T01:39:00.000Z",
+          },
+        }),
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it("상단 바에 방 제목을 표시한다", () => {
     render(<DowntimeRoom {...defaultProps} />);
@@ -105,6 +153,21 @@ describe("DowntimeRoom", () => {
     expect(input).toHaveValue("줄바꿈 테스트");
   });
 
+  it("한글 조합 중 Enter는 전송하지 않는다", () => {
+    render(<DowntimeRoom {...defaultProps} />);
+    const input = screen.getByTestId("chat-input");
+
+    fireEvent.change(input, { target: { value: "ㅋㅋㅋ" } });
+    fireEvent.keyDown(input, {
+      key: "Enter",
+      shiftKey: false,
+      isComposing: true,
+      keyCode: 229,
+    });
+
+    expect(input).toHaveValue("ㅋㅋㅋ");
+  });
+
   it("서사반영 클릭 시 범위 선택 모드에 진입한다", () => {
     render(<DowntimeRoom {...defaultProps} />);
     fireEvent.click(screen.getByTestId("narrative-request-btn"));
@@ -130,5 +193,42 @@ describe("DowntimeRoom", () => {
     render(<DowntimeRoom {...defaultProps} />);
     expect(screen.getByTestId("narrative-request-card")).toBeInTheDocument();
     expect(screen.getByText("관리자 검토 대기중")).toBeInTheDocument();
+  });
+
+  it("operationId가 있으면 operation_messages INSERT를 operation_id 필터로 구독한다", () => {
+    render(<DowntimeRoom {...defaultProps} operationId="op-1" />);
+
+    expect(mockCreateClient).toHaveBeenCalledTimes(1);
+    expect(mockChannel).toHaveBeenCalledWith("operation-messages:op-1");
+    expect(mockOn).toHaveBeenCalledWith(
+      "postgres_changes",
+      expect.objectContaining({
+        event: "INSERT",
+        schema: "public",
+        table: "operation_messages",
+        filter: "operation_id=eq.op-1",
+      }),
+      expect.any(Function),
+    );
+  });
+
+  it("operationId 모드 전송 시 API 응답의 sender 메타데이터를 사용한다", async () => {
+    render(
+      <DowntimeRoom
+        {...defaultProps}
+        operationId="op-1"
+        participants={[]}
+        initialMessages={[]}
+        currentUserId="p2"
+      />,
+    );
+
+    const input = screen.getByTestId("chat-input");
+    fireEvent.change(input, { target: { value: "안녕하세요" } });
+    fireEvent.click(screen.getByTestId("send-button"));
+
+    expect(await screen.findByText("안녕하세요")).toBeInTheDocument();
+    expect(screen.getByText("루")).toBeInTheDocument();
+    expect(screen.queryByText("?")).not.toBeInTheDocument();
   });
 });

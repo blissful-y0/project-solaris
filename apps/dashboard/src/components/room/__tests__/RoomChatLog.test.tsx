@@ -104,10 +104,13 @@ describe("RoomChatLog", () => {
         timestamp: "2026-02-18T20:05:00Z",
         isMine: false,
         narrativeRequest: {
+          id: "nr-1",
           requesterId: "p1",
           rangeStart: "msg-2",
           rangeEnd: "msg-3",
-          status: "pending",
+          status: "voting",
+          votes: {},
+          totalParticipants: 3,
         },
       },
     ];
