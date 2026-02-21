@@ -3,9 +3,21 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 import OperationPage from "@/app/(dashboard)/operation/page";
 
+const {
+  mockCreateClient,
+  mockSubscribe,
+} = vi.hoisted(() => ({
+  mockCreateClient: vi.fn(),
+  mockSubscribe: vi.fn(),
+}));
+
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: mockCreateClient,
 }));
 
 const mockFetch = vi.fn();
@@ -20,11 +32,23 @@ function makeFetchResponse(body: unknown, ok = true) {
 describe("OperationPage", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", mockFetch);
+
+    const channel = {
+      on: vi.fn().mockReturnThis(),
+      subscribe: mockSubscribe.mockReturnThis(),
+      unsubscribe: vi.fn(),
+    };
+
+    mockCreateClient.mockReturnValue({
+      channel: vi.fn(() => channel),
+    });
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
     mockFetch.mockReset();
+    mockCreateClient.mockReset();
+    mockSubscribe.mockReset();
   });
 
   it("로딩 중에는 확인 중... 문구를 표시한다", () => {
@@ -91,6 +115,48 @@ describe("OperationPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("HELIOS SYSTEM")).toBeInTheDocument();
+    });
+  });
+
+  it("Realtime 이벤트 수신 시 /api/operations를 다시 조회한다", async () => {
+    let realtimeHandler: (() => void) | null = null;
+    const channel = {
+      on: vi.fn((_event: string, _filter: unknown, cb: () => void) => {
+        realtimeHandler = cb;
+        return channel;
+      }),
+      subscribe: mockSubscribe.mockReturnThis(),
+      unsubscribe: vi.fn(),
+    };
+
+    mockCreateClient.mockReturnValue({
+      channel: vi.fn(() => channel),
+    });
+
+    mockFetch.mockImplementation((url: string) => {
+      if (url === "/api/me") {
+        return makeFetchResponse({ character: { status: "approved" } });
+      }
+      if (url === "/api/operations") {
+        return makeFetchResponse({ data: [] });
+      }
+      return makeFetchResponse({});
+    });
+
+    render(<OperationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("OPERATION // TACTICAL HUB")).toBeInTheDocument();
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith("/api/operations", { cache: "no-store" });
+    const initialCalls = mockFetch.mock.calls.filter((args) => args[0] === "/api/operations").length;
+
+    realtimeHandler?.();
+
+    await waitFor(() => {
+      const calls = mockFetch.mock.calls.filter((args) => args[0] === "/api/operations").length;
+      expect(calls).toBeGreaterThan(initialCalls);
     });
   });
 });

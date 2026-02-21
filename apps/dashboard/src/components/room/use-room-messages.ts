@@ -27,6 +27,31 @@ export function useRoomMessages(
   // participants가 바뀌면 ref 갱신 (구독 재생성 없이 최신 값 유지)
   useEffect(() => {
     participantsRef.current = participants;
+
+    // 참가자 정보가 늦게 도착한 경우 기존 메시지 sender를 보정한다.
+    setMessagesById((prev) => {
+      let changed = false;
+      const next = new Map(prev);
+
+      for (const [id, message] of prev.entries()) {
+        const senderId = message.sender?.id;
+        if (!senderId) continue;
+
+        const participant = participants.find((p) => p.id === senderId);
+        if (!participant) continue;
+
+        const needsUpdate =
+          message.sender?.name !== participant.name ||
+          message.sender?.avatarUrl !== participant.avatarUrl;
+
+        if (needsUpdate) {
+          next.set(id, { ...message, sender: participant });
+          changed = true;
+        }
+      }
+
+      return changed ? next : prev;
+    });
   }, [participants]);
 
   // operation이 바뀌는 경우에만 스토어를 리셋한다.
@@ -86,7 +111,11 @@ export function useRoomMessages(
           const message: RoomMessage = {
             id: row.id,
             type: (row.type ?? "narration") as RoomMessage["type"],
-            sender,
+            sender:
+              sender ??
+              (row.sender_character_id
+                ? { id: row.sender_character_id, name: "알 수 없음" }
+                : undefined),
             content: row.content,
             timestamp: row.created_at,
             isMine: row.sender_character_id === currentCharacterId,

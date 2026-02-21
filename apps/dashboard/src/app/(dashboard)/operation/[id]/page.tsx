@@ -8,6 +8,7 @@ import { BattleSession } from "@/components/operation/session";
 import type { BattleAbility, BattleParticipant, ChatMessage, Faction, TurnPhase, BattleSessionData } from "@/components/operation/session";
 import { DowntimeRoom } from "@/components/room";
 import type { RoomMessage, RoomParticipant } from "@/components/room/types";
+import { createClient } from "@/lib/supabase/client";
 
 const phases: { value: TurnPhase; label: string }[] = [
   { value: "my_turn", label: "MY TURN" },
@@ -95,6 +96,32 @@ export default function OperationSessionPage() {
   useEffect(() => {
     void loadOperation();
   }, [loadOperation]);
+
+  /* 참가자 변경 Realtime 동기화 */
+  useEffect(() => {
+    if (!operationId) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`operation_participants:${operationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "operation_participants",
+          filter: `operation_id=eq.${operationId}`,
+        },
+        () => {
+          void loadOperation();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void channel.unsubscribe();
+    };
+  }, [operationId, loadOperation]);
 
   /* Downtime용 RoomParticipant 목록 */
   const roomParticipants: RoomParticipant[] = useMemo(

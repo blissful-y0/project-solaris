@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AccessDenied } from "@/components/common";
 import { OperationHub } from "@/components/operation";
 import type { OperationItem } from "@/components/operation";
+import { createClient } from "@/lib/supabase/client";
 
 type CharacterStatus = "approved" | "pending" | "rejected" | null;
 
@@ -62,6 +63,41 @@ export default function OperationPage() {
   useEffect(() => {
     if (!isApproved) return;
     return loadOperations();
+  }, [isApproved, loadOperations]);
+
+  /* 목록 Realtime 동기화: operation/participant 변경 시 재조회 */
+  useEffect(() => {
+    if (!isApproved) return;
+
+    const supabase = createClient();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleReload = () => {
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        loadOperations();
+      }, 150);
+    };
+
+    const channel = supabase
+      .channel("operations:list")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "operations" },
+        scheduleReload,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "operation_participants" },
+        scheduleReload,
+      )
+      .subscribe();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      void channel.unsubscribe();
+    };
   }, [isApproved, loadOperations]);
 
   if (statusLoading) {

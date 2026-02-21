@@ -1,5 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
+
+let realtimeInsertHandler: ((payload: { new: unknown }) => void) | undefined;
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
@@ -10,7 +12,10 @@ vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     channel: () => {
       const channel = {
-        on: vi.fn(() => channel),
+        on: vi.fn((_event: string, _filter: unknown, cb: (payload: { new: unknown }) => void) => {
+          realtimeInsertHandler = cb;
+          return channel;
+        }),
         subscribe: vi.fn(() => channel),
         unsubscribe: vi.fn(),
       };
@@ -183,5 +188,34 @@ describe("DowntimeRoom", () => {
     render(<DowntimeRoom {...defaultProps} />);
     expect(screen.getByTestId("narrative-request-card")).toBeInTheDocument();
     expect(screen.getByText("관리자 검토 대기중")).toBeInTheDocument();
+  });
+
+  it("새 참가자 메시지는 참가자 목록 갱신 후 sender 이름이 보정된다", async () => {
+    const { rerender } = render(<DowntimeRoom {...defaultProps} participants={[mockParticipants[1]]} />);
+
+    act(() => {
+      realtimeInsertHandler?.({
+        new: {
+          id: "msg-realtime-1",
+          operation_id: "op-test-1",
+          type: "narration",
+          content: "새로 참가했어요",
+          created_at: "2026-02-21T11:30:00.000Z",
+          sender_character_id: "p9",
+        },
+      });
+    });
+
+    expect(await screen.findByText("새로 참가했어요")).toBeInTheDocument();
+    expect(screen.getAllByText("알 수 없음").length).toBeGreaterThan(0);
+
+    rerender(
+      <DowntimeRoom
+        {...defaultProps}
+        participants={[mockParticipants[1], { id: "p9", name: "신규 참가자", avatarUrl: undefined }]}
+      />,
+    );
+
+    expect(await screen.findByText("신규 참가자")).toBeInTheDocument();
   });
 });
