@@ -3,104 +3,146 @@
 import { useCallback, useMemo } from "react";
 
 import { Modal } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
-import { ClearanceBadge } from "./ClearanceBadge";
 import { LoreContent } from "./LoreContent";
-import type { LoreCategory, LoreCategoryContent, LoreCategoryId } from "./types";
-import { LORE_CATEGORIES } from "./types";
+import { CLEARANCE_CONFIG } from "./types";
+import type { LoreDocumentHtml } from "./types";
 
 type LoreDetailModalProps = {
   open: boolean;
-  categoryId: LoreCategoryId | null;
-  contents: LoreCategoryContent[];
+  slug: string | null;
+  contents: LoreDocumentHtml[];
   onClose: () => void;
-  onNavigate: (id: LoreCategoryId) => void;
+  onNavigate: (slug: string) => void;
 };
 
-/** HELIOS 아카이브 상세 모달 — 선택한 카테고리 콘텐츠 + 이전/다음 네비게이션 */
+/** HELIOS 터미널 stdout 스타일 문서 뷰어 */
 export function LoreDetailModal({
   open,
-  categoryId,
+  slug,
   contents,
   onClose,
   onNavigate,
 }: LoreDetailModalProps) {
   const currentIndex = useMemo(
-    () => LORE_CATEGORIES.findIndex((c) => c.id === categoryId),
-    [categoryId],
+    () => contents.findIndex((c) => c.slug === slug),
+    [contents, slug],
   );
 
-  const category: LoreCategory | undefined = LORE_CATEGORIES[currentIndex];
-  const content = contents.find((c) => c.id === categoryId);
+  const doc: LoreDocumentHtml | undefined = contents[currentIndex];
 
-  const prevCategory: LoreCategory | undefined =
-    currentIndex > 0 ? LORE_CATEGORIES[currentIndex - 1] : undefined;
-  const nextCategory: LoreCategory | undefined =
-    currentIndex < LORE_CATEGORIES.length - 1
-      ? LORE_CATEGORIES[currentIndex + 1]
-      : undefined;
+  const prevDoc: LoreDocumentHtml | undefined =
+    currentIndex > 0 ? contents[currentIndex - 1] : undefined;
+  const nextDoc: LoreDocumentHtml | undefined =
+    currentIndex < contents.length - 1 ? contents[currentIndex + 1] : undefined;
 
   const handlePrev = useCallback(() => {
-    if (prevCategory) onNavigate(prevCategory.id);
-  }, [prevCategory, onNavigate]);
+    if (prevDoc) onNavigate(prevDoc.slug);
+  }, [prevDoc, onNavigate]);
 
   const handleNext = useCallback(() => {
-    if (nextCategory) onNavigate(nextCategory.id);
-  }, [nextCategory, onNavigate]);
+    if (nextDoc) onNavigate(nextDoc.slug);
+  }, [nextDoc, onNavigate]);
 
-  if (!open || !category) return null;
+  if (!open || !doc) return null;
+
+  const cfg = CLEARANCE_CONFIG[doc.clearanceLevel];
+
+  /* 클리어런스별 터미널 accent */
+  const accent: Record<1 | 2 | 3, { text: string; bg: string }> = {
+    1: { text: "text-emerald-400", bg: "bg-emerald-400" },
+    2: { text: "text-yellow-400", bg: "bg-yellow-400" },
+    3: { text: "text-accent", bg: "bg-accent" },
+  };
+  const { text: accentText, bg: accentBg } = accent[doc.clearanceLevel];
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel={`${category.label} 아카이브`}
-      className="max-w-2xl md:max-w-4xl"
+      ariaLabel={`${doc.title} 기밀문서`}
+      className="max-w-3xl"
+      closeButtonClassName="font-mono text-lg hover:text-primary"
     >
-      {/* 헤더 */}
-      <div className="border-b border-border px-4 pt-3 pb-3">
-        <div className="flex items-center gap-2 mb-2 pr-6">
-          <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="font-mono text-[0.625rem] text-text-secondary tracking-wider">
-            FILE_{String(currentIndex + 1).padStart(3, "0")} // ACCESSING
+      {/* ── 상단 컬러 밴드 ── */}
+      <div className={cn("-mx-4 -mt-4 h-1.5", accentBg)} />
+
+      {/* ── cat 커맨드 라인 ── */}
+      <div className="font-mono flex items-center gap-1.5 py-2.5 px-1 border-b border-border/40">
+        <span className={cn("text-xs animate-pulse leading-none", accentText)}>
+          ▋
+        </span>
+        <span className="text-primary text-xs">$</span>
+        <span className="text-text-secondary text-xs">cat</span>
+        <span className={cn("text-xs", accentText)}>
+          /helios/archive/{doc.slug}.doc
+        </span>
+      </div>
+
+      {/* ── 파일 메타데이터 ── */}
+      <div className="font-mono mt-4 space-y-0.5">
+        <div className="flex gap-3 text-[0.6875rem]">
+          <span className="text-text-secondary w-16 shrink-0">[FILE]</span>
+          <span className={accentText}>
+            FILE_{String(currentIndex + 1).padStart(3, "0")} / {doc.slug}
           </span>
-          <ClearanceBadge level={category.clearanceLevel} className="ml-auto" />
         </div>
-        <p className="font-mono text-[0.6875rem] text-primary tracking-wider mb-0.5">
-          SECTION::{category.codeName}
-        </p>
-        <h2 className="text-base font-bold text-text">{category.label}</h2>
+        <div className="flex gap-3 text-[0.6875rem]">
+          <span className="text-text-secondary w-16 shrink-0">[CLASS]</span>
+          <span className={accentText}>
+            CLEARANCE LEVEL {doc.clearanceLevel} — {cfg.label}
+          </span>
+        </div>
+        <div className="flex gap-3 text-[0.6875rem]">
+          <span className="text-text-secondary w-16 shrink-0">[STATUS]</span>
+          <span className="text-text-secondary">ACCESSED</span>
+        </div>
       </div>
 
-      {/* 콘텐츠 */}
-      <div className="px-4 pt-2 pb-4 max-h-[60dvh] overflow-y-auto">
-        <LoreContent html={content?.html ?? ""} className="first-heading-no-mt" />
+      {/* ── 구분선 ── */}
+      <div className="font-mono text-[0.625rem] text-border mt-4 mb-3 select-none overflow-hidden whitespace-nowrap">
+        {"─".repeat(80)}
       </div>
 
-      {/* 하단 네비게이션 */}
-      <div className="border-t border-border px-4 py-3 flex items-center justify-between">
-        {prevCategory ? (
-          <button
-            type="button"
-            onClick={handlePrev}
-            className="text-xs text-text-secondary hover:text-primary transition-colors"
-          >
-            ← {prevCategory.label}
-          </button>
-        ) : (
-          <span />
-        )}
-        {nextCategory ? (
-          <button
-            type="button"
-            onClick={handleNext}
-            className="text-xs text-text-secondary hover:text-primary transition-colors"
-          >
-            {nextCategory.label} →
-          </button>
-        ) : (
-          <span />
-        )}
+      {/* ── 문서 본문 ── */}
+      <LoreContent html={doc.html} className="first-heading-no-mt" />
+
+      {/* ── 하단 구분선 + 네비게이션 ── */}
+      <div className="font-mono text-[0.625rem] text-border mt-6 mb-3 select-none overflow-hidden whitespace-nowrap">
+        {"─".repeat(80)}
+      </div>
+
+      <div className="font-mono flex items-center text-[0.6875rem]">
+        <span className={cn("shrink-0 mr-3", accentText)}>
+          [{currentIndex + 1}/{contents.length}]
+        </span>
+        <div className="flex-1 flex justify-start">
+          {prevDoc ? (
+            <button
+              type="button"
+              onClick={handlePrev}
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              ← {prevDoc.title}
+            </button>
+          ) : (
+            <span className="text-border">← —</span>
+          )}
+        </div>
+        <div className="flex-1 flex justify-end">
+          {nextDoc ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="text-text-secondary hover:text-primary transition-colors text-right"
+            >
+              {nextDoc.title} →
+            </button>
+          ) : (
+            <span className="text-border text-right">— →</span>
+          )}
+        </div>
       </div>
     </Modal>
   );

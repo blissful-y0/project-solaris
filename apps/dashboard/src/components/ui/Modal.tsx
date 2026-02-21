@@ -12,9 +12,10 @@ type ModalProps = {
   ariaLabel?: string;
   children: ReactNode;
   className?: string;
+  closeButtonClassName?: string;
 };
 
-export function Modal({ open, onClose, title, ariaLabel, children, className }: ModalProps) {
+export function Modal({ open, onClose, title, ariaLabel, children, className, closeButtonClassName }: ModalProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -53,7 +54,10 @@ export function Modal({ open, onClose, title, ariaLabel, children, className }: 
         <button
           onClick={onClose}
           aria-label="닫기"
-          className="absolute top-2 right-2 z-10 text-text-secondary hover:text-text transition-colors p-1"
+          className={cn(
+            "absolute top-2 right-2 z-10 text-text-secondary hover:text-text transition-colors p-1",
+            closeButtonClassName,
+          )}
         >
           &#x2715;
         </button>
