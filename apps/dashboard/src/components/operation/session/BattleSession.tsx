@@ -11,10 +11,16 @@ import { ActionInput } from "./ActionInput";
 
 type BattleSessionProps = {
   initialData: BattleSessionData;
+  /**
+   * 서술 제출 후 백엔드에 저장하는 콜백 (선택).
+   * 로컬 낙관적 업데이트는 컴포넌트 내에서 처리하므로
+   * 이 콜백은 영속성 저장만 담당한다.
+   */
+  onAction?: (narration: string) => Promise<void>;
   className?: string;
 };
 
-export function BattleSession({ initialData, className }: BattleSessionProps) {
+export function BattleSession({ initialData, onAction, className }: BattleSessionProps) {
   /* 상태 관리 (목 데이터 기반, 향후 Realtime 연동) */
   const [session, setSession] = useState(initialData);
 
@@ -66,8 +72,13 @@ export function BattleSession({ initialData, className }: BattleSessionProps) {
         messages: [...prev.messages, newMessage],
         phase: "waiting" as TurnPhase,
       }));
+
+      /* 백엔드 저장 (낙관적 업데이트 이후, 실패해도 로컬 메시지는 유지) */
+      if (onAction) {
+        void onAction(data.narration);
+      }
     },
-    [myParticipant, session.participants],
+    [myParticipant, session.participants, onAction],
   );
 
   if (!myParticipant) {

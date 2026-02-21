@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { BattleSession, mockBattleSession } from "@/components/operation/session";
-import type { TurnPhase, BattleSessionData } from "@/components/operation/session";
+import { BattleSession } from "@/components/operation/session";
+import type { BattleAbility, BattleParticipant, ChatMessage, Faction, TurnPhase, BattleSessionData } from "@/components/operation/session";
 import { DowntimeRoom } from "@/components/room";
-import type { RoomParticipant, RoomMessage } from "@/components/room/types";
+import type { RoomParticipant } from "@/components/room/types";
 
 const phases: { value: TurnPhase; label: string }[] = [
   { value: "my_turn", label: "MY TURN" },
@@ -15,6 +15,36 @@ const phases: { value: TurnPhase; label: string }[] = [
   { value: "both_submitted", label: "SUBMITTED" },
   { value: "judging", label: "JUDGING" },
 ];
+
+/** API 응답 참가자 타입 */
+type ApiParticipant = {
+  id: string;
+  name: string;
+  faction?: string | null;
+  team: string;
+  hp?: { current: number; max: number } | null;
+  will?: { current: number; max: number } | null;
+  avatarUrl?: string | null;
+  abilities: Array<{
+    id: string;
+    name: string;
+    tier: string;
+    costHp: number;
+    costWill: number;
+  }>;
+};
+
+/** API 응답 메시지 타입 (mapOperationMessage 출력) */
+type ApiMessage = {
+  id: string;
+  type: string;
+  senderId?: string | null;
+  senderName?: string | null;
+  senderAvatarUrl?: string | null;
+  content: string;
+  timestamp: string;
+  isMine?: boolean;
+};
 
 /**
  * 작전 세션 페이지 — /operation/[id]
@@ -36,16 +66,12 @@ export default function OperationSessionPage() {
     type: string;
     status: string;
     myParticipantId: string | null;
-    participants: Array<{
-      id: string;
-      name: string;
-      avatarUrl: string | null;
-    }>;
-    messages: RoomMessage[];
+    participants: ApiParticipant[];
+    messages: ApiMessage[];
   } | null>(null);
 
   /* 전투 세션 dev 페이즈 스위처 */
-  const [phase, setPhase] = useState<TurnPhase>(mockBattleSession.phase);
+  const [phase, setPhase] = useState<TurnPhase>("my_turn");
 
   const loadOperation = useCallback(async () => {
     try {
@@ -70,7 +96,8 @@ export default function OperationSessionPage() {
     void loadOperation();
   }, [loadOperation]);
 
-  const participants: RoomParticipant[] = useMemo(
+  /* Downtime용 RoomParticipant 목록 */
+  const roomParticipants: RoomParticipant[] = useMemo(
     () =>
       (operation?.participants ?? []).map((item) => ({
         id: item.id,
@@ -78,6 +105,62 @@ export default function OperationSessionPage() {
         avatarUrl: item.avatarUrl ?? undefined,
       })),
     [operation?.participants],
+  );
+
+  /* 전투용 BattleParticipant 목록 */
+  const battleParticipants: BattleParticipant[] = useMemo(
+    () =>
+      (operation?.participants ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        faction: (item.faction ?? "bureau") as Faction,
+        team: (item.team === "enemy" ? "enemy" : "ally") as "ally" | "enemy",
+        hp: item.hp ?? { current: 80, max: 80 },
+        will: item.will ?? { current: 250, max: 250 },
+        abilities: item.abilities.map((a) => ({
+          id: a.id,
+          name: a.name,
+          tier: a.tier as BattleAbility["tier"],
+          costHp: a.costHp,
+          costWill: a.costWill,
+        })),
+      })),
+    [operation?.participants],
+  );
+
+  /* 전투용 ChatMessage 목록 */
+  const battleMessages: ChatMessage[] = useMemo(
+    () =>
+      (operation?.messages ?? []).map((m) => ({
+        id: m.id,
+        type: (m.type ?? "narration") as ChatMessage["type"],
+        senderId: m.senderId ?? undefined,
+        senderName: m.senderName ?? undefined,
+        senderAvatarUrl: m.senderAvatarUrl ?? undefined,
+        content: m.content,
+        timestamp: m.timestamp,
+        isMine: m.isMine,
+      })),
+    [operation?.messages],
+  );
+
+  /**
+   * 전투 서술 제출 — 로컬 낙관적 업데이트 후 API에 저장
+   * (phase 1: encounter 없이 operation_messages 테이블에 직접 저장)
+   */
+  const handleBattleAction = useCallback(
+    async (narration: string) => {
+      try {
+        await fetch(`/api/operations/${operationId}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: narration }),
+        });
+      } catch (e) {
+        console.error("[operation/[id]] 서술 저장 실패:", e);
+      }
+    },
+    [operationId],
   );
 
   if (loading) {
@@ -112,8 +195,8 @@ export default function OperationSessionPage() {
         <div className="w-full max-w-7xl mx-auto h-full">
           <DowntimeRoom
             roomTitle={operation.title}
-            participants={participants}
-            initialMessages={operation.messages}
+            participants={roomParticipants}
+            initialMessages={operation.messages as any}
             currentUserId={operation.myParticipantId ?? ""}
           />
         </div>
@@ -121,12 +204,15 @@ export default function OperationSessionPage() {
     );
   }
 
-  /* ── OPERATION (전투) — 실연동은 task #9에서 진행 ── */
+  /* ── OPERATION (전투) — 실 참가자/메시지 연동 ── */
   const sessionData: BattleSessionData = {
-    ...mockBattleSession,
     id: operation.id,
     title: operation.title,
+    currentTurn: 1,
     phase,
+    participants: battleParticipants,
+    messages: battleMessages,
+    myParticipantId: operation.myParticipantId ?? "",
   };
 
   return (
@@ -153,7 +239,12 @@ export default function OperationSessionPage() {
           </div>
         )}
 
-        <BattleSession key={phase} initialData={sessionData} className="!h-full" />
+        <BattleSession
+          key={phase}
+          initialData={sessionData}
+          onAction={handleBattleAction}
+          className="!h-full"
+        />
       </div>
     </div>
   );

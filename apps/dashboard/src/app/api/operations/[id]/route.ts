@@ -54,7 +54,7 @@ export async function GET(
     const { data: participants, error: participantsError } = await (supabase as any)
       .from("operation_participants")
       .select(
-        "character_id, team, character:characters(id, name, faction, ability_class, hp_current, hp_max, will_current, will_max, profile_image_url)",
+        "character_id, team, character:characters(id, name, faction, ability_class, hp_current, hp_max, will_current, will_max, profile_image_url, abilities(id, name, tier, cost_hp, cost_will))",
       )
       .eq("operation_id", id)
       .is("deleted_at", null);
@@ -94,7 +94,13 @@ export async function GET(
           current: item.character.will_current,
           max: item.character.will_max,
         },
-        abilities: [],
+        abilities: (item.character.abilities ?? []).map((a: any) => ({
+          id: a.id,
+          name: a.name,
+          tier: a.tier,
+          costHp: a.cost_hp,
+          costWill: a.cost_will,
+        })),
         avatarUrl: item.character.profile_image_url,
       }));
 
