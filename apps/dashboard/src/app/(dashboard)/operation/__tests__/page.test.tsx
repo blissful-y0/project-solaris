@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, afterEach } from "vitest";
 
@@ -91,6 +92,24 @@ describe("OperationPage", () => {
       expect(screen.getAllByText("OPERATION").length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText("DOWNTIME").length).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  it("StrictMode에서도 /api/operations를 호출해 목록을 표시한다", async () => {
+    const fetchMock = makeApprovedFetch();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <StrictMode>
+        <OperationPage />
+      </StrictMode>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(2);
+    });
+
+    const operationCalls = fetchMock.mock.calls.filter(([url]) => url === "/api/operations");
+    expect(operationCalls.length).toBeGreaterThanOrEqual(1);
   });
 
   it("미승인 상태에서 AccessDenied를 표시한다", async () => {

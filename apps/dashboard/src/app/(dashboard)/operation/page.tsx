@@ -47,10 +47,11 @@ export default function OperationPage() {
   }, [track]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
-  }, [track]);
+  }, []);
 
   useEffect(() => {
     operationsRef.current = operations;
@@ -83,8 +84,8 @@ export default function OperationPage() {
         } else {
           await track(run);
         }
-    } catch {
-      if (!isMountedRef.current || requestId !== operationLoadRequestSeqRef.current) return;
+      } catch {
+        if (!isMountedRef.current || requestId !== operationLoadRequestSeqRef.current) return;
 
         if (retries > 0) {
           setTimeout(() => {
@@ -97,11 +98,11 @@ export default function OperationPage() {
         if (operationsRef.current.length === 0) {
           setOperations([]);
         }
-    } finally {
-      if (!isMountedRef.current || requestId !== operationLoadRequestSeqRef.current) return;
-      if (!silent) {
-        setOperationsLoading(false);
-      }
+      } finally {
+        if (!isMountedRef.current || requestId !== operationLoadRequestSeqRef.current) return;
+        if (!silent) {
+          setOperationsLoading(false);
+        }
       }
     },
     [],
