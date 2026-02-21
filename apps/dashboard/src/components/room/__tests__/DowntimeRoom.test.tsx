@@ -5,6 +5,20 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
 }));
 
+// Supabase Realtime 구독 모킹 (테스트 환경에서 env 불필요)
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    channel: () => {
+      const channel = {
+        on: vi.fn(() => channel),
+        subscribe: vi.fn(() => channel),
+        unsubscribe: vi.fn(),
+      };
+      return channel;
+    },
+  }),
+}));
+
 import { DowntimeRoom } from "../DowntimeRoom";
 import {
   mockParticipants,
@@ -13,11 +27,35 @@ import {
 
 describe("DowntimeRoom", () => {
   const defaultProps = {
+    operationId: "op-test-1",
     roomTitle: "중앙 아케이드 야간 순찰",
     participants: mockParticipants,
     initialMessages: mockRoomMessages,
     currentUserId: "p2",
   };
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: "msg-api-1",
+            senderId: "p2",
+            senderName: "루시엘 린",
+            senderAvatarUrl: undefined,
+            content: "안녕하세요",
+            timestamp: "2026-02-20T01:39:00.000Z",
+          },
+        }),
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it("상단 바에 방 제목을 표시한다", () => {
     render(<DowntimeRoom {...defaultProps} />);
@@ -72,26 +110,26 @@ describe("DowntimeRoom", () => {
     expect(screen.getByTestId("send-button")).not.toBeDisabled();
   });
 
-  it("전송 버튼 클릭 시 메시지가 추가된다", () => {
+  it("전송 버튼 클릭 시 메시지가 즉시 추가된다", async () => {
     render(<DowntimeRoom {...defaultProps} />);
     const input = screen.getByTestId("chat-input");
 
-    fireEvent.change(input, { target: { value: "새로운 서술입니다." } });
+    fireEvent.change(input, { target: { value: "안녕하세요" } });
     fireEvent.click(screen.getByTestId("send-button"));
 
-    expect(screen.getByText("새로운 서술입니다.")).toBeInTheDocument();
-    // 입력 필드 초기화 확인
+    expect(await screen.findByText("안녕하세요")).toBeInTheDocument();
     expect(input).toHaveValue("");
   });
 
-  it("Enter 키로 메시지를 전송한다", () => {
+  it("Enter 키로 전송하면 메시지가 즉시 추가된다", async () => {
     render(<DowntimeRoom {...defaultProps} />);
     const input = screen.getByTestId("chat-input");
 
-    fireEvent.change(input, { target: { value: "키보드 전송 테스트" } });
+    fireEvent.change(input, { target: { value: "안녕하세요" } });
     fireEvent.keyDown(input, { key: "Enter", shiftKey: false });
 
-    expect(screen.getByText("키보드 전송 테스트")).toBeInTheDocument();
+    expect(await screen.findByText("안녕하세요")).toBeInTheDocument();
+    expect(input).toHaveValue("");
   });
 
   it("Shift+Enter로는 전송하지 않는다", () => {
@@ -103,6 +141,21 @@ describe("DowntimeRoom", () => {
 
     // 입력 필드에 텍스트가 남아있어야 함
     expect(input).toHaveValue("줄바꿈 테스트");
+  });
+
+  it("한글 조합 중 Enter는 전송하지 않는다", () => {
+    render(<DowntimeRoom {...defaultProps} />);
+    const input = screen.getByTestId("chat-input");
+
+    fireEvent.change(input, { target: { value: "ㅋㅋㅋ" } });
+    fireEvent.keyDown(input, {
+      key: "Enter",
+      shiftKey: false,
+      isComposing: true,
+      keyCode: 229,
+    });
+
+    expect(input).toHaveValue("ㅋㅋㅋ");
   });
 
   it("서사반영 클릭 시 범위 선택 모드에 진입한다", () => {

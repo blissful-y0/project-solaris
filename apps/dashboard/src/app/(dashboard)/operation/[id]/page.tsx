@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { BattleSession } from "@/components/operation/session";
 import type { BattleAbility, BattleParticipant, ChatMessage, Faction, TurnPhase, BattleSessionData } from "@/components/operation/session";
 import { DowntimeRoom } from "@/components/room";
-import type { RoomParticipant } from "@/components/room/types";
+import type { RoomMessage, RoomParticipant } from "@/components/room/types";
 
 const phases: { value: TurnPhase; label: string }[] = [
   { value: "my_turn", label: "MY TURN" },
@@ -107,6 +107,22 @@ export default function OperationSessionPage() {
     [operation?.participants],
   );
 
+  /* Downtime용 RoomMessage 목록 */
+  const roomMessages: RoomMessage[] = useMemo(
+    () =>
+      (operation?.messages ?? []).map((m) => ({
+        id: m.id,
+        type: (m.type ?? "narration") as RoomMessage["type"],
+        sender: m.senderId
+          ? { id: m.senderId, name: m.senderName ?? "Unknown", avatarUrl: m.senderAvatarUrl ?? undefined }
+          : undefined,
+        content: m.content,
+        timestamp: m.timestamp,
+        isMine: m.isMine,
+      })),
+    [operation?.messages],
+  );
+
   /* 전투용 BattleParticipant 목록 */
   const battleParticipants: BattleParticipant[] = useMemo(
     () =>
@@ -194,9 +210,10 @@ export default function OperationSessionPage() {
       <div className="fixed top-22 bottom-16 left-0 right-0 md:bottom-0">
         <div className="w-full max-w-7xl mx-auto h-full">
           <DowntimeRoom
+            operationId={operation.id}
             roomTitle={operation.title}
             participants={roomParticipants}
-            initialMessages={operation.messages as any}
+            initialMessages={roomMessages}
             currentUserId={operation.myParticipantId ?? ""}
           />
         </div>
