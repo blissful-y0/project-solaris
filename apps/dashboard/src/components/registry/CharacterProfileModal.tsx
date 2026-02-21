@@ -2,15 +2,23 @@
 
 import Image from "next/image";
 
-import { Modal, Skeleton } from "@/components/ui";
+import { Modal } from "@/components/ui";
 import { AbilityAccordion, StatBar } from "@/components/common";
 import { cn } from "@/lib/utils";
 import type { RegistryCharacter } from "./registry-data";
 import { ABILITY_CLASS_LABEL, FACTION_FULL_NAME } from "./registry-data";
 
 const factionStyle = {
-  bureau: { stripe: "bg-primary", labelClass: "text-primary", tag: "SOLARIS CITIZEN DOSSIER" },
-  static: { stripe: "bg-accent", labelClass: "text-accent", tag: "UNREGISTERED ENTITY FILE" },
+  bureau: {
+    stripe: "bg-primary",
+    labelClass: "text-primary",
+    tag: "SOLARIS CITIZEN DOSSIER",
+  },
+  static: {
+    stripe: "bg-accent",
+    labelClass: "text-accent",
+    tag: "UNREGISTERED ENTITY FILE",
+  },
 } as const;
 
 /** defector는 static으로 표시 */
@@ -45,30 +53,12 @@ export function CharacterProfileModal({
       {error ? (
         <p className="text-center text-sm text-accent py-8">{error}</p>
       ) : loading || !character ? (
-        <ProfileSkeleton />
+        /* 전역 스피너(ApiActivityProvider)가 표시하므로 빈 영역만 확보 */
+        <div className="py-12" />
       ) : (
         <CharacterDetail character={character} />
       )}
     </Modal>
-  );
-}
-
-function ProfileSkeleton() {
-  return (
-    <div className="space-y-4">
-      <Skeleton className="h-4 w-48" />
-      <div className="flex gap-5">
-        <Skeleton className="h-[200px] w-[160px] rounded-md flex-shrink-0" />
-        <div className="flex-1 space-y-3">
-          <Skeleton className="h-7 w-40" />
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-px w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -88,7 +78,14 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       <div className="flex gap-5">
         {/* 아바타 — 더 크게 */}
         <div className="shrink-0">
-          <div className={cn("overflow-hidden rounded-md border border-border p-0.5", style.stripe === "bg-primary" ? "border-primary/20" : "border-accent/20")}>
+          <div
+            className={cn(
+              "overflow-hidden rounded-md border border-border p-0.5",
+              style.stripe === "bg-primary"
+                ? "border-primary/20"
+                : "border-accent/20",
+            )}
+          >
             <Image
               src={character.avatarUrl}
               alt={`${character.name} 프로필`}
@@ -105,12 +102,22 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
           <div className="flex items-center gap-2">
             <h3 className="text-xl font-bold text-text">{character.name}</h3>
             {character.isLeader && (
-              <span className="shrink-0 rounded border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-[0.6rem] font-bold tracking-wider text-warning" aria-label="리더">LEADER</span>
+              <span
+                className="shrink-0 rounded border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-[0.6rem] font-bold tracking-wider text-warning"
+                aria-label="리더"
+              >
+                LEADER
+              </span>
             )}
           </div>
 
           {/* 팩션 풀네임 */}
-          <p className={cn("text-xs font-medium tracking-wide", style.labelClass)}>
+          <p
+            className={cn(
+              "text-xs font-medium tracking-wide",
+              style.labelClass,
+            )}
+          >
             {FACTION_FULL_NAME[character.faction]}
           </p>
 
@@ -119,7 +126,10 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
           {/* 데이터 필드 */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {character.abilityClass && (
-              <DataField label="CLASS" value={ABILITY_CLASS_LABEL[character.abilityClass]} />
+              <DataField
+                label="CLASS"
+                value={ABILITY_CLASS_LABEL[character.abilityClass]}
+              />
             )}
             {typeof character.age === "number" && (
               <DataField label="AGE" value={`${character.age}세`} />
@@ -127,11 +137,17 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
             {character.gender && (
               <DataField label="GENDER" value={character.gender} />
             )}
-            <DataField label="RESONANCE" value={`${character.resonanceRate}%`} valueClass="text-primary" />
+            <DataField
+              label="RESONANCE"
+              value={`${character.resonanceRate}%`}
+              valueClass="text-primary"
+            />
             <DataField
               label="STATUS"
               value={character.hpCurrent > 0 ? "ACTIVE" : "INACTIVE"}
-              valueClass={character.hpCurrent > 0 ? "text-success" : "text-accent"}
+              valueClass={
+                character.hpCurrent > 0 ? "text-success" : "text-accent"
+              }
             />
           </div>
 
@@ -157,7 +173,10 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {character.abilities.length > 0 && (
         <div>
           <h4 className="hud-label text-text-secondary mb-2">ABILITIES</h4>
-          <AbilityAccordion abilities={character.abilities} faction={character.faction} />
+          <AbilityAccordion
+            abilities={character.abilities}
+            faction={character.faction}
+          />
         </div>
       )}
 
@@ -165,7 +184,9 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {character.personality && (
         <div>
           <h4 className="hud-label text-text-secondary mb-1">성격</h4>
-          <p className="text-sm text-text-secondary leading-relaxed">{character.personality}</p>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            {character.personality}
+          </p>
         </div>
       )}
 
@@ -173,7 +194,9 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {character.appearance && (
         <div>
           <h4 className="hud-label text-text-secondary mb-1">외형</h4>
-          <p className="text-sm text-text-secondary leading-relaxed">{character.appearance}</p>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            {character.appearance}
+          </p>
         </div>
       )}
 
@@ -181,7 +204,9 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {character.backstory && (
         <div>
           <h4 className="hud-label text-text-secondary mb-1">배경</h4>
-          <p className="text-sm text-text-secondary leading-relaxed">{character.backstory}</p>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            {character.backstory}
+          </p>
         </div>
       )}
     </div>
@@ -189,11 +214,23 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
 }
 
 /** 키-값 데이터 필드 */
-function DataField({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+function DataField({
+  label,
+  value,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+}) {
   return (
     <div>
-      <span className="hud-label text-text-secondary/60 text-[0.6rem]">{label}</span>
-      <p className={cn("text-sm font-semibold", valueClass ?? "text-text")}>{value}</p>
+      <span className="hud-label text-text-secondary/60 text-[0.6rem]">
+        {label}
+      </span>
+      <p className={cn("text-sm font-semibold", valueClass ?? "text-text")}>
+        {value}
+      </p>
     </div>
   );
 }

@@ -66,19 +66,22 @@ describe("DashboardLayout", () => {
     expect(screen.getByText("5")).toBeInTheDocument();
   });
 
-  it("isCharacterApproved를 MobileTabBar/TopBar에 전달한다", () => {
+  it("isCharacterApproved=false여도 Operation은 정상 Link로 렌더링한다", () => {
     render(
       <DashboardLayout isCharacterApproved={false}>
         <div>Content</div>
       </DashboardLayout>,
     );
-    // isCharacterApproved=false → Operation 잠금 (Lock 아이콘 표시)
-    // MobileTabBar + TopBar 양쪽에 Lock 아이콘이 렌더링됨
-    const lockIcons = screen.getAllByTestId("lock-icon-/operation");
-    expect(lockIcons.length).toBe(2);
+    // Operation은 requireApproval 없이 항상 일반 링크로 표시됨
+    const operationLinks = screen.getAllByRole("link", { name: /operation/i });
+    expect(operationLinks.length).toBeGreaterThanOrEqual(1);
+    operationLinks.forEach((link) => {
+      expect(link).toHaveAttribute("href", "/operation");
+    });
+    expect(screen.queryByTestId("lock-icon-/operation")).not.toBeInTheDocument();
   });
 
-  it("isCharacterApproved=true → Operation 잠금 해제", () => {
+  it("isCharacterApproved=true → Operation 잠금 없음", () => {
     render(
       <DashboardLayout isCharacterApproved>
         <div>Content</div>

@@ -33,7 +33,6 @@ const ABILITY_CLASS_LABELS: Record<string, string> = {
 const FACTION_MAP: Record<string, "Enforcer" | "Static"> = {
   bureau: "Enforcer",
   static: "Static",
-  civilian: "Static",
   defector: "Static",
 };
 
@@ -122,7 +121,7 @@ export default function HomePage() {
         : "...";
 
   return (
-    <div className="py-6 space-y-8">
+    <div className="pb-6 space-y-8">
       {/* 환영 메시지 */}
       <div>
         <p className="hud-label mb-2">OPERATOR STATUS</p>

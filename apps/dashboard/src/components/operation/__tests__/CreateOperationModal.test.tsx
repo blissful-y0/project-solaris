@@ -1,10 +1,21 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 import { CreateOperationModal } from "../CreateOperationModal";
 
+const mockFetch = vi.fn();
+
 describe("CreateOperationModal", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", mockFetch);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    mockFetch.mockReset();
+  });
+
   it("open=false일 때 렌더링하지 않는다", () => {
     render(<CreateOperationModal open={false} onClose={vi.fn()} />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -65,33 +76,44 @@ describe("CreateOperationModal", () => {
     expect(screen.getByText("작전 생성")).toBeInTheDocument();
   });
 
-  it("onSubmit 콜백을 호출한다", async () => {
+  it("API 성공 시 onCreated 콜백을 호출하고 모달을 닫는다", async () => {
     const user = userEvent.setup();
-    const onSubmit = vi.fn();
+    const onCreated = vi.fn();
+    const onClose = vi.fn();
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: { id: "op_test", title: "테스트 작전" } }),
+    });
+
     render(
-      <CreateOperationModal open={true} onClose={vi.fn()} onSubmit={onSubmit} />,
+      <CreateOperationModal open={true} onClose={onClose} onCreated={onCreated} />,
     );
 
-    /* 타입 선택 */
     await user.click(screen.getByText("작전 개시"));
-
-    /* 제목 입력 */
-    const titleInput = screen.getByLabelText(/제목/);
-    await user.type(titleInput, "테스트 작전");
-
-    /* 설명 입력 */
-    const descInput = screen.getByLabelText(/상황 설명/);
-    await user.type(descInput, "테스트 설명");
-
-    /* 제출 */
+    await user.type(screen.getByLabelText(/제목/), "테스트 작전");
     await user.click(screen.getByText("작전 생성"));
 
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "operation",
-        title: "테스트 작전",
-        summary: "테스트 설명",
-      }),
-    );
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+      expect(onCreated).toHaveBeenCalled();
+    });
+  });
+
+  it("API 실패 시 에러 메시지를 표시한다", async () => {
+    const user = userEvent.setup();
+    mockFetch.mockResolvedValue({
+      ok: false,
+      json: () => Promise.resolve({ error: "FAILED_TO_CREATE_OPERATION" }),
+    });
+
+    render(<CreateOperationModal open={true} onClose={vi.fn()} />);
+
+    await user.click(screen.getByText("작전 개시"));
+    await user.type(screen.getByLabelText(/제목/), "테스트 작전");
+    await user.click(screen.getByText("작전 생성"));
+
+    await waitFor(() => {
+      expect(screen.getByText("FAILED_TO_CREATE_OPERATION")).toBeInTheDocument();
+    });
   });
 });

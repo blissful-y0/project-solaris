@@ -69,49 +69,14 @@ describe("MobileTabBar", () => {
 
   // --- 잠금 UI 테스트 ---
 
-  it("isCharacterApproved=false → Operation에 Lock 아이콘 표시", () => {
-    render(<MobileTabBar currentPath="/" isCharacterApproved={false} />);
-    // Operation은 requireApproval: true → 잠금 상태
-    const lockIcon = screen.getByTestId("lock-icon-/operation");
-    expect(lockIcon).toBeInTheDocument();
-  });
-
-  it("isCharacterApproved=false → Operation이 button으로 렌더링 (Link 아님)", () => {
-    render(<MobileTabBar currentPath="/" isCharacterApproved={false} />);
-    const operationButton = screen.getByRole("button", { name: /operation/i });
-    expect(operationButton).toBeInTheDocument();
-    expect(operationButton).toHaveAttribute("aria-disabled", "true");
-  });
-
-  it("isCharacterApproved=false → Operation 텍스트에 흐린 스타일", () => {
-    render(<MobileTabBar currentPath="/" isCharacterApproved={false} />);
-    const operationButton = screen.getByRole("button", { name: /operation/i });
-    expect(operationButton.className).toContain("text-text-secondary/40");
-  });
-
-  it("isCharacterApproved=true → Operation에 정상 Link 렌더링", () => {
-    render(<MobileTabBar currentPath="/" isCharacterApproved />);
+  it("Operation은 항상 정상 Link로 렌더링한다", () => {
+    render(<MobileTabBar currentPath="/" />);
     const operationLink = screen.getByRole("link", { name: /operation/i });
     expect(operationLink).toHaveAttribute("href", "/operation");
   });
 
-  it("isCharacterApproved=true → Lock 아이콘 없음", () => {
-    render(<MobileTabBar currentPath="/" isCharacterApproved />);
-    const lockIcon = screen.queryByTestId("lock-icon-/operation");
-    expect(lockIcon).not.toBeInTheDocument();
-  });
-
-  it("isCharacterApproved 미전달(기본값) → requireApproval 항목 잠금", () => {
+  it("Operation에 Lock 아이콘 없음", () => {
     render(<MobileTabBar currentPath="/" />);
-    // 기본값 false → Operation 잠금
-    const lockIcon = screen.getByTestId("lock-icon-/operation");
-    expect(lockIcon).toBeInTheDocument();
-  });
-
-  it("requireApproval 없는 항목은 잠금 영향 없음", () => {
-    render(<MobileTabBar currentPath="/" isCharacterApproved={false} />);
-    // Home은 requireApproval 없음 → 정상 Link
-    const homeLink = screen.getByRole("link", { name: /home/i });
-    expect(homeLink).toHaveAttribute("href", "/");
+    expect(screen.queryByTestId("lock-icon-/operation")).not.toBeInTheDocument();
   });
 });
