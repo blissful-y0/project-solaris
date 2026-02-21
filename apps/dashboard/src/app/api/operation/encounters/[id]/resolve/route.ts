@@ -102,13 +102,17 @@ export async function POST(
       return NextResponse.json({ error: "FAILED_TO_LOAD_SUBMISSIONS" }, { status: 500 });
     }
 
+    const turnJudgementActions =
+      Array.isArray((turn as { judgement?: { actions?: unknown[] } } | null)?.judgement?.actions)
+        ? ((turn as { judgement: { actions: Array<{ actor_id: string; multiplier?: number }> } }).judgement.actions)
+        : [];
+
+    const judgementActions = payload.judgement?.actions ?? turnJudgementActions;
+
     const { resolved, effects } = await computeResolution(supabase, {
       participants,
       submissions,
-      judgementActions:
-        Array.isArray((turn as { judgement?: { actions?: unknown[] } } | null)?.judgement?.actions)
-          ? ((turn as { judgement: { actions: Array<{ actor_id: string; multiplier?: number }> } }).judgement.actions)
-          : [],
+      judgementActions,
     });
 
     const hasDefeated = Object.values(resolved.participants).some((state) => state.hp <= 0);

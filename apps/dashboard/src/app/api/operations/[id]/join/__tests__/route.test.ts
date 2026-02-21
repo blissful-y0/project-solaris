@@ -7,6 +7,7 @@ const {
   mockCharacterMaybeSingle,
   mockOperationMaybeSingle,
   mockParticipantMaybeSingle,
+  mockActiveParticipantsSelect,
   mockInsertSelectSingle,
   mockInsert,
 } = vi.hoisted(() => ({
@@ -16,6 +17,7 @@ const {
   mockCharacterMaybeSingle: vi.fn(),
   mockOperationMaybeSingle: vi.fn(),
   mockParticipantMaybeSingle: vi.fn(),
+  mockActiveParticipantsSelect: vi.fn(),
   mockInsertSelectSingle: vi.fn(),
   mockInsert: vi.fn(),
 }));
@@ -62,15 +64,25 @@ describe("POST /api/operations/[id]/join", () => {
 
       if (table === "operation_participants") {
         return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({
-                is: () => ({
-                  maybeSingle: mockParticipantMaybeSingle,
+          select: (columns?: string) => {
+            if (columns === "id, team, role") {
+              return {
+                eq: () => ({
+                  eq: () => ({
+                    is: () => ({
+                      maybeSingle: mockParticipantMaybeSingle,
+                    }),
+                  }),
                 }),
+              };
+            }
+
+            return {
+              eq: () => ({
+                is: mockActiveParticipantsSelect,
               }),
-            }),
-          }),
+            };
+          },
           insert: mockInsert,
         };
       }
@@ -83,6 +95,8 @@ describe("POST /api/operations/[id]/join", () => {
         single: mockInsertSelectSingle,
       }),
     }));
+
+    mockActiveParticipantsSelect.mockResolvedValue({ data: [], error: null });
   });
 
   it("미인증이면 401", async () => {
@@ -100,7 +114,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
-      data: { id: "op-1", type: "downtime", created_by: "ch-host" },
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({
@@ -122,7 +136,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
-      data: { id: "op-1", type: "downtime", created_by: "ch-host" },
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
@@ -150,7 +164,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
-      data: { id: "op-1", type: "downtime", created_by: "ch-host" },
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle
@@ -183,7 +197,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-host", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
-      data: { id: "op-1", type: "operation", created_by: "ch-host" },
+      data: { id: "op-1", type: "operation", status: "waiting", max_participants: 4, created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
@@ -213,7 +227,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-host", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
-      data: { id: "op-1", type: "downtime", created_by: "ch-host" },
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
@@ -243,7 +257,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-static", faction: "static" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
-      data: { id: "op-1", type: "operation", created_by: "ch-host" },
+      data: { id: "op-1", type: "operation", status: "waiting", max_participants: 4, created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
@@ -305,6 +319,30 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(409);
     expect(body).toEqual({ error: "OPERATION_CLOSED" });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("정원이 가득 찬 작전에는 참가할 수 없다 (409)", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "operation", status: "waiting", max_participants: 2, created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockActiveParticipantsSelect.mockResolvedValue({
+      data: [{ id: "opp-1" }, { id: "opp-2" }],
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toEqual({ error: "OPERATION_FULL" });
     expect(mockInsert).not.toHaveBeenCalled();
   });
 });

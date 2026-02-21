@@ -54,7 +54,7 @@ export async function POST(
 
     const { data: operation, error: operationError } = await supabase
       .from("operations")
-      .select("id, type, status, created_by")
+      .select("id, type, status, max_participants, created_by")
       .eq("id", operationId)
       .is("deleted_at", null)
       .maybeSingle();
@@ -103,6 +103,23 @@ export async function POST(
     const team = mapFactionToTeam(myCharacter.faction);
     if (!team) {
       return NextResponse.json({ error: "INVALID_FACTION" }, { status: 422 });
+    }
+
+    const { data: activeParticipants, error: activeParticipantsError } = await supabase
+      .from("operation_participants")
+      .select("id")
+      .eq("operation_id", operationId)
+      .is("deleted_at", null);
+
+    if (activeParticipantsError) {
+      return NextResponse.json(
+        { error: "FAILED_TO_FETCH_OPERATION_PARTICIPANTS" },
+        { status: 500 },
+      );
+    }
+
+    if ((activeParticipants?.length ?? 0) >= operation.max_participants) {
+      return NextResponse.json({ error: "OPERATION_FULL" }, { status: 409 });
     }
 
     const { data: inserted, error: insertError } = await supabase
