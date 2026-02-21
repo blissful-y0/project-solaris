@@ -410,4 +410,92 @@ describe("POST /api/operations/[id]/join", () => {
     );
     expect(mockInsert).toHaveBeenCalled();
   });
+
+  it("42883이라도 join RPC 미존재가 아니면 폴백하지 않는다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { code: "42883", message: "operator does not exist" },
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: "FAILED_TO_JOIN_OPERATION" });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("legacy insert가 unique 충돌이어도 기존 참가자로 복구한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({
+        data: { id: "opp-existing", team: "bureau", role: "member" },
+        error: null,
+      });
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { code: "42883", message: "function join_operation_participant does not exist" },
+    });
+    mockInsertSelectSingle.mockResolvedValue({
+      data: null,
+      error: { code: "23505", message: "duplicate key value violates unique constraint" },
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual(
+      expect.objectContaining({
+        participantId: "opp-existing",
+        alreadyJoined: true,
+      }),
+    );
+  });
+
+  it("legacy insert 권한 오류는 403으로 매핑한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { code: "42883", message: "function join_operation_participant does not exist" },
+    });
+    mockInsertSelectSingle.mockResolvedValue({
+      data: null,
+      error: { code: "42501", message: "permission denied for table operation_participants" },
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body).toEqual({ error: "FORBIDDEN" });
+  });
 });

@@ -6,9 +6,10 @@ function isDuplicateKeyError(error: unknown) {
   return code === "23505";
 }
 
-function isUndefinedFunctionError(error: unknown) {
+function isMissingJoinRpcFunction(error: unknown) {
   const code = (error as { code?: string } | null)?.code;
-  return code === "42883";
+  const message = (error as { message?: string } | null)?.message ?? "";
+  return code === "42883" && /join_operation_participant/i.test(message);
 }
 
 function mapJoinRpcError(message: string): { code: string; status: number } {
@@ -54,7 +55,6 @@ async function joinWithLegacyInsert({
 
       if (!concurrentExistingError && concurrentExisting) {
         return {
-          ok: true as const,
           status: 200,
           body: {
             data: {
@@ -68,15 +68,15 @@ async function joinWithLegacyInsert({
       }
     }
 
-    return {
-      ok: false as const,
-      status: 500,
-      body: { error: "FAILED_TO_JOIN_OPERATION" },
-    };
+    const code = (insertError as { code?: string } | null)?.code;
+    if (code === "42501") {
+      return { status: 403, body: { error: "FORBIDDEN" } };
+    }
+
+    return { status: 500, body: { error: "FAILED_TO_JOIN_OPERATION" } };
   }
 
   return {
-    ok: true as const,
     status: 201,
     body: {
       data: {
@@ -196,7 +196,7 @@ export async function POST(
     });
 
     if (joinError) {
-      if (isUndefinedFunctionError(joinError)) {
+      if (isMissingJoinRpcFunction(joinError)) {
         const legacy = await joinWithLegacyInsert({
           supabase,
           operationId,
