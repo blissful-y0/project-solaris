@@ -23,39 +23,14 @@ export async function markdownToHtml(markdown: string): Promise<string> {
   return replaceRedactedMarkers(String(result));
 }
 
-async function getLoreAccessLevel() {
-  const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { supabase, level: 1 as const };
-  }
-
-  const { data: userRow } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  return {
-    supabase,
-    level: userRow?.role === "admin" ? (3 as const) : (1 as const),
-  };
-}
-
 /** DB에서 모든 Lore 문서를 로드하고 HTML로 변환 (서버 컴포넌트용) */
 export async function loadAllLoreContents(): Promise<LoreDocumentHtml[]> {
-  const { supabase, level } = await getLoreAccessLevel();
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("lore_documents")
     .select("id, title, slug, content, clearance_level, order_index, created_at, updated_at")
-    .lte("clearance_level", level)
     .is("deleted_at", null)
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: true });
@@ -80,13 +55,13 @@ export async function loadAllLoreContents(): Promise<LoreDocumentHtml[]> {
 
 /** slug로 단일 문서 로드 (서버 컴포넌트용) */
 export async function loadLoreDocumentBySlug(slug: string): Promise<LoreDocumentHtml | null> {
-  const { supabase, level } = await getLoreAccessLevel();
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("lore_documents")
     .select("id, title, slug, content, clearance_level, order_index, created_at, updated_at")
     .eq("slug", slug)
-    .lte("clearance_level", level)
     .is("deleted_at", null)
     .maybeSingle();
 
@@ -106,12 +81,12 @@ export async function loadLoreDocumentBySlug(slug: string): Promise<LoreDocument
 
 /** 목록용 메타데이터만 조회 (content 제외) */
 export async function loadLoreDocumentsMeta(): Promise<LoreDocumentMeta[]> {
-  const { supabase, level } = await getLoreAccessLevel();
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("lore_documents")
     .select("id, title, slug, clearance_level, order_index, created_at, updated_at")
-    .lte("clearance_level", level)
     .is("deleted_at", null)
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: true });
