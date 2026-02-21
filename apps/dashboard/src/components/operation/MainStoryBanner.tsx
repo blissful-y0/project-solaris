@@ -22,7 +22,11 @@ function formatDate(isoDate: string): string {
 
 /** 참가자 총 인원 */
 function participantCount(item: OperationItem): number {
-  return item.teamA.length + item.teamB.length;
+  const uniqueIds = new Set<string>();
+  for (const member of [...item.teamA, ...item.teamB]) {
+    if (member.id) uniqueIds.add(member.id);
+  }
+  return uniqueIds.size;
 }
 
 /** 운영자 MAIN STORY LIVE 배너 */

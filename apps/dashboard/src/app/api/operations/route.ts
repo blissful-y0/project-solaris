@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     const { data: participants, error: participantsError } = await (supabase as any)
       .from("operation_participants")
-      .select("operation_id, team, character:characters(id, name)")
+      .select("operation_id, team, character:characters(id, name, faction)")
       .in("operation_id", operationIds)
       .is("deleted_at", null);
 

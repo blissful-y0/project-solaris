@@ -21,7 +21,7 @@ type ApiParticipant = {
   id: string;
   name: string;
   faction?: string | null;
-  team: string;
+  team: "bureau" | "static" | "defector";
   hp?: { current: number; max: number } | null;
   will?: { current: number; max: number } | null;
   avatarUrl?: string | null;
@@ -130,7 +130,7 @@ export default function OperationSessionPage() {
         id: item.id,
         name: item.name,
         faction: (item.faction ?? "bureau") as Faction,
-        team: (item.team === "enemy" ? "enemy" : "ally") as "ally" | "enemy",
+        team: (item.team === "bureau" ? "ally" : "enemy") as "ally" | "enemy",
         hp: item.hp ?? { current: 80, max: 80 },
         will: item.will ?? { current: 250, max: 250 },
         abilities: item.abilities.map((a) => ({

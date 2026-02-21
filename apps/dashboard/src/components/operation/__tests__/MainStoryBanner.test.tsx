@@ -53,7 +53,7 @@ describe("MainStoryBanner", () => {
 
   it("참가자 수를 표시한다", () => {
     render(<MainStoryBanner event={mainStory} />);
-    /* teamA(2) + teamB(2) = 4명 / maxParticipants 12 */
+    /* teamA(2) + teamB(2) = 4명 */
     expect(screen.getByText(/참가자 4\/12/)).toBeInTheDocument();
   });
 

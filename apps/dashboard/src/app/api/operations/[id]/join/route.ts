@@ -6,6 +6,12 @@ function isDuplicateKeyError(error: unknown) {
   return code === "23505";
 }
 
+function mapFactionToTeam(faction: string | null | undefined): "bureau" | "static" | "defector" {
+  if (faction === "bureau") return "bureau";
+  if (faction === "defector") return "defector";
+  return "static";
+}
+
 /**
  * POST /api/operations/[id]/join
  *
@@ -31,7 +37,7 @@ export async function POST(
 
     const { data: myCharacter, error: myCharacterError } = await (supabase as any)
       .from("characters")
-      .select("id")
+      .select("id, faction")
       .eq("user_id", user.id)
       .eq("status", "approved")
       .is("deleted_at", null)
@@ -89,7 +95,7 @@ export async function POST(
       );
     }
 
-    const team = operation.created_by === myCharacter.id ? "host" : "ally";
+    const team = mapFactionToTeam(myCharacter.faction);
 
     const { data: inserted, error: insertError } = await (supabase as any)
       .from("operation_participants")

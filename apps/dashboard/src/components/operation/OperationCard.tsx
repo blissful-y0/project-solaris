@@ -41,10 +41,11 @@ function StatusIndicator({ status }: { status: OperationItem["status"] }) {
 
 /** 참가자 총 인원 계산 */
 function participantCount(item: OperationItem): number {
-  if (item.type === "operation") {
-    return item.teamA.length + item.teamB.length;
+  const uniqueIds = new Set<string>();
+  for (const member of [...item.teamA, ...item.teamB]) {
+    if (member.id) uniqueIds.add(member.id);
   }
-  return 1;
+  return uniqueIds.size;
 }
 
 /** 경과시간 포맷 */
@@ -61,17 +62,20 @@ function timeAgo(isoDate: string): string {
 /** 참가자 표시 */
 function ParticipantsLine({ item }: { item: OperationItem }) {
   if (item.type === "operation") {
-    const teamANames = item.teamA.map((m) => m.name).join(", ");
-    const teamBNames = item.teamB.map((m) => m.name).join(", ");
+    const teamANames = item.teamA.map((m) => m.name).join(", ") || "팀 A 미정";
+    const teamBNames = item.teamB.map((m) => m.name).join(", ") || "팀 B 미정";
     return (
       <p className="truncate text-xs text-text-secondary">
         {teamANames} <span className="text-primary/60">vs</span> {teamBNames}
       </p>
     );
   }
+
+  const names = [...item.teamA, ...item.teamB].map((m) => m.name).join(", ");
+
   return (
     <p className="truncate text-xs text-text-secondary">
-      <span className="text-text-secondary/80">호스트:</span> {item.host.name}
+      {names || "참여자 없음"}
     </p>
   );
 }
@@ -87,24 +91,27 @@ export function OperationCard({ item }: OperationCardProps) {
   }, [router, item.id]);
 
   /** 입장: join API 호출 후 방으로 이동 */
-  const handleJoin = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (joining) return;
-    setJoining(true);
-    try {
-      const response = await fetch(`/api/operations/${item.id}/join`, {
-        method: "POST",
-      });
-      if (response.ok) {
-        router.push(`/operation/${item.id}`);
-      } else {
-        const body = await response.json().catch(() => null);
-        alert(body?.error ?? "JOIN_FAILED");
+  const handleJoin = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (joining) return;
+      setJoining(true);
+      try {
+        const response = await fetch(`/api/operations/${item.id}/join`, {
+          method: "POST",
+        });
+        if (response.ok) {
+          router.push(`/operation/${item.id}`);
+        } else {
+          const body = await response.json().catch(() => null);
+          alert(body?.error ?? "JOIN_FAILED");
+        }
+      } finally {
+        setJoining(false);
       }
-    } finally {
-      setJoining(false);
-    }
-  }, [joining, item.id, router]);
+    },
+    [joining, item.id, router],
+  );
 
   return (
     <article

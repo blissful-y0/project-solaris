@@ -18,7 +18,7 @@ export type DbOperationRow = {
 
 export type DbParticipantRow = {
   operation_id: string;
-  team: "ally" | "enemy" | "host";
+  team: "bureau" | "static" | "defector";
   character_id?: string;
   character?: {
     id: string;
@@ -51,15 +51,14 @@ export function mapOperationListItem(
   participants: DbParticipantRow[],
 ) {
   const teamA = participants
-    .filter((item) => item.team === "ally" && item.character)
+    .filter((item) => item.character && item.team === "bureau")
     .map((item) => ({ id: item.character!.id, name: item.character!.name }));
 
   const teamB = participants
-    .filter((item) => item.team === "enemy" && item.character)
+    .filter((item) => item.character && item.team !== "bureau")
     .map((item) => ({ id: item.character!.id, name: item.character!.name }));
 
-  const host =
-    participants.find((item) => item.team === "host" && item.character)?.character ?? null;
+  const host = participants.find((item) => item.character?.id === operation.created_by)?.character ?? null;
 
   return {
     id: operation.id,

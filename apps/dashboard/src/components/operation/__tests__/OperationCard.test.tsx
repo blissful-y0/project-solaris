@@ -125,14 +125,14 @@ describe("OperationCard", () => {
     expect(screen.getByText(/나디아 볼코프/)).toBeInTheDocument();
   });
 
-  it("DOWNTIME: '호스트: 이름' 형태로 표시한다", () => {
+  it("DOWNTIME: teamA/teamB 기반 참가자 목록을 표시한다", () => {
     render(<OperationCard item={waitingDowntime} />);
-    expect(screen.getByText(/호스트:/)).toBeInTheDocument();
-    expect(screen.getByText(/나디아 볼코프/)).toBeInTheDocument();
+    expect(screen.getByText("참여자 없음")).toBeInTheDocument();
+    expect(screen.queryByText(/호스트:/)).not.toBeInTheDocument();
   });
 
   /* --- 인원 수 --- */
-  it("참가자 수를 표시한다", () => {
+  it("teamA/teamB 기반 참가자 수를 표시한다", () => {
     render(<OperationCard item={liveOperation} />);
     /* teamA(2) + teamB(1) = 3명 */
     expect(screen.getByText(/3\/4명/)).toBeInTheDocument();

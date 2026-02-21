@@ -88,7 +88,13 @@ describe("GET /api/operations", () => {
       error: null,
     });
     mockParticipantsIs.mockResolvedValue({
-      data: [{ operation_id: "op-1", team: "host", character: { id: "ch-1", name: "루시엘" } }],
+      data: [
+        {
+          operation_id: "op-1",
+          team: "bureau",
+          character: { id: "ch-1", name: "루시엘", faction: "bureau" },
+        },
+      ],
       error: null,
     });
 
@@ -106,5 +112,58 @@ describe("GET /api/operations", () => {
         host: { id: "ch-1", name: "루시엘" },
       }),
     );
+  });
+
+  it("OPERATION은 faction 기준으로 teamA/teamB를 구성한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockOpSelect.mockResolvedValue({
+      data: [
+        {
+          id: "op-2",
+          title: "전투 테스트",
+          type: "operation",
+          status: "waiting",
+          summary: "요약",
+          is_main_story: false,
+          max_participants: 4,
+          created_at: "2026-02-21T10:36:33.577404+00:00",
+          created_by: "ch-host",
+        },
+      ],
+      error: null,
+    });
+    mockParticipantsIs.mockResolvedValue({
+      data: [
+        {
+          operation_id: "op-2",
+          team: "bureau",
+          character: { id: "ch-b", name: "아마츠키 레이", faction: "bureau" },
+        },
+        {
+          operation_id: "op-2",
+          team: "static",
+          character: { id: "ch-s", name: "루시엘 린", faction: "static" },
+        },
+        {
+          operation_id: "op-2",
+          team: "defector",
+          character: { id: "ch-d", name: "엘라 크루즈", faction: "defector" },
+        },
+      ],
+      error: null,
+    });
+
+    const { GET } = await import("../route");
+    const response = await GET(new Request("http://localhost/api/operations?type=operation"));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data[0].teamA).toEqual([
+      { id: "ch-b", name: "아마츠키 레이" },
+    ]);
+    expect(body.data[0].teamB).toEqual([
+      { id: "ch-s", name: "루시엘 린" },
+      { id: "ch-d", name: "엘라 크루즈" },
+    ]);
   });
 });

@@ -8,6 +8,7 @@ const {
   mockOperationMaybeSingle,
   mockParticipantMaybeSingle,
   mockInsertSelectSingle,
+  mockInsert,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
@@ -16,6 +17,7 @@ const {
   mockOperationMaybeSingle: vi.fn(),
   mockParticipantMaybeSingle: vi.fn(),
   mockInsertSelectSingle: vi.fn(),
+  mockInsert: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -69,16 +71,18 @@ describe("POST /api/operations/[id]/join", () => {
               }),
             }),
           }),
-          insert: () => ({
-            select: () => ({
-              single: mockInsertSelectSingle,
-            }),
-          }),
+          insert: mockInsert,
         };
       }
 
       throw new Error(`unexpected table: ${table}`);
     });
+
+    mockInsert.mockImplementation(() => ({
+      select: () => ({
+        single: mockInsertSelectSingle,
+      }),
+    }));
   });
 
   it("미인증이면 401", async () => {
@@ -94,13 +98,13 @@ describe("POST /api/operations/[id]/join", () => {
 
   it("이미 참가했으면 200", async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
-    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1" }, error: null });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
       data: { id: "op-1", type: "downtime", created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({
-      data: { id: "opp-1", team: "ally", role: "member" },
+      data: { id: "opp-1", team: "bureau", role: "member" },
       error: null,
     });
 
@@ -116,14 +120,14 @@ describe("POST /api/operations/[id]/join", () => {
 
   it("신규 참가면 201", async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
-    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1" }, error: null });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
       data: { id: "op-1", type: "downtime", created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
     mockInsertSelectSingle.mockResolvedValue({
-      data: { id: "opp-new", team: "ally", role: "member" },
+      data: { id: "opp-new", team: "bureau", role: "member" },
       error: null,
     });
 
@@ -137,14 +141,14 @@ describe("POST /api/operations/[id]/join", () => {
     expect(body.data).toEqual(
       expect.objectContaining({
         alreadyJoined: false,
-        team: "ally",
+        team: "bureau",
       }),
     );
   });
 
   it("동시 요청으로 unique 충돌이 나도 이미 참가로 처리한다", async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
-    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1" }, error: null });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
       data: { id: "op-1", type: "downtime", created_by: "ch-host" },
       error: null,
@@ -171,6 +175,96 @@ describe("POST /api/operations/[id]/join", () => {
       expect.objectContaining({
         participantId: "opp-1",
         alreadyJoined: true,
+      }),
+    );
+  });
+
+  it("OPERATION 생성자가 입장하면 bureau 팀으로 들어간다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-host", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "operation", created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockInsertSelectSingle.mockResolvedValue({
+      data: { id: "opp-new", team: "bureau", role: "member" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body.data.team).toBe("bureau");
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation_id: "op-1",
+        character_id: "ch-host",
+        team: "bureau",
+      }),
+    );
+  });
+
+  it("DOWNTIME 생성자가 입장해도 bureau 팀으로 저장한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-host", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "downtime", created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockInsertSelectSingle.mockResolvedValue({
+      data: { id: "opp-new", team: "bureau", role: "member" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body.data.team).toBe("bureau");
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation_id: "op-1",
+        character_id: "ch-host",
+        team: "bureau",
+      }),
+    );
+  });
+
+  it("OPERATION에서 static 계열 캐릭터는 static 팀으로 저장한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-static", faction: "static" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "operation", created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockInsertSelectSingle.mockResolvedValue({
+      data: { id: "opp-new", team: "static", role: "member" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body.data.team).toBe("static");
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation_id: "op-1",
+        character_id: "ch-static",
+        team: "static",
       }),
     );
   });
