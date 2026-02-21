@@ -46,7 +46,10 @@ describe("GET /api/auth/callback", () => {
   });
 
   it("유효 code면 세션 교환 후 next 경로로 리다이렉트한다", async () => {
-    mockExchangeCodeForSession.mockResolvedValue({ error: null });
+    mockExchangeCodeForSession.mockResolvedValue({
+      data: { session: { provider_token: "mock-discord-token" } },
+      error: null,
+    });
     mockGetUser.mockResolvedValue({
       data: {
         user: {
@@ -80,6 +83,7 @@ describe("GET /api/auth/callback", () => {
 
   it("무효 code면 로그인 에러 경로로 리다이렉트한다", async () => {
     mockExchangeCodeForSession.mockResolvedValue({
+      data: { session: null },
       error: new Error("invalid"),
     });
     const request = new Request(
@@ -96,7 +100,10 @@ describe("GET /api/auth/callback", () => {
   });
 
   it("next에 외부 경로가 와도 open redirect를 차단한다", async () => {
-    mockExchangeCodeForSession.mockResolvedValue({ error: null });
+    mockExchangeCodeForSession.mockResolvedValue({
+      data: { session: { provider_token: "mock-discord-token" } },
+      error: null,
+    });
     const request = new Request(
       "https://solaris.local/api/auth/callback?code=valid&next=%2F%2Fevil.com",
     );
@@ -109,7 +116,10 @@ describe("GET /api/auth/callback", () => {
   });
 
   it("discord provider_id가 없으면 업서트하지 않고 로그인 에러로 보낸다", async () => {
-    mockExchangeCodeForSession.mockResolvedValue({ error: null });
+    mockExchangeCodeForSession.mockResolvedValue({
+      data: { session: { provider_token: "mock-discord-token" } },
+      error: null,
+    });
     mockGetUser.mockResolvedValue({
       data: {
         user: {
