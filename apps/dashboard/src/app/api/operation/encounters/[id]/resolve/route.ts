@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-guard";
 import { resolveTurnSchema } from "@/lib/operation/schemas";
 import { computeResolution } from "@/lib/operation/resolve";
 
@@ -25,20 +25,13 @@ export async function POST(
       return NextResponse.json({ error: "INVALID_REQUEST", issues: parsed.error.issues }, { status: 400 });
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
-    }
+    const { supabase, user } = await requireAdmin();
 
     const payload = parsed.data;
 
     const { data: turn, error: turnError } = await supabase
       .from("operation_turns")
-      .select("id, encounter_id, turn_number, status")
+      .select("id, encounter_id, turn_number, status, judgement")
       .eq("id", payload.turn_id)
       .eq("encounter_id", id)
       .single();
@@ -112,7 +105,10 @@ export async function POST(
     const { resolved, effects } = await computeResolution(supabase, {
       participants,
       submissions,
-      judgementActions: payload.judgement?.actions ?? [],
+      judgementActions:
+        Array.isArray((turn as { judgement?: { actions?: unknown[] } } | null)?.judgement?.actions)
+          ? ((turn as { judgement: { actions: Array<{ actor_id: string; multiplier?: number }> } }).judgement.actions)
+          : [],
     });
 
     const hasDefeated = Object.values(resolved.participants).some((state) => state.hp <= 0);
@@ -148,6 +144,13 @@ export async function POST(
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHENTICATED") {
+      return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+    }
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    }
+
     console.error("[operation/resolve] unexpected error", error);
     return NextResponse.json({ error: "INTERNAL_SERVER_ERROR" }, { status: 500 });
   }

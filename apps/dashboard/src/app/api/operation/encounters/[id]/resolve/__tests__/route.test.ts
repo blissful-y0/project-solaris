@@ -1,14 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockCreateClient, mockGetUser, mockFrom, mockRpc } = vi.hoisted(() => ({
-  mockCreateClient: vi.fn(),
-  mockGetUser: vi.fn(),
+const { mockRequireAdmin, mockFrom, mockRpc } = vi.hoisted(() => ({
+  mockRequireAdmin: vi.fn(),
   mockFrom: vi.fn(),
   mockRpc: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: mockCreateClient,
+vi.mock("@/lib/admin-guard", () => ({
+  requireAdmin: mockRequireAdmin,
 }));
 
 describe("POST /api/operation/encounters/[id]/resolve", () => {
@@ -17,9 +16,7 @@ describe("POST /api/operation/encounters/[id]/resolve", () => {
   });
 
   it("미인증이면 401", async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
-    });
+    mockRequireAdmin.mockRejectedValue(new Error("UNAUTHENTICATED"));
 
     const { POST } = await import("../route");
     const request = new Request("http://localhost", {
@@ -32,6 +29,22 @@ describe("POST /api/operation/encounters/[id]/resolve", () => {
     });
 
     expect(response.status).toBe(401);
+  });
+
+  it("관리자가 아니면 403", async () => {
+    mockRequireAdmin.mockRejectedValue(new Error("FORBIDDEN"));
+
+    const { POST } = await import("../route");
+    const request = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ turn_id: "ot_1", idempotency_key: "idem-12345678" }),
+    });
+
+    const response = await POST(request as never, {
+      params: Promise.resolve({ id: "enc_1" }),
+    });
+
+    expect(response.status).toBe(403);
   });
 
   it("정상 resolve면 200", async () => {
@@ -85,7 +98,10 @@ describe("POST /api/operation/encounters/[id]/resolve", () => {
       B: { hp_current: 100, will_current: 100 },
     };
 
-    mockGetUser.mockResolvedValue({ data: { user: { id: "user_1" } } });
+    mockRequireAdmin.mockResolvedValue({
+      supabase: { from: mockFrom, rpc: mockRpc },
+      user: { id: "user_1" },
+    });
 
     mockFrom.mockImplementation((table: string) => {
       if (table === "operation_turns") {
@@ -141,12 +157,6 @@ describe("POST /api/operation/encounters/[id]/resolve", () => {
     });
 
     mockRpc.mockResolvedValue({ data: { ok: true }, error: null });
-
-    mockCreateClient.mockResolvedValue({
-      auth: { getUser: mockGetUser },
-      from: mockFrom,
-      rpc: mockRpc,
-    });
 
     const { POST } = await import("../route");
     const request = new Request("http://localhost", {

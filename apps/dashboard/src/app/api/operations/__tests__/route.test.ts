@@ -5,12 +5,14 @@ const {
   mockGetUser,
   mockFrom,
   mockOpSelect,
+  mockParticipantsIs,
   mockParticipantSelect,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
   mockFrom: vi.fn(),
   mockOpSelect: vi.fn(),
+  mockParticipantsIs: vi.fn(),
   mockParticipantSelect: vi.fn(),
 }));
 
@@ -45,7 +47,9 @@ describe("GET /api/operations", () => {
       if (table === "operation_participants") {
         return {
           select: () => ({
-            in: mockParticipantSelect,
+            in: () => ({
+              is: mockParticipantsIs,
+            }),
           }),
         };
       }
@@ -83,7 +87,7 @@ describe("GET /api/operations", () => {
       ],
       error: null,
     });
-    mockParticipantSelect.mockResolvedValue({
+    mockParticipantsIs.mockResolvedValue({
       data: [{ operation_id: "op-1", team: "host", character: { id: "ch-1", name: "루시엘" } }],
       error: null,
     });
@@ -93,6 +97,7 @@ describe("GET /api/operations", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(mockParticipantsIs).toHaveBeenCalledWith("deleted_at", null);
     expect(body.data).toHaveLength(1);
     expect(body.data[0]).toEqual(
       expect.objectContaining({

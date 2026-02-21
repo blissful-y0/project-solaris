@@ -56,7 +56,8 @@ export async function GET(
       .select(
         "character_id, team, character:characters(id, name, faction, ability_class, hp_current, hp_max, will_current, will_max, profile_image_url)",
       )
-      .eq("operation_id", id);
+      .eq("operation_id", id)
+      .is("deleted_at", null);
 
     if (participantsError) {
       console.error("[api/operations/[id]] 참가자 조회 실패:", participantsError.message);
@@ -70,6 +71,7 @@ export async function GET(
       .from("operation_messages")
       .select("id, type, content, created_at, sender_character_id, sender:characters(id, name, profile_image_url)")
       .eq("operation_id", id)
+      .is("deleted_at", null)
       .order("created_at", { ascending: true });
 
     if (messagesError) {

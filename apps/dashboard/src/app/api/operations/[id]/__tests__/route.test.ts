@@ -6,14 +6,18 @@ const {
   mockFrom,
   mockOperationMaybeSingle,
   mockParticipantsEq,
+  mockParticipantsIs,
   mockMessagesEq,
+  mockMessagesIs,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
   mockFrom: vi.fn(),
   mockOperationMaybeSingle: vi.fn(),
   mockParticipantsEq: vi.fn(),
+  mockParticipantsIs: vi.fn(),
   mockMessagesEq: vi.fn(),
+  mockMessagesIs: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -45,7 +49,9 @@ describe("GET /api/operations/[id]", () => {
       if (table === "operation_participants") {
         return {
           select: () => ({
-            eq: mockParticipantsEq,
+            eq: () => ({
+              is: mockParticipantsIs,
+            }),
           }),
         };
       }
@@ -53,7 +59,11 @@ describe("GET /api/operations/[id]", () => {
       if (table === "operation_messages") {
         return {
           select: () => ({
-            eq: mockMessagesEq,
+            eq: () => ({
+              is: () => ({
+                order: mockMessagesIs,
+              }),
+            }),
           }),
         };
       }
@@ -102,7 +112,7 @@ describe("GET /api/operations/[id]", () => {
       },
       error: null,
     });
-    mockParticipantsEq.mockResolvedValue({
+    mockParticipantsIs.mockResolvedValue({
       data: [
         {
           character_id: "ch-1",
@@ -122,20 +132,18 @@ describe("GET /api/operations/[id]", () => {
       ],
       error: null,
     });
-    mockMessagesEq.mockReturnValue({
-      order: vi.fn().mockResolvedValue({
-        data: [
-          {
-            id: "msg-1",
-            type: "narration",
-            content: "테스트 메시지",
-            created_at: "2026-02-20T00:01:00.000Z",
-            sender_character_id: "ch-1",
-            sender: { id: "ch-1", name: "루시엘", profile_image_url: null },
-          },
-        ],
-        error: null,
-      }),
+    mockMessagesIs.mockResolvedValue({
+      data: [
+        {
+          id: "msg-1",
+          type: "narration",
+          content: "테스트 메시지",
+          created_at: "2026-02-20T00:01:00.000Z",
+          sender_character_id: "ch-1",
+          sender: { id: "ch-1", name: "루시엘", profile_image_url: null },
+        },
+      ],
+      error: null,
     });
 
     const { GET } = await import("../route");
@@ -145,6 +153,8 @@ describe("GET /api/operations/[id]", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(mockParticipantsIs).toHaveBeenCalledWith("deleted_at", null);
+    expect(mockMessagesIs).toHaveBeenCalled();
     expect(body.data).toEqual(
       expect.objectContaining({
         id: "op-1",

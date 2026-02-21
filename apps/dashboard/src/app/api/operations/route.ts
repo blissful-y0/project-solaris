@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
     const { data: participants, error: participantsError } = await (supabase as any)
       .from("operation_participants")
       .select("operation_id, team, character:characters(id, name)")
-      .in("operation_id", operationIds);
+      .in("operation_id", operationIds)
+      .is("deleted_at", null);
 
     if (participantsError) {
       console.error("[api/operations] 참가자 조회 실패:", participantsError.message);

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+function isDuplicateKeyError(error: unknown) {
+  const code = (error as { code?: string } | null)?.code;
+  return code === "23505";
+}
+
 /**
  * POST /api/operations/[id]/join
  *
@@ -99,6 +104,30 @@ export async function POST(
       .single();
 
     if (insertError) {
+      if (isDuplicateKeyError(insertError)) {
+        const { data: concurrentExisting, error: concurrentExistingError } = await (supabase as any)
+          .from("operation_participants")
+          .select("id, team, role")
+          .eq("operation_id", operationId)
+          .eq("character_id", myCharacter.id)
+          .is("deleted_at", null)
+          .maybeSingle();
+
+        if (!concurrentExistingError && concurrentExisting) {
+          return NextResponse.json(
+            {
+              data: {
+                participantId: concurrentExisting.id,
+                team: concurrentExisting.team,
+                role: concurrentExisting.role,
+                alreadyJoined: true,
+              },
+            },
+            { status: 200 },
+          );
+        }
+      }
+
       return NextResponse.json({ error: "FAILED_TO_JOIN_OPERATION" }, { status: 500 });
     }
 

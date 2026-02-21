@@ -41,10 +41,13 @@ function makeRequest(
   overrides: Partial<NarrativeRequest> = {},
 ): NarrativeRequest {
   return {
+    id: "nr-1",
     requesterId: "p1",
     rangeStart: "msg-4",
     rangeEnd: "msg-9",
-    status: "pending",
+    status: "voting",
+    votes: {},
+    totalParticipants: 3,
     ...overrides,
   };
 }
@@ -81,7 +84,7 @@ describe("NarrativeRequestCard", () => {
   it("대기중 상태를 표시한다", () => {
     render(
       <NarrativeRequestCard
-        request={makeRequest({ status: "pending" })}
+        request={makeRequest({ status: "voting" })}
         participants={participants}
       />,
     );

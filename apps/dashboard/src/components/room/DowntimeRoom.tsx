@@ -216,10 +216,13 @@ export function DowntimeRoom({
       timestamp: new Date().toISOString(),
       isMine: false,
       narrativeRequest: {
+        id: `nr-${Date.now()}`,
         requesterId: currentUserId,
         rangeStart: selectedRange.start,
         rangeEnd: selectedRange.end,
-        status: "pending",
+        status: "voting",
+        votes: {},
+        totalParticipants: participants.length,
       },
     };
 

@@ -214,7 +214,7 @@ CREATE TRIGGER trg_enforce_lore_vote_operation_match
   FOR EACH ROW
   EXECUTE FUNCTION enforce_lore_vote_operation_match();
 
--- RLS: 1차 구현은 인증 사용자 기준 완화 정책으로 시작
+-- RLS: 최소 권한 원칙 적용
 ALTER TABLE operations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE operation_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE operation_messages ENABLE ROW LEVEL SECURITY;
@@ -223,49 +223,249 @@ ALTER TABLE lore_request_segments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lore_request_votes ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "operations_authenticated_all" ON operations;
-CREATE POLICY "operations_authenticated_all"
+CREATE POLICY "operations_select_authenticated"
   ON operations
-  FOR ALL
+  FOR SELECT
   TO authenticated
-  USING (deleted_at IS NULL)
-  WITH CHECK (true);
+  USING (deleted_at IS NULL);
+
+CREATE POLICY "operations_insert_owned_character"
+  ON operations
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    deleted_at IS NULL
+    AND EXISTS (
+      SELECT 1
+      FROM characters c
+      WHERE c.id = operations.created_by
+        AND c.user_id = auth.uid()
+        AND c.deleted_at IS NULL
+    )
+  );
+
+CREATE POLICY "operations_update_creator_or_admin"
+  ON operations
+  FOR UPDATE
+  TO authenticated
+  USING (
+    deleted_at IS NULL
+    AND (
+      EXISTS (
+        SELECT 1
+        FROM characters c
+        WHERE c.id = operations.created_by
+          AND c.user_id = auth.uid()
+          AND c.deleted_at IS NULL
+      )
+      OR EXISTS (
+        SELECT 1 FROM users u
+        WHERE u.id = auth.uid()
+          AND u.role = 'admin'
+          AND u.deleted_at IS NULL
+      )
+    )
+  )
+  WITH CHECK (
+    deleted_at IS NULL
+    AND (
+      EXISTS (
+        SELECT 1
+        FROM characters c
+        WHERE c.id = operations.created_by
+          AND c.user_id = auth.uid()
+          AND c.deleted_at IS NULL
+      )
+      OR EXISTS (
+        SELECT 1 FROM users u
+        WHERE u.id = auth.uid()
+          AND u.role = 'admin'
+          AND u.deleted_at IS NULL
+      )
+    )
+  );
 
 DROP POLICY IF EXISTS "operation_participants_authenticated_all" ON operation_participants;
-CREATE POLICY "operation_participants_authenticated_all"
+CREATE POLICY "operation_participants_select_authenticated"
   ON operation_participants
-  FOR ALL
+  FOR SELECT
   TO authenticated
-  USING (deleted_at IS NULL)
-  WITH CHECK (true);
+  USING (deleted_at IS NULL);
+
+CREATE POLICY "operation_participants_insert_own_character"
+  ON operation_participants
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    deleted_at IS NULL
+    AND EXISTS (
+      SELECT 1
+      FROM characters c
+      WHERE c.id = operation_participants.character_id
+        AND c.user_id = auth.uid()
+        AND c.deleted_at IS NULL
+    )
+    AND EXISTS (
+      SELECT 1
+      FROM operations o
+      WHERE o.id = operation_participants.operation_id
+        AND o.deleted_at IS NULL
+    )
+  );
+
+CREATE POLICY "operation_participants_update_self_or_admin"
+  ON operation_participants
+  FOR UPDATE
+  TO authenticated
+  USING (
+    deleted_at IS NULL
+    AND (
+      EXISTS (
+        SELECT 1
+        FROM characters c
+        WHERE c.id = operation_participants.character_id
+          AND c.user_id = auth.uid()
+          AND c.deleted_at IS NULL
+      )
+      OR EXISTS (
+        SELECT 1 FROM users u
+        WHERE u.id = auth.uid()
+          AND u.role = 'admin'
+          AND u.deleted_at IS NULL
+      )
+    )
+  )
+  WITH CHECK (
+    deleted_at IS NULL
+    AND (
+      EXISTS (
+        SELECT 1
+        FROM characters c
+        WHERE c.id = operation_participants.character_id
+          AND c.user_id = auth.uid()
+          AND c.deleted_at IS NULL
+      )
+      OR EXISTS (
+        SELECT 1 FROM users u
+        WHERE u.id = auth.uid()
+          AND u.role = 'admin'
+          AND u.deleted_at IS NULL
+      )
+    )
+  );
 
 DROP POLICY IF EXISTS "operation_messages_authenticated_all" ON operation_messages;
-CREATE POLICY "operation_messages_authenticated_all"
+CREATE POLICY "operation_messages_select_authenticated"
   ON operation_messages
-  FOR ALL
+  FOR SELECT
   TO authenticated
-  USING (deleted_at IS NULL)
-  WITH CHECK (true);
+  USING (deleted_at IS NULL);
+
+CREATE POLICY "operation_messages_insert_owned_sender"
+  ON operation_messages
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    deleted_at IS NULL
+    AND sender_character_id IS NOT NULL
+    AND EXISTS (
+      SELECT 1
+      FROM characters c
+      WHERE c.id = operation_messages.sender_character_id
+        AND c.user_id = auth.uid()
+        AND c.deleted_at IS NULL
+    )
+    AND EXISTS (
+      SELECT 1
+      FROM operation_participants p
+      WHERE p.operation_id = operation_messages.operation_id
+        AND p.character_id = operation_messages.sender_character_id
+        AND p.deleted_at IS NULL
+    )
+  );
+
+CREATE POLICY "operation_messages_update_admin_only"
+  ON operation_messages
+  FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM users u
+      WHERE u.id = auth.uid()
+        AND u.role = 'admin'
+        AND u.deleted_at IS NULL
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM users u
+      WHERE u.id = auth.uid()
+        AND u.role = 'admin'
+        AND u.deleted_at IS NULL
+    )
+  );
 
 DROP POLICY IF EXISTS "lore_requests_authenticated_all" ON lore_requests;
-CREATE POLICY "lore_requests_authenticated_all"
+CREATE POLICY "lore_requests_select_authenticated"
   ON lore_requests
-  FOR ALL
+  FOR SELECT
   TO authenticated
-  USING (deleted_at IS NULL)
-  WITH CHECK (true);
+  USING (deleted_at IS NULL);
+
+CREATE POLICY "lore_requests_insert_owned_requester"
+  ON lore_requests
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    deleted_at IS NULL
+    AND EXISTS (
+      SELECT 1
+      FROM characters c
+      WHERE c.id = lore_requests.requester_id
+        AND c.user_id = auth.uid()
+        AND c.deleted_at IS NULL
+    )
+  );
 
 DROP POLICY IF EXISTS "lore_request_segments_authenticated_all" ON lore_request_segments;
-CREATE POLICY "lore_request_segments_authenticated_all"
+CREATE POLICY "lore_request_segments_select_authenticated"
   ON lore_request_segments
-  FOR ALL
+  FOR SELECT
   TO authenticated
-  USING (deleted_at IS NULL)
-  WITH CHECK (true);
+  USING (deleted_at IS NULL);
+
+CREATE POLICY "lore_request_segments_insert_authenticated"
+  ON lore_request_segments
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    deleted_at IS NULL
+    AND EXISTS (
+      SELECT 1
+      FROM lore_requests lr
+      WHERE lr.id = lore_request_segments.lore_request_id
+        AND lr.deleted_at IS NULL
+    )
+  );
 
 DROP POLICY IF EXISTS "lore_request_votes_authenticated_all" ON lore_request_votes;
-CREATE POLICY "lore_request_votes_authenticated_all"
+CREATE POLICY "lore_request_votes_select_authenticated"
   ON lore_request_votes
-  FOR ALL
+  FOR SELECT
   TO authenticated
-  USING (deleted_at IS NULL)
-  WITH CHECK (true);
+  USING (deleted_at IS NULL);
+
+CREATE POLICY "lore_request_votes_insert_owned_voter"
+  ON lore_request_votes
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    deleted_at IS NULL
+    AND EXISTS (
+      SELECT 1
+      FROM characters c
+      WHERE c.id = lore_request_votes.voter_id
+        AND c.user_id = auth.uid()
+        AND c.deleted_at IS NULL
+    )
+  );
