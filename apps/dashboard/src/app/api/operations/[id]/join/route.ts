@@ -6,10 +6,11 @@ function isDuplicateKeyError(error: unknown) {
   return code === "23505";
 }
 
-function mapFactionToTeam(faction: string | null | undefined): "bureau" | "static" | "defector" {
+function mapFactionToTeam(faction: string | null | undefined): "bureau" | "static" | "defector" | null {
   if (faction === "bureau") return "bureau";
+  if (faction === "static") return "static";
   if (faction === "defector") return "defector";
-  return "static";
+  return null;
 }
 
 /**
@@ -96,6 +97,9 @@ export async function POST(
     }
 
     const team = mapFactionToTeam(myCharacter.faction);
+    if (!team) {
+      return NextResponse.json({ error: "INVALID_FACTION" }, { status: 422 });
+    }
 
     const { data: inserted, error: insertError } = await (supabase as any)
       .from("operation_participants")

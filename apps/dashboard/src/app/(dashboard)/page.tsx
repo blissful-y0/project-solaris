@@ -33,7 +33,6 @@ const ABILITY_CLASS_LABELS: Record<string, string> = {
 const FACTION_MAP: Record<string, "Enforcer" | "Static"> = {
   bureau: "Enforcer",
   static: "Static",
-  civilian: "Static",
   defector: "Static",
 };
 

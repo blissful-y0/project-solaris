@@ -156,7 +156,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockParticipantMaybeSingle
       .mockResolvedValueOnce({ data: null, error: null })
       .mockResolvedValueOnce({
-        data: { id: "opp-1", team: "ally", role: "member" },
+        data: { id: "opp-1", team: "bureau", role: "member" },
         error: null,
       });
     mockInsertSelectSingle.mockResolvedValue({
@@ -267,5 +267,25 @@ describe("POST /api/operations/[id]/join", () => {
         team: "static",
       }),
     );
+  });
+
+  it("미지원 faction이면 422를 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "civilian" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "operation", created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body).toEqual({ error: "INVALID_FACTION" });
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });

@@ -9,7 +9,7 @@ describe("registry-data mappers", () => {
       id: "c1",
       is_mine: true,
       name: "테스트",
-      faction: "civilian",
+      faction: "unknown-faction",
       ability_class: "field",
       profile_image_url: null,
       is_leader: false,

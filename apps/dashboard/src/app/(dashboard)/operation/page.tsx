@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AccessDenied } from "@/components/common";
 import { OperationHub } from "@/components/operation";
@@ -14,6 +14,7 @@ export default function OperationPage() {
   const [operations, setOperations] = useState<OperationItem[]>([]);
   const [statusLoading, setStatusLoading] = useState(true);
   const [operationsLoading, setOperationsLoading] = useState(false);
+  const isMountedRef = useRef(true);
 
   const isApproved = characterStatus === "approved";
 
@@ -39,30 +40,33 @@ export default function OperationPage() {
     return () => { mounted = false; };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   /* 작전 목록 — 승인된 경우만 */
-  const loadOperations = useCallback(() => {
-    let mounted = true;
+  const loadOperations = useCallback(async () => {
+    if (!isMountedRef.current) return;
     setOperationsLoading(true);
-    fetch("/api/operations", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((body) => {
-        if (!mounted) return;
-        setOperations(body?.data ?? []);
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setOperations([]);
-      })
-      .finally(() => {
-        if (!mounted) return;
-        setOperationsLoading(false);
-      });
-    return () => { mounted = false; };
+    try {
+      const response = await fetch("/api/operations", { cache: "no-store" });
+      const body = await response.json();
+      if (!isMountedRef.current) return;
+      setOperations(body?.data ?? []);
+    } catch {
+      if (!isMountedRef.current) return;
+      setOperations([]);
+    } finally {
+      if (!isMountedRef.current) return;
+      setOperationsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     if (!isApproved) return;
-    return loadOperations();
+    void loadOperations();
   }, [isApproved, loadOperations]);
 
   /* 목록 Realtime 동기화: operation/participant 변경 시 재조회 */
