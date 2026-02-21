@@ -60,6 +60,7 @@ export default function LoginPage() {
         provider: "discord",
         options: {
           redirectTo: callbackUrl.toString(),
+          scopes: "guilds.join",
         },
       });
 

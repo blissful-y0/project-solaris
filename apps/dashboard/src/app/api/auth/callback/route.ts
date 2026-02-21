@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       },
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       const {
         data: { user },
@@ -78,6 +78,35 @@ export async function GET(request: Request) {
 
       if (upsertError) {
         return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+      }
+
+      // Discord 서버 자동 가입 (실패해도 로그인 차단 안 함)
+      const guildId = process.env.DISCORD_GUILD_ID;
+      const botToken = process.env.DISCORD_BOT_TOKEN;
+      const providerToken = session?.provider_token;
+
+      if (guildId && botToken && providerToken && discordId) {
+        try {
+          const guildRes = await fetch(
+            `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}`,
+            {
+              method: "PUT",
+              headers: {
+                "content-type": "application/json",
+                authorization: `Bot ${botToken}`,
+              },
+              body: JSON.stringify({ access_token: providerToken }),
+            },
+          );
+          // 201: 추가됨, 204: 이미 멤버 — 둘 다 정상
+          if (!guildRes.ok && guildRes.status !== 204) {
+            console.error(
+              `[auth/callback] Discord 길드 가입 실패: ${guildRes.status}`,
+            );
+          }
+        } catch (guildError) {
+          console.error("[auth/callback] Discord 길드 가입 오류:", guildError);
+        }
       }
 
       return NextResponse.redirect(`${origin}${next}`);
