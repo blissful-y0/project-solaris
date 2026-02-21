@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 
 import { Button, Card, Input, Modal } from "@/components/ui";
-import { CLEARANCE_CONFIG, type ClearanceLevel } from "@/components/lore";
+import { CLEARANCE_CONFIG, type ClearanceLevel } from "@/components/lore/types";
 import { cn } from "@/lib/utils";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });

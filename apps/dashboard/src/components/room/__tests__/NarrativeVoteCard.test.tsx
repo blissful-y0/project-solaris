@@ -45,6 +45,8 @@ function makeRequest(
     rangeStart: "msg-4",
     rangeEnd: "msg-9",
     status: "pending",
+    votes: {},
+    totalParticipants: 3,
     ...overrides,
   };
 }
