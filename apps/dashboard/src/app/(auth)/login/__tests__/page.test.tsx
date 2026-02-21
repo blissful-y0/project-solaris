@@ -2,6 +2,13 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/login",
+}));
+
 // Supabase 클라이언트 모킹
 const mockSignInWithOAuth = vi.fn().mockResolvedValue({ error: null });
 
