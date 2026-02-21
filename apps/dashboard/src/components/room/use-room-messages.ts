@@ -90,6 +90,7 @@ export function useRoomMessages(
           event: "INSERT",
           schema: "public",
           table: "operation_messages",
+          filter: `operation_id=eq.${operationId}`,
         },
         (payload) => {
           const row = payload.new as {

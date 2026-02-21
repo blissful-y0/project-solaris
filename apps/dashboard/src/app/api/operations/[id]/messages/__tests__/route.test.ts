@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MAX_OPERATION_MESSAGE_LENGTH } from "@/lib/operations/constants";
 
 const {
   mockCreateClient,
@@ -114,6 +115,68 @@ describe("POST /api/operations/[id]/messages", () => {
     );
 
     expect(response.status).toBe(400);
+  });
+
+  it("content가 최대 길이를 초과하면 400", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({ content: "a".repeat(MAX_OPERATION_MESSAGE_LENGTH + 1) }),
+      }),
+      { params: Promise.resolve({ id: "op-1" }) },
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it("content가 최대 길이와 같으면 201", async () => {
+    const content = "a".repeat(MAX_OPERATION_MESSAGE_LENGTH);
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({
+      data: {
+        id: "ch-1",
+        name: "루시엘",
+        profile_image_url: null,
+      },
+      error: null,
+    });
+    mockInsertSelectSingle.mockResolvedValue({
+      data: {
+        id: "msg-1",
+        type: "narration",
+        content,
+        created_at: "2026-02-20T00:00:00.000Z",
+        sender_character_id: "ch-1",
+        sender: {
+          id: "ch-1",
+          name: "루시엘",
+          profile_image_url: null,
+        },
+      },
+      error: null,
+    });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", status: "live" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({
+      data: { id: "opp-1" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      }),
+      { params: Promise.resolve({ id: "op-1" }) },
+    );
+
+    expect(response.status).toBe(201);
   });
 
   it("정상 전송이면 201", async () => {

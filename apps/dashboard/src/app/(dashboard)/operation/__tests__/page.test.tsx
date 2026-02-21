@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, afterEach } from "vitest";
 
 import OperationPage from "../page";
@@ -98,6 +98,73 @@ describe("OperationPage", () => {
     render(<OperationPage />);
     await waitFor(() => {
       expect(screen.getByText(/작전 참여 자격이 필요합니다/)).toBeInTheDocument();
+    });
+  });
+
+  it("목록 재조회가 실패해도 기존 목록을 유지한다", async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url === "/api/me") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ character: { status: "approved" } }),
+        });
+      }
+
+      if (url === "/api/operations") {
+        if (fetchMock.mock.calls.filter(([u]) => u === "/api/operations").length === 1) {
+          return Promise.resolve({ ok: true, json: async () => ({ data: MOCK_OPERATIONS }) });
+        }
+        return Promise.reject(new Error("temporary network error"));
+      }
+
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+    render(<OperationPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(2);
+    });
+
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  it("초기 로드 실패 후 복귀 이벤트에서 목록을 복구한다", async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url === "/api/me") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ character: { status: "approved" } }),
+        });
+      }
+
+      if (url === "/api/operations") {
+        const attempts = fetchMock.mock.calls.filter(([u]) => u === "/api/operations").length;
+        if (attempts <= 1) {
+          return Promise.reject(new Error("cold start timeout"));
+        }
+        return Promise.resolve({ ok: true, json: async () => ({ data: MOCK_OPERATIONS }) });
+      }
+
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+    render(<OperationPage />);
+
+    await act(async () => {
+      window.dispatchEvent(new Event("pageshow"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(2);
     });
   });
 });

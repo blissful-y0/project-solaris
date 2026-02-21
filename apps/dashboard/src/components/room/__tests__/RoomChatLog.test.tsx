@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect } from "vitest";
 
 import type { RoomMessage, RoomParticipant } from "../types";
@@ -146,5 +147,52 @@ describe("RoomChatLog", () => {
     );
 
     expect(screen.getByText("서사 반영할 시작 메시지를 선택하세요")).toBeInTheDocument();
+  });
+
+  it("2000자 초과 메시지는 더보기 버튼을 노출한다", () => {
+    const longContent = "가".repeat(2001);
+    const longMessages: RoomMessage[] = [
+      {
+        ...baseMessages[1],
+        id: "msg-long",
+        content: longContent,
+      },
+    ];
+
+    render(
+      <RoomChatLog
+        messages={longMessages}
+        participants={participants}
+        currentUserId="p2"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "메시지 더보기" })).toBeInTheDocument();
+    expect(screen.queryByText(longContent)).not.toBeInTheDocument();
+  });
+
+  it("더보기 클릭 시 전체 메시지를 표시하고 접기 버튼으로 전환한다", async () => {
+    const user = userEvent.setup();
+    const longContent = "나".repeat(2001);
+    const longMessages: RoomMessage[] = [
+      {
+        ...baseMessages[1],
+        id: "msg-long-toggle",
+        content: longContent,
+      },
+    ];
+
+    render(
+      <RoomChatLog
+        messages={longMessages}
+        participants={participants}
+        currentUserId="p2"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "메시지 더보기" }));
+
+    expect(screen.getByText(longContent)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "메시지 접기" })).toBeInTheDocument();
   });
 });

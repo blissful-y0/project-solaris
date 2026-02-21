@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { mapOperationMessage } from "@/lib/operations/dto";
+import { MAX_OPERATION_MESSAGE_LENGTH } from "@/lib/operations/constants";
 
 /**
  * POST /api/operations/[id]/messages
@@ -28,7 +29,7 @@ export async function POST(
     const body = await request.json().catch(() => null);
     const content = typeof body?.content === "string" ? body.content.trim() : "";
 
-    if (!content) {
+    if (!content || content.length > MAX_OPERATION_MESSAGE_LENGTH) {
       return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
     }
 
