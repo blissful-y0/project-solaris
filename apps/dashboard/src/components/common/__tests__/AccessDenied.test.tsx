@@ -35,7 +35,7 @@ describe("AccessDenied", () => {
 
   it("HELIOS SYSTEM 레이블을 표시한다", () => {
     render(<AccessDenied characterStatus={null} />);
-    expect(screen.getByText("HELIOS SYSTEM")).toBeInTheDocument();
+    expect(screen.getByText("HELIOS SYSTEM // ACCESS RESTRICTED")).toBeInTheDocument();
   });
 
   describe("characterStatus=null (미등록)", () => {
@@ -50,7 +50,7 @@ describe("AccessDenied", () => {
   describe("characterStatus='pending' (승인 대기)", () => {
     it("'승인 대기 중' 텍스트를 표시한다", () => {
       render(<AccessDenied characterStatus="pending" />);
-      expect(screen.getByText("승인 대기 중")).toBeInTheDocument();
+      expect(screen.getByText(/승인 대기 중/)).toBeInTheDocument();
     });
 
     it("링크를 표시하지 않는다", () => {
