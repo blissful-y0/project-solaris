@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -74,34 +74,77 @@ export default function OperationSessionPage() {
     status: string;
     myParticipantId: string | null;
     participants: ApiParticipant[];
-    messages: ApiMessage[];
   } | null>(null);
+  const [messages, setMessages] = useState<ApiMessage[]>([]);
+  const operationRequestSeqRef = useRef(0);
+  const messageRequestSeqRef = useRef(0);
 
   /* 전투 세션 dev 페이즈 스위처 */
   const [phase, setPhase] = useState<TurnPhase>("my_turn");
 
-  const loadOperation = useCallback(async () => {
+  const loadOperation = useCallback(async (options?: { silent?: boolean }) => {
+    const requestId = ++operationRequestSeqRef.current;
+    const silent = options?.silent ?? false;
+
     try {
-      setLoading(true);
-      setError(null);
+      if (!silent) {
+        setLoading(true);
+      }
       const res = await fetch(`/api/operations/${operationId}`, { cache: "no-store" });
       if (!res.ok) {
+        if (requestId !== operationRequestSeqRef.current) return;
         setError("FAILED_TO_FETCH_OPERATION");
         return;
       }
       const body = await res.json();
+      if (requestId !== operationRequestSeqRef.current) return;
       setOperation(body.data);
+      setError(null);
     } catch (e) {
+      if (requestId !== operationRequestSeqRef.current) return;
       console.error("[operation/[id]] 상세 조회 실패:", e);
       setError("FAILED_TO_FETCH_OPERATION");
     } finally {
-      setLoading(false);
+      if (!silent && requestId === operationRequestSeqRef.current) {
+        setLoading(false);
+      }
+    }
+  }, [operationId]);
+
+  const loadMessages = useCallback(async () => {
+    const requestId = ++messageRequestSeqRef.current;
+    try {
+      const res = await fetch(`/api/operations/${operationId}/messages?limit=50&offset=0`, {
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        if (requestId !== messageRequestSeqRef.current) return;
+        setError("FAILED_TO_FETCH_MESSAGES");
+        return;
+      }
+      const body = await res.json();
+      if (requestId !== messageRequestSeqRef.current) return;
+      setMessages(body?.data ?? []);
+    } catch (e) {
+      if (requestId !== messageRequestSeqRef.current) return;
+      console.error("[operation/[id]] 메시지 조회 실패:", e);
+      setError("FAILED_TO_FETCH_MESSAGES");
     }
   }, [operationId]);
 
   useEffect(() => {
-    void loadOperation();
-  }, [loadOperation]);
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+
+    Promise.all([loadOperation({ silent: true }), loadMessages()]).finally(() => {
+      if (mounted) setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [loadOperation, loadMessages]);
 
   /* 참가자 변경 Realtime 동기화 */
   useEffect(() => {
@@ -119,7 +162,7 @@ export default function OperationSessionPage() {
           filter: `operation_id=eq.${operationId}`,
         },
         () => {
-          void loadOperation();
+          void loadOperation({ silent: true });
         },
       )
       .subscribe();
@@ -143,7 +186,7 @@ export default function OperationSessionPage() {
   /* Downtime용 RoomMessage 목록 */
   const roomMessages: RoomMessage[] = useMemo(
     () =>
-      (operation?.messages ?? []).map((m) => ({
+      messages.map((m) => ({
         id: m.id,
         type: (m.type ?? "narration") as RoomMessage["type"],
         sender: m.senderId
@@ -153,7 +196,7 @@ export default function OperationSessionPage() {
         timestamp: m.timestamp,
         isMine: m.isMine,
       })),
-    [operation?.messages],
+    [messages],
   );
 
   /* 전투용 BattleParticipant 목록 */
@@ -184,7 +227,7 @@ export default function OperationSessionPage() {
   /* 전투용 ChatMessage 목록 */
   const battleMessages: ChatMessage[] = useMemo(
     () =>
-      (operation?.messages ?? []).map((m) => ({
+      messages.map((m) => ({
         id: m.id,
         type: (m.type ?? "narration") as ChatMessage["type"],
         senderId: m.senderId ?? undefined,
@@ -194,7 +237,7 @@ export default function OperationSessionPage() {
         timestamp: m.timestamp,
         isMine: m.isMine,
       })),
-    [operation?.messages],
+    [messages],
   );
 
   /**

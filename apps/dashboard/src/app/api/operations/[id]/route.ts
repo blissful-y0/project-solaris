@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { mapOperationMessage, type DbMessageRow } from "@/lib/operations/dto";
 
 type OperationDetailRow = {
   id: string;
@@ -101,18 +100,6 @@ export async function GET(
       );
     }
 
-    const { data: messages, error: messagesError } = await supabase
-      .from("operation_messages")
-      .select("id, type, content, created_at, sender_character_id, sender:characters(id, name, profile_image_url)")
-      .eq("operation_id", id)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: true });
-
-    if (messagesError) {
-      console.error("[api/operations/[id]] 메시지 조회 실패:", messagesError.message);
-      return NextResponse.json({ error: "FAILED_TO_FETCH_MESSAGES" }, { status: 500 });
-    }
-
     const participantRows = (participants ?? []) as OperationDetailParticipantRow[];
     const normalizedParticipants = participantRows
       .filter((item) => item.character)
@@ -145,10 +132,6 @@ export async function GET(
     );
     const myParticipantId = isParticipant ? myCharacterId : null;
 
-    const mappedMessages = ((messages ?? []) as DbMessageRow[]).map((row) =>
-      mapOperationMessage(row, myCharacterId),
-    );
-
     const operationRow = operation as OperationDetailRow;
 
     return NextResponse.json({
@@ -163,7 +146,6 @@ export async function GET(
         createdAt: operationRow.created_at,
         myParticipantId,
         participants: normalizedParticipants,
-        messages: mappedMessages,
       },
     });
   } catch (error) {

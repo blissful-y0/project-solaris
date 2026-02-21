@@ -9,6 +9,7 @@ const {
   mockOperationMaybeSingle,
   mockParticipantMaybeSingle,
   mockInsertSelectSingle,
+  mockMessagesRange,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
@@ -17,6 +18,7 @@ const {
   mockOperationMaybeSingle: vi.fn(),
   mockParticipantMaybeSingle: vi.fn(),
   mockInsertSelectSingle: vi.fn(),
+  mockMessagesRange: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -49,6 +51,17 @@ describe("POST /api/operations/[id]/messages", () => {
 
       if (table === "operation_messages") {
         return {
+          select: () => ({
+            eq: () => ({
+              is: () => ({
+                order: () => ({
+                  order: () => ({
+                    range: mockMessagesRange,
+                  }),
+                }),
+              }),
+            }),
+          }),
           insert: () => ({
             select: () => ({
               single: mockInsertSelectSingle,
@@ -282,5 +295,127 @@ describe("POST /api/operations/[id]/messages", () => {
     );
 
     expect(response.status).toBe(409);
+  });
+});
+
+describe("GET /api/operations/[id]/messages", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: mockGetUser },
+      from: mockFrom,
+    });
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "characters") {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                is: () => ({
+                  maybeSingle: mockCharacterMaybeSingle,
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+
+      if (table === "operation_messages") {
+        return {
+          select: () => ({
+            eq: () => ({
+              is: () => ({
+                order: () => ({
+                  order: () => ({
+                    range: mockMessagesRange,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+
+      if (table === "operations") {
+        return {
+          select: () => ({
+            eq: () => ({
+              is: () => ({
+                maybeSingle: mockOperationMaybeSingle,
+              }),
+            }),
+          }),
+        };
+      }
+
+      throw new Error(`unexpected table: ${table}`);
+    });
+  });
+
+  it("미인증이면 401", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
+
+    const { GET } = await import("../route");
+    const response = await GET(
+      new Request("http://localhost/api/operations/op-1/messages"),
+      { params: Promise.resolve({ id: "op-1" }) },
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  it("메시지 페이지를 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({
+      data: { id: "ch-1" },
+      error: null,
+    });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1" },
+      error: null,
+    });
+    mockMessagesRange.mockResolvedValue({
+      data: [
+        {
+          id: "msg-2",
+          type: "narration",
+          content: "두번째",
+          created_at: "2026-02-20T00:02:00.000Z",
+          sender_character_id: "ch-1",
+          sender: { id: "ch-1", name: "루시엘", profile_image_url: null },
+        },
+        {
+          id: "msg-1",
+          type: "narration",
+          content: "첫번째",
+          created_at: "2026-02-20T00:01:00.000Z",
+          sender_character_id: "ch-1",
+          sender: { id: "ch-1", name: "루시엘", profile_image_url: null },
+        },
+      ],
+      error: null,
+    });
+
+    const { GET } = await import("../route");
+    const response = await GET(
+      new Request("http://localhost/api/operations/op-1/messages?limit=2&offset=0"),
+      { params: Promise.resolve({ id: "op-1" }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockMessagesRange).toHaveBeenCalledWith(0, 1);
+    expect(body.page).toEqual(
+      expect.objectContaining({
+        limit: 2,
+        offset: 0,
+        hasMore: true,
+        nextOffset: 2,
+      }),
+    );
+    expect(body.data[0].id).toBe("msg-1");
+    expect(body.data[1].id).toBe("msg-2");
   });
 });

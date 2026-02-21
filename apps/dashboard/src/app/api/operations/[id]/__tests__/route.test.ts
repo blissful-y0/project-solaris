@@ -5,20 +5,14 @@ const {
   mockGetUser,
   mockFrom,
   mockOperationMaybeSingle,
-  mockParticipantsEq,
   mockParticipantsIs,
-  mockMessagesEq,
-  mockMessagesIs,
   mockCharacterMaybeSingle,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
   mockFrom: vi.fn(),
   mockOperationMaybeSingle: vi.fn(),
-  mockParticipantsEq: vi.fn(),
   mockParticipantsIs: vi.fn(),
-  mockMessagesEq: vi.fn(),
-  mockMessagesIs: vi.fn(),
   mockCharacterMaybeSingle: vi.fn(),
 }));
 
@@ -53,18 +47,6 @@ describe("GET /api/operations/[id]", () => {
           select: () => ({
             eq: () => ({
               is: mockParticipantsIs,
-            }),
-          }),
-        };
-      }
-
-      if (table === "operation_messages") {
-        return {
-          select: () => ({
-            eq: () => ({
-              is: () => ({
-                order: mockMessagesIs,
-              }),
             }),
           }),
         };
@@ -137,20 +119,6 @@ describe("GET /api/operations/[id]", () => {
       ],
       error: null,
     });
-    mockMessagesIs.mockResolvedValue({
-      data: [
-        {
-          id: "msg-1",
-          type: "narration",
-          content: "테스트 메시지",
-          created_at: "2026-02-20T00:01:00.000Z",
-          sender_character_id: "ch-1",
-          sender: { id: "ch-1", name: "루시엘", profile_image_url: null },
-        },
-      ],
-      error: null,
-    });
-
     const { GET } = await import("../route");
     const response = await GET(new Request("http://localhost"), {
       params: Promise.resolve({ id: "op-1" }),
@@ -159,17 +127,10 @@ describe("GET /api/operations/[id]", () => {
 
     expect(response.status).toBe(200);
     expect(mockParticipantsIs).toHaveBeenCalledWith("deleted_at", null);
-    expect(mockMessagesIs).toHaveBeenCalled();
     expect(body.data).toEqual(
       expect.objectContaining({
         id: "op-1",
         myParticipantId: "ch-1",
-        messages: expect.arrayContaining([
-          expect.objectContaining({
-            id: "msg-1",
-            content: "테스트 메시지",
-          }),
-        ]),
       }),
     );
   });
@@ -210,8 +171,6 @@ describe("GET /api/operations/[id]", () => {
       ],
       error: null,
     });
-    mockMessagesIs.mockResolvedValue({ data: [], error: null });
-
     const { GET } = await import("../route");
     const response = await GET(new Request("http://localhost"), {
       params: Promise.resolve({ id: "op-2" }),

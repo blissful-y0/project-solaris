@@ -1,7 +1,102 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { mapOperationMessage } from "@/lib/operations/dto";
+import { mapOperationMessage, type DbMessageRow } from "@/lib/operations/dto";
 import { MAX_OPERATION_MESSAGE_LENGTH } from "@/lib/operations/constants";
+
+const DEFAULT_MESSAGE_PAGE_SIZE = 50;
+const MAX_MESSAGE_PAGE_SIZE = 100;
+
+/**
+ * GET /api/operations/[id]/messages
+ *
+ * 메시지 히스토리를 페이지네이션으로 조회한다.
+ * - 최신순으로 가져온 뒤 응답은 시간순(오래된 -> 최신)으로 정렬한다.
+ */
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const rawLimit = Number(searchParams.get("limit") ?? DEFAULT_MESSAGE_PAGE_SIZE);
+    const rawOffset = Number(searchParams.get("offset") ?? 0);
+    const limit = Number.isFinite(rawLimit)
+      ? Math.min(MAX_MESSAGE_PAGE_SIZE, Math.max(1, Math.floor(rawLimit)))
+      : DEFAULT_MESSAGE_PAGE_SIZE;
+    const offset = Number.isFinite(rawOffset)
+      ? Math.max(0, Math.floor(rawOffset))
+      : 0;
+
+    const { data: operation, error: operationError } = await supabase
+      .from("operations")
+      .select("id")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (operationError) {
+      return NextResponse.json({ error: "FAILED_TO_FETCH_OPERATION" }, { status: 500 });
+    }
+
+    if (!operation) {
+      return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+    }
+
+    const { data: myCharacter } = await supabase
+      .from("characters")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "approved")
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    const myCharacterId: string | null = myCharacter?.id ?? null;
+
+    const { data: rows, error: messagesError } = await supabase
+      .from("operation_messages")
+      .select("id, type, content, created_at, sender_character_id, sender:characters(id, name, profile_image_url)")
+      .eq("operation_id", id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (messagesError) {
+      return NextResponse.json({ error: "FAILED_TO_FETCH_MESSAGES" }, { status: 500 });
+    }
+
+    const mapped = ((rows ?? []) as DbMessageRow[])
+      .map((row) => mapOperationMessage(row, myCharacterId))
+      .reverse();
+
+    const hasMore = (rows?.length ?? 0) === limit;
+    const nextOffset = hasMore ? offset + limit : null;
+
+    return NextResponse.json({
+      data: mapped,
+      page: {
+        limit,
+        offset,
+        hasMore,
+        nextOffset,
+      },
+    });
+  } catch (error) {
+    console.error("[api/operations/[id]/messages] GET unexpected error:", error);
+    return NextResponse.json({ error: "INTERNAL_SERVER_ERROR" }, { status: 500 });
+  }
+}
 
 /**
  * POST /api/operations/[id]/messages
