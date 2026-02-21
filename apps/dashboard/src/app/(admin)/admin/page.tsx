@@ -115,6 +115,7 @@ export default function AdminPage() {
           <Link href="/admin/characters"><Button size="sm">심사 큐</Button></Link>
           <Link href="/admin/characters/all"><Button size="sm" variant="secondary">캐릭터 관리</Button></Link>
           <Link href="/admin/notifications"><Button size="sm" variant="secondary">알림 센터</Button></Link>
+          <Link href="/admin/lore"><Button size="sm" variant="secondary">Lore 관리</Button></Link>
           <Link href="/admin/settings"><Button size="sm" variant="ghost">운영 설정</Button></Link>
         </div>
       </Card>
