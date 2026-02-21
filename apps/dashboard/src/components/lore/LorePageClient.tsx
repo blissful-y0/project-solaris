@@ -6,26 +6,25 @@ import { cn } from "@/lib/utils";
 
 import { LoreArchiveCard } from "./LoreArchiveCard";
 import { LoreDetailModal } from "./LoreDetailModal";
-import type { LoreCategoryContent, LoreCategoryId } from "./types";
-import { LORE_CATEGORIES } from "./types";
+import type { LoreDocumentHtml } from "./types";
 
 type ArchiveTab = "database" | "incident-log";
 
 type LorePageClientProps = {
-  contents: LoreCategoryContent[];
+  contents: LoreDocumentHtml[];
 };
 
 /** Lore 페이지 — HELIOS 풀스크린 터미널 + 모달 상세 */
 export function LorePageClient({ contents }: LorePageClientProps) {
   const [activeTab, setActiveTab] = useState<ArchiveTab>("database");
-  const [selectedId, setSelectedId] = useState<LoreCategoryId | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
 
-  const handleSelect = useCallback((id: LoreCategoryId) => {
-    setSelectedId(id);
+  const handleSelect = useCallback((slug: string) => {
+    setSelectedSlug(slug);
   }, []);
 
   const handleClose = useCallback(() => {
-    setSelectedId(null);
+    setSelectedSlug(null);
   }, []);
 
   return (
@@ -94,12 +93,12 @@ export function LorePageClient({ contents }: LorePageClientProps) {
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {LORE_CATEGORIES.map((cat, i) => (
+                {contents.map((doc, i) => (
                   <LoreArchiveCard
-                    key={cat.id}
-                    category={cat}
+                    key={doc.id}
+                    doc={doc}
                     index={i}
-                    onClick={() => handleSelect(cat.id)}
+                    onClick={() => handleSelect(doc.slug)}
                     className="h-full"
                   />
                 ))}
@@ -122,7 +121,7 @@ export function LorePageClient({ contents }: LorePageClientProps) {
         {/* 하단 상태 바 — 데스크탑 전용 */}
         <div className="hidden md:flex items-center justify-between px-4 py-1.5 bg-bg-secondary border-t border-border">
           <span className="font-mono text-[0.625rem] text-text-secondary tracking-wider">
-            {LORE_CATEGORIES.length} FILES INDEXED
+            {contents.length} FILES INDEXED
           </span>
           <span className="font-mono text-[0.625rem] text-text-secondary tracking-wider">
             HELIOS INTELLIGENCE SYSTEM
@@ -132,8 +131,8 @@ export function LorePageClient({ contents }: LorePageClientProps) {
 
       {/* 상세 모달 — fixed 컨테이너 밖에서 렌더링 */}
       <LoreDetailModal
-        open={selectedId !== null}
-        categoryId={selectedId}
+        open={selectedSlug !== null}
+        slug={selectedSlug}
         contents={contents}
         onClose={handleClose}
         onNavigate={handleSelect}

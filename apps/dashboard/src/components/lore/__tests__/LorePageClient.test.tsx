@@ -3,15 +3,26 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { LorePageClient } from "../LorePageClient";
-import type { LoreCategoryContent } from "../types";
+import type { LoreDocumentHtml } from "../types";
 
-const mockContents: LoreCategoryContent[] = [
-  { id: "overview", html: "<p>세계 개요 내용</p>" },
-  { id: "society", html: "<p>사회 구조 내용</p>" },
-  { id: "resonance", html: "<p>공명율 내용</p>" },
-  { id: "abilities", html: "<p>능력 분류 내용</p>" },
-  { id: "factions", html: "<p>대립 구도 내용</p>" },
-  { id: "battle-rules", html: "<p>배틀룰 내용</p>" },
+const makeDoc = (slug: string, html: string, title: string, i: number): LoreDocumentHtml => ({
+  id: `mock-uuid-${i}`,
+  title,
+  slug,
+  clearanceLevel: 1,
+  orderIndex: i,
+  createdAt: "2026-01-01T00:00:00Z",
+  updatedAt: "2026-01-01T00:00:00Z",
+  html,
+});
+
+const mockContents: LoreDocumentHtml[] = [
+  makeDoc("overview", "<p>세계 개요 내용</p>", "세계 개요", 0),
+  makeDoc("society", "<p>사회 구조 내용</p>", "사회 구조", 1),
+  makeDoc("resonance", "<p>공명율 내용</p>", "공명율과 능력체계", 2),
+  makeDoc("abilities", "<p>능력 분류 내용</p>", "능력 분류", 3),
+  makeDoc("factions", "<p>대립 구도 내용</p>", "대립 구도", 4),
+  makeDoc("battle-rules", "<p>배틀룰 내용</p>", "전투 규칙", 5),
 ];
 
 describe("LorePageClient", () => {
@@ -21,19 +32,20 @@ describe("LorePageClient", () => {
     expect(screen.getByText("DATABASE", { exact: false })).toBeInTheDocument();
   });
 
-  it("데이터베이스 탭에 LORE_CATEGORIES 정보가 표시된다", () => {
+  it("데이터베이스 탭에 문서 제목이 표시된다", () => {
     render(<LorePageClient contents={mockContents} />);
-    expect(screen.getByText("WORLD-OVERVIEW")).toBeInTheDocument();
+    expect(screen.getByText("세계 개요")).toBeInTheDocument();
   });
 
   it("카드를 클릭하면 모달이 열리고 내용이 렌더링된다", async () => {
     const user = userEvent.setup();
     render(<LorePageClient contents={mockContents} />);
 
-    const card = screen.getByText("WORLD-OVERVIEW");
+    // 제목으로 카드 식별 후 클릭
+    const card = screen.getByText("세계 개요");
     await user.click(card);
 
-    expect(screen.getByText("SECTION::WORLD-OVERVIEW")).toBeInTheDocument();
+    expect(screen.getByText("SECTION::OVERVIEW")).toBeInTheDocument();
     expect(screen.getByText("세계 개요 내용")).toBeInTheDocument();
   });
 
@@ -42,12 +54,12 @@ describe("LorePageClient", () => {
     render(<LorePageClient contents={mockContents} />);
 
     // 세계 개요 카드 클릭
-    await user.click(screen.getByText("WORLD-OVERVIEW"));
-    expect(screen.getByText("SECTION::WORLD-OVERVIEW")).toBeInTheDocument();
+    await user.click(screen.getByText("세계 개요"));
+    expect(screen.getByText("SECTION::OVERVIEW")).toBeInTheDocument();
 
     // 다음 카테고리로 이동
     await user.click(screen.getByText("사회 구조 →"));
-    expect(screen.getByText("SECTION::CIVIC-STRUCTURE")).toBeInTheDocument();
+    expect(screen.getByText("SECTION::SOCIETY")).toBeInTheDocument();
     expect(screen.getByText("사회 구조 내용")).toBeInTheDocument();
   });
 
