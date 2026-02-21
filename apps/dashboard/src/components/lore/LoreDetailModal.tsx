@@ -63,7 +63,7 @@ export function LoreDetailModal({
       onClose={onClose}
       ariaLabel={`${doc.title} 기밀문서`}
       className="max-w-3xl"
-      closeButtonClassName="font-mono text-sm hover:text-primary"
+      closeButtonClassName="font-mono text-lg hover:text-primary"
     >
       {/* ── 상단 컬러 밴드 ── */}
       <div className={cn("-mx-4 -mt-4 h-1.5", accentBg)} />
@@ -75,7 +75,7 @@ export function LoreDetailModal({
         <span className={cn("text-xs", accentText)}>
           /helios/archive/{doc.slug}.doc
         </span>
-        <span className={cn("ml-auto text-xs animate-pulse leading-none", accentText)}>
+        <span className={cn("text-xs animate-pulse leading-none", accentText)}>
           ▋
         </span>
       </div>
