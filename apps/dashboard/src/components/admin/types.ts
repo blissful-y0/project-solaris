@@ -12,7 +12,7 @@ export type AdminCharacter = {
   id: string;
   user_id: string;
   name: string;
-  faction: "bureau" | "static" | "civilian" | "defector";
+  faction: "bureau" | "static" | "defector";
   ability_class: string | null;
   status: "pending" | "approved" | "rejected";
   resonance_rate: number;

@@ -20,7 +20,6 @@ type RejectTarget = { id: string; name: string } | null;
 function factionLabel(faction: AdminCharacter["faction"]) {
   if (faction === "bureau") return "Enforcer";
   if (faction === "static") return "Static";
-  if (faction === "civilian") return "Civilian";
   return "Defector";
 }
 
