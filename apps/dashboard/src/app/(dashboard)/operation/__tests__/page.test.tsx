@@ -167,4 +167,58 @@ describe("OperationPage", () => {
       expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(2);
     });
   });
+
+  it("이전 요청이 늦게 실패해도 최신 성공 응답을 덮어쓰지 않는다", async () => {
+    let rejectFirstOpsRequest: ((reason?: unknown) => void) | null = null;
+
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url === "/api/me") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ character: { status: "approved" } }),
+        });
+      }
+
+      if (url === "/api/operations") {
+        const attempts = fetchMock.mock.calls.filter(([u]) => u === "/api/operations").length;
+        if (attempts === 1) {
+          return new Promise((_, reject) => {
+            rejectFirstOpsRequest = reject;
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: MOCK_OPERATIONS }),
+        });
+      }
+
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+    render(<OperationPage />);
+
+    await waitFor(() => {
+      const opCalls = fetchMock.mock.calls.filter(([u]) => u === "/api/operations");
+      expect(opCalls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      window.dispatchEvent(new Event("pageshow"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(2);
+    });
+
+    await act(async () => {
+      rejectFirstOpsRequest?.(new Error("late network fail"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(2);
+    });
+  });
 });
