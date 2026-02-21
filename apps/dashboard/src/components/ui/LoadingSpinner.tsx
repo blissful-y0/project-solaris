@@ -13,7 +13,10 @@ export function LoadingSpinner({
     <div
       role="status"
       aria-live="polite"
-      className={cn("flex items-center justify-center gap-2 text-sm text-text-secondary", className)}
+      className={cn(
+        "flex items-center justify-center gap-2 text-text-secondary",
+        className,
+      )}
     >
       <svg
         className="h-4 w-4 animate-spin"
@@ -22,10 +25,28 @@ export function LoadingSpinner({
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        <circle cx="12" cy="12" r="10" className="opacity-25" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        {/* 배경 링 */}
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="opacity-15"
+        />
+        {/* 회전 아크 — 3/4 원호 */}
+        <path
+          d="M12 2a10 10 0 0 1 10 10"
+          stroke="var(--color-primary)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       </svg>
-      <span>{label}</span>
+      {label && (
+        <span className="font-mono text-[0.625rem] uppercase tracking-widest">
+          {label}
+        </span>
+      )}
     </div>
   );
 }
