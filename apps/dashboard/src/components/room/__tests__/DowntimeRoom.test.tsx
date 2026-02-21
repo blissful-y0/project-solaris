@@ -145,6 +145,29 @@ describe("DowntimeRoom", () => {
     expect(input).toHaveValue("");
   });
 
+  it("API가 실패 응답을 반환하면 로컬 메시지를 추가하지 않는다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: "FORBIDDEN" }),
+      }),
+    );
+
+    render(<DowntimeRoom {...defaultProps} />);
+    const input = screen.getByTestId("chat-input");
+
+    fireEvent.change(input, { target: { value: "실패 메시지" } });
+    fireEvent.click(screen.getByTestId("send-button"));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText("실패 메시지")).not.toBeInTheDocument();
+    expect(input).toHaveValue("");
+  });
+
   it("Shift+Enter로는 전송하지 않는다", () => {
     render(<DowntimeRoom {...defaultProps} />);
     const input = screen.getByTestId("chat-input");

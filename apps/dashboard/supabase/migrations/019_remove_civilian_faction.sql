@@ -1,4 +1,4 @@
--- 018_remove_civilian_faction.sql
+-- 019_remove_civilian_faction.sql
 -- characters.faction에서 civilian을 제거하고 bureau/static/defector만 허용한다.
 
 UPDATE characters

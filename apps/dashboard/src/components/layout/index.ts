@@ -2,6 +2,7 @@ export { TopBar } from "./TopBar";
 export { SolarisTicker } from "./SolarisTicker";
 export { MobileTabBar } from "./MobileTabBar";
 export { DashboardLayout } from "./DashboardLayout";
+export { ApiActivityProvider, useApiActivity } from "./ApiActivityProvider";
 export { DashboardSessionProvider, useDashboardSession } from "./DashboardSessionProvider";
 export type { DashboardMe, DashboardMeCharacter, DashboardMeUser } from "./DashboardSessionProvider";
 export { NAV_ITEMS } from "./nav-items";

@@ -139,6 +139,12 @@ export async function GET(
         avatarUrl: item.character.profile_image_url,
       }));
 
+    const isParticipant = Boolean(
+      myCharacterId &&
+      participantRows.some((row) => row.character_id === myCharacterId),
+    );
+    const myParticipantId = isParticipant ? myCharacterId : null;
+
     const mappedMessages = ((messages ?? []) as DbMessageRow[]).map((row) =>
       mapOperationMessage(row, myCharacterId),
     );
@@ -155,7 +161,7 @@ export async function GET(
         isMainStory: operationRow.is_main_story,
         maxParticipants: operationRow.max_participants,
         createdAt: operationRow.created_at,
-        myParticipantId: myCharacterId,
+        myParticipantId,
         participants: normalizedParticipants,
         messages: mappedMessages,
       },

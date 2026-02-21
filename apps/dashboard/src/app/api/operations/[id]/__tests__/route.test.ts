@@ -9,6 +9,7 @@ const {
   mockParticipantsIs,
   mockMessagesEq,
   mockMessagesIs,
+  mockCharacterMaybeSingle,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
@@ -18,6 +19,7 @@ const {
   mockParticipantsIs: vi.fn(),
   mockMessagesEq: vi.fn(),
   mockMessagesIs: vi.fn(),
+  mockCharacterMaybeSingle: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -74,7 +76,7 @@ describe("GET /api/operations/[id]", () => {
             eq: () => ({
               eq: () => ({
                 is: () => ({
-                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                  maybeSingle: mockCharacterMaybeSingle,
                 }),
               }),
             }),
@@ -84,6 +86,8 @@ describe("GET /api/operations/[id]", () => {
 
       throw new Error(`unexpected table: ${table}`);
     });
+
+    mockCharacterMaybeSingle.mockResolvedValue({ data: null, error: null });
   });
 
   it("미인증이면 401", async () => {
@@ -99,6 +103,7 @@ describe("GET /api/operations/[id]", () => {
 
   it("상세를 반환한다", async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
       data: {
         id: "op-1",
@@ -116,7 +121,7 @@ describe("GET /api/operations/[id]", () => {
       data: [
         {
           character_id: "ch-1",
-          team: "host",
+          team: "bureau",
           character: {
             id: "ch-1",
             name: "루시엘",
@@ -158,6 +163,7 @@ describe("GET /api/operations/[id]", () => {
     expect(body.data).toEqual(
       expect.objectContaining({
         id: "op-1",
+        myParticipantId: "ch-1",
         messages: expect.arrayContaining([
           expect.objectContaining({
             id: "msg-1",
@@ -166,5 +172,53 @@ describe("GET /api/operations/[id]", () => {
         ]),
       }),
     );
+  });
+
+  it("승인 캐릭터가 있어도 작전 미참가면 myParticipantId는 null이다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-me" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: {
+        id: "op-2",
+        title: "다운타임 B",
+        type: "downtime",
+        status: "live",
+        summary: "요약",
+        is_main_story: false,
+        max_participants: 8,
+        created_at: "2026-02-20T00:00:00.000Z",
+      },
+      error: null,
+    });
+    mockParticipantsIs.mockResolvedValue({
+      data: [
+        {
+          character_id: "ch-other",
+          team: "static",
+          character: {
+            id: "ch-other",
+            name: "타 참가자",
+            faction: "static",
+            ability_class: "compute",
+            hp_current: 100,
+            hp_max: 100,
+            will_current: 200,
+            will_max: 200,
+            profile_image_url: null,
+          },
+        },
+      ],
+      error: null,
+    });
+    mockMessagesIs.mockResolvedValue({ data: [], error: null });
+
+    const { GET } = await import("../route");
+    const response = await GET(new Request("http://localhost"), {
+      params: Promise.resolve({ id: "op-2" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.myParticipantId).toBeNull();
   });
 });

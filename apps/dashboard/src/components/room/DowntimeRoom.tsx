@@ -86,6 +86,7 @@ export function DowntimeRoom({
           return;
         }
       }
+      return;
     } catch (e) {
       console.error("[DowntimeRoom] 메시지 전송 실패:", e);
     }

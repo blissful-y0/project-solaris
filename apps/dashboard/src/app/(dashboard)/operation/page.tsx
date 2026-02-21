@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AccessDenied } from "@/components/common";
 import { OperationHub } from "@/components/operation";
 import type { OperationItem } from "@/components/operation";
+import { useApiActivity } from "@/components/layout";
 import { createClient } from "@/lib/supabase/client";
 
 type CharacterStatus = "approved" | "pending" | "rejected" | null;
@@ -14,9 +15,9 @@ export default function OperationPage() {
   const [operations, setOperations] = useState<OperationItem[]>([]);
   const [statusLoading, setStatusLoading] = useState(true);
   const [operationsLoading, setOperationsLoading] = useState(false);
-  const [operationsError, setOperationsError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const operationsRef = useRef<OperationItem[]>([]);
+  const { track } = useApiActivity();
 
   const isApproved = characterStatus === "approved";
 
@@ -24,7 +25,7 @@ export default function OperationPage() {
   useEffect(() => {
     let mounted = true;
     setStatusLoading(true);
-    fetch("/api/me", { cache: "no-store" })
+    track(() => fetch("/api/me", { cache: "no-store" }))
       .then((r) => r.json())
       .then((body) => {
         if (!mounted) return;
@@ -40,13 +41,13 @@ export default function OperationPage() {
         setStatusLoading(false);
       });
     return () => { mounted = false; };
-  }, []);
+  }, [track]);
 
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [track]);
 
   useEffect(() => {
     operationsRef.current = operations;
@@ -61,9 +62,7 @@ export default function OperationPage() {
     if (!silent) {
       setOperationsLoading(true);
     }
-    setOperationsError(null);
-
-    try {
+    const run = async () => {
       const response = await fetch("/api/operations", { cache: "no-store" });
       if (!response.ok) {
         throw new Error(`FAILED_TO_FETCH_OPERATIONS:${response.status}`);
@@ -71,6 +70,14 @@ export default function OperationPage() {
       const body = await response.json();
       if (!isMountedRef.current) return;
       setOperations(body?.data ?? []);
+    };
+
+    try {
+      if (silent) {
+        await run();
+      } else {
+        await track(run);
+      }
     } catch {
       if (!isMountedRef.current) return;
 
@@ -80,8 +87,6 @@ export default function OperationPage() {
         }, 700);
         return;
       }
-
-      setOperationsError("FAILED_TO_FETCH_OPERATIONS");
 
       // empty 응답과 일시 실패를 구분하기 위해, 기존 목록이 있으면 보존한다.
       if (operationsRef.current.length === 0) {
@@ -175,12 +180,6 @@ export default function OperationPage() {
           <div className="text-sm text-text-secondary py-8">작전 목록을 불러오는 중...</div>
         ) : (
           <>
-            {operationsError && operations.length === 0 && (
-              <div className="mb-4 rounded-md border border-accent/30 bg-accent/5 px-3 py-2 text-xs text-accent">
-                작전 목록이 비어 보이는 상태입니다. 실제로 생성된 작전이 없거나, 복귀 직후 동기화가 지연된
-                경우일 수 있습니다. 잠시 후 자동 재시도됩니다.
-              </div>
-            )}
             <OperationHub
               operations={operations}
               onOperationCreated={() => {
