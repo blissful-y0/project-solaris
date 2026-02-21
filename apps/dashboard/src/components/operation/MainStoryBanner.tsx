@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
 
@@ -45,7 +46,7 @@ export function MainStoryBanner({ event }: MainStoryBannerProps) {
         router.push(`/operation/${event.id}`);
       } else {
         const body = await response.json().catch(() => null);
-        alert(body?.error ?? "JOIN_FAILED");
+        toast.error(body?.error ?? "JOIN_FAILED");
       }
     } finally {
       setJoining(false);

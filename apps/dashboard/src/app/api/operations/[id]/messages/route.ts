@@ -50,6 +50,41 @@ export async function POST(
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
+    const { data: operation, error: operationError } = await (supabase as any)
+      .from("operations")
+      .select("id, status")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (operationError) {
+      return NextResponse.json({ error: "FAILED_TO_FETCH_OPERATION" }, { status: 500 });
+    }
+
+    if (!operation) {
+      return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+    }
+
+    if (operation.status === "completed") {
+      return NextResponse.json({ error: "OPERATION_CLOSED" }, { status: 409 });
+    }
+
+    const { data: participant, error: participantError } = await (supabase as any)
+      .from("operation_participants")
+      .select("id")
+      .eq("operation_id", id)
+      .eq("character_id", myCharacter.id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (participantError) {
+      return NextResponse.json({ error: "FAILED_TO_FETCH_PARTICIPANT" }, { status: 500 });
+    }
+
+    if (!participant) {
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    }
+
     const { data: inserted, error: insertError } = await (supabase as any)
       .from("operation_messages")
       .insert({

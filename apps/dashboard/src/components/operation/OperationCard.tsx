@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Badge, Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -104,7 +105,7 @@ export function OperationCard({ item }: OperationCardProps) {
           router.push(`/operation/${item.id}`);
         } else {
           const body = await response.json().catch(() => null);
-          alert(body?.error ?? "JOIN_FAILED");
+          toast.error(body?.error ?? "JOIN_FAILED");
         }
       } finally {
         setJoining(false);

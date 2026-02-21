@@ -33,6 +33,7 @@ import {
 describe("DowntimeRoom", () => {
   const defaultProps = {
     operationId: "op-test-1",
+    isParticipant: true,
     roomTitle: "중앙 아케이드 야간 순찰",
     participants: mockParticipants,
     initialMessages: mockRoomMessages,
@@ -91,6 +92,13 @@ describe("DowntimeRoom", () => {
     render(<DowntimeRoom {...defaultProps} />);
     expect(screen.getByTestId("chat-input")).toBeInTheDocument();
     expect(screen.getByTestId("send-button")).toBeInTheDocument();
+  });
+
+  it("관전자(isParticipant=false)는 입력 영역과 서사반영 버튼을 보지 못한다", () => {
+    render(<DowntimeRoom {...defaultProps} isParticipant={false} />);
+    expect(screen.queryByTestId("chat-input")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("send-button")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("narrative-request-btn")).not.toBeInTheDocument();
   });
 
   it("서사반영 버튼을 표시한다", () => {

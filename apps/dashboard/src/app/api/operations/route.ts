@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         id,
         title,
         type,
-        summary: summary || null,
+        summary,
         status: "waiting",
         is_main_story: false,
         // DB CHECK 제약(2~12)을 준수해야 insert가 실패하지 않는다.

@@ -5,15 +5,17 @@ const {
   mockGetUser,
   mockFrom,
   mockOpSelect,
+  mockOpInsertSingle,
   mockParticipantsIs,
-  mockParticipantSelect,
+  mockCharacterMaybeSingle,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
   mockFrom: vi.fn(),
   mockOpSelect: vi.fn(),
+  mockOpInsertSingle: vi.fn(),
   mockParticipantsIs: vi.fn(),
-  mockParticipantSelect: vi.fn(),
+  mockCharacterMaybeSingle: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -41,6 +43,11 @@ describe("GET /api/operations", () => {
               order: chain.order,
             }),
           }),
+          insert: () => ({
+            select: () => ({
+              single: mockOpInsertSingle,
+            }),
+          }),
         };
       }
 
@@ -49,6 +56,20 @@ describe("GET /api/operations", () => {
           select: () => ({
             in: () => ({
               is: mockParticipantsIs,
+            }),
+          }),
+        };
+      }
+
+      if (table === "characters") {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                is: () => ({
+                  maybeSingle: mockCharacterMaybeSingle,
+                }),
+              }),
             }),
           }),
         };
@@ -165,5 +186,75 @@ describe("GET /api/operations", () => {
       { id: "ch-s", name: "루시엘 린" },
       { id: "ch-d", name: "엘라 크루즈" },
     ]);
+  });
+});
+
+describe("POST /api/operations", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: mockGetUser },
+      from: mockFrom,
+    });
+  });
+
+  it("summary를 비워도 201로 생성된다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({
+      data: { id: "ch-1" },
+      error: null,
+    });
+    mockOpInsertSingle.mockResolvedValue({
+      data: {
+        id: "op-new",
+        title: "새 작전",
+        type: "operation",
+        status: "waiting",
+        summary: "",
+        is_main_story: false,
+        max_participants: 4,
+        created_at: "2026-02-21T12:00:00Z",
+        created_by: "ch-1",
+      },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost/api/operations", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "operation",
+          title: "새 작전",
+          summary: "   ",
+        }),
+      }) as any,
+    );
+
+    expect(response.status).toBe(201);
+  });
+
+  it("title이 101자 이상이면 400을 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({
+      data: { id: "ch-1" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost/api/operations", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "operation",
+          title: "a".repeat(101),
+          summary: "",
+        }),
+      }) as any,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: "INVALID_TITLE" });
   });
 });

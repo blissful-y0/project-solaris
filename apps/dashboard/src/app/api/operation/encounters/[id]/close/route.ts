@@ -26,7 +26,7 @@ export async function POST(
         gm_closed_by: user.id,
       })
       .eq("id", id)
-      .eq("deleted_at", null)
+      .is("deleted_at", null)
       .select("id, status, result, ended_at")
       .single();
 

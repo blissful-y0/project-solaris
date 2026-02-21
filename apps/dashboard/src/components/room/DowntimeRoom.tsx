@@ -12,6 +12,7 @@ import { useRoomMessages } from "./use-room-messages";
 
 type DowntimeRoomProps = {
   operationId: string;
+  isParticipant: boolean;
   roomTitle: string;
   participants: RoomParticipant[];
   initialMessages: RoomMessage[];
@@ -21,6 +22,7 @@ type DowntimeRoomProps = {
 
 export function DowntimeRoom({
   operationId,
+  isParticipant,
   roomTitle,
   participants,
   initialMessages,
@@ -203,18 +205,20 @@ export function DowntimeRoom({
         >
           {participants.length}명
         </span>
-        <button
-          onClick={selectingRange ? handleCancelSelection : handleStartSelection}
-          className={cn(
-            "text-[0.65rem] font-medium transition-colors",
-            selectingRange
-              ? "text-accent/80 hover:text-accent"
-              : "text-primary/70 hover:text-primary",
-          )}
-          data-testid={selectingRange ? "cancel-selection-btn" : "narrative-request-btn"}
-        >
-          {selectingRange ? "취소" : "서사반영"}
-        </button>
+        {isParticipant && (
+          <button
+            onClick={selectingRange ? handleCancelSelection : handleStartSelection}
+            className={cn(
+              "text-[0.65rem] font-medium transition-colors",
+              selectingRange
+                ? "text-accent/80 hover:text-accent"
+                : "text-primary/70 hover:text-primary",
+            )}
+            data-testid={selectingRange ? "cancel-selection-btn" : "narrative-request-btn"}
+          >
+            {selectingRange ? "취소" : "서사반영"}
+          </button>
+        )}
         <button
           aria-label="메뉴"
           className="text-text-secondary hover:text-text transition-colors"
@@ -235,7 +239,7 @@ export function DowntimeRoom({
       />
 
       {/* ── 범위 선택 모드: 하단 바 ── */}
-      {selectingRange && (
+      {isParticipant && selectingRange && (
         <div className="border-t border-primary/30 bg-bg-secondary/90 backdrop-blur-sm px-4 py-3 flex items-center gap-3">
           <span className="flex-1 text-xs text-text-secondary">
             {rangeComplete
@@ -255,7 +259,7 @@ export function DowntimeRoom({
       )}
 
       {/* ── 일반 입력 영역 (범위 선택 중이면 숨김) ── */}
-      {!selectingRange && (
+      {!selectingRange && isParticipant && (
         <div className="border-t border-border bg-bg-secondary/80 backdrop-blur-sm p-3">
           <div className="flex items-end gap-2">
             <textarea

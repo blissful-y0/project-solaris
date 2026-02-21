@@ -17,6 +17,12 @@ const phases: { value: TurnPhase; label: string }[] = [
   { value: "judging", label: "JUDGING" },
 ];
 
+const FACTION_DEFAULT_STATS: Record<"bureau" | "static" | "defector", { hp: number; will: number }> = {
+  bureau: { hp: 80, will: 250 },
+  static: { hp: 120, will: 150 },
+  defector: { hp: 100, will: 200 },
+};
+
 /** API 응답 참가자 타입 */
 type ApiParticipant = {
   id: string;
@@ -153,21 +159,25 @@ export default function OperationSessionPage() {
   /* 전투용 BattleParticipant 목록 */
   const battleParticipants: BattleParticipant[] = useMemo(
     () =>
-      (operation?.participants ?? []).map((item) => ({
-        id: item.id,
-        name: item.name,
-        faction: (item.faction ?? "bureau") as Faction,
-        team: (item.team === "bureau" ? "ally" : "enemy") as "ally" | "enemy",
-        hp: item.hp ?? { current: 80, max: 80 },
-        will: item.will ?? { current: 250, max: 250 },
-        abilities: item.abilities.map((a) => ({
-          id: a.id,
-          name: a.name,
-          tier: a.tier as BattleAbility["tier"],
-          costHp: a.costHp,
-          costWill: a.costWill,
-        })),
-      })),
+      (operation?.participants ?? []).map((item) => {
+        const faction = (item.faction ?? item.team) as Faction;
+        const defaults = FACTION_DEFAULT_STATS[item.team];
+        return {
+          id: item.id,
+          name: item.name,
+          faction,
+          team: (item.team === "bureau" ? "ally" : "enemy") as "ally" | "enemy",
+          hp: item.hp ?? { current: defaults.hp, max: defaults.hp },
+          will: item.will ?? { current: defaults.will, max: defaults.will },
+          abilities: item.abilities.map((a) => ({
+            id: a.id,
+            name: a.name,
+            tier: a.tier as BattleAbility["tier"],
+            costHp: a.costHp,
+            costWill: a.costWill,
+          })),
+        };
+      }),
     [operation?.participants],
   );
 
@@ -238,6 +248,7 @@ export default function OperationSessionPage() {
         <div className="w-full max-w-7xl mx-auto h-full">
           <DowntimeRoom
             operationId={operation.id}
+            isParticipant={Boolean(operation.myParticipantId)}
             roomTitle={operation.title}
             participants={roomParticipants}
             initialMessages={roomMessages}

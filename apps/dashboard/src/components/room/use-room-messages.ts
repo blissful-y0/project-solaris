@@ -125,7 +125,9 @@ export function useRoomMessages(
         },
       )
       .subscribe((status, err) => {
-        console.log("[Realtime] status:", status, err ?? "");
+        if (err) {
+          console.error("[Realtime] subscription error:", status, err.message);
+        }
       });
 
     return () => {

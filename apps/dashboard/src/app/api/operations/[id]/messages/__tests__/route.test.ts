@@ -5,12 +5,16 @@ const {
   mockGetUser,
   mockFrom,
   mockCharacterMaybeSingle,
+  mockOperationMaybeSingle,
+  mockParticipantMaybeSingle,
   mockInsertSelectSingle,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
   mockFrom: vi.fn(),
   mockCharacterMaybeSingle: vi.fn(),
+  mockOperationMaybeSingle: vi.fn(),
+  mockParticipantMaybeSingle: vi.fn(),
   mockInsertSelectSingle: vi.fn(),
 }));
 
@@ -47,6 +51,32 @@ describe("POST /api/operations/[id]/messages", () => {
           insert: () => ({
             select: () => ({
               single: mockInsertSelectSingle,
+            }),
+          }),
+        };
+      }
+
+      if (table === "operations") {
+        return {
+          select: () => ({
+            eq: () => ({
+              is: () => ({
+                maybeSingle: mockOperationMaybeSingle,
+              }),
+            }),
+          }),
+        };
+      }
+
+      if (table === "operation_participants") {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                is: () => ({
+                  maybeSingle: mockParticipantMaybeSingle,
+                }),
+              }),
             }),
           }),
         };
@@ -111,6 +141,14 @@ describe("POST /api/operations/[id]/messages", () => {
       },
       error: null,
     });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", status: "live" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({
+      data: { id: "opp-1" },
+      error: null,
+    });
 
     const { POST } = await import("../route");
     const response = await POST(
@@ -131,5 +169,55 @@ describe("POST /api/operations/[id]/messages", () => {
         isMine: true,
       }),
     );
+  });
+
+  it("비참가자는 403", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({
+      data: { id: "ch-1", name: "루시엘", profile_image_url: null },
+      error: null,
+    });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", status: "live" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({ content: "테스트 전송" }),
+      }),
+      { params: Promise.resolve({ id: "op-1" }) },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it("완료된 operation은 409", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({
+      data: { id: "ch-1", name: "루시엘", profile_image_url: null },
+      error: null,
+    });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", status: "completed" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({ content: "테스트 전송" }),
+      }),
+      { params: Promise.resolve({ id: "op-1" }) },
+    );
+
+    expect(response.status).toBe(409);
   });
 });
