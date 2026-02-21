@@ -6,55 +6,53 @@ import { Modal } from "@/components/ui";
 
 import { ClearanceBadge } from "./ClearanceBadge";
 import { LoreContent } from "./LoreContent";
-import type { LoreCategory, LoreCategoryId, LoreDocumentHtml } from "./types";
-import { LORE_CATEGORIES } from "./types";
+import type { LoreDocumentHtml } from "./types";
 
 type LoreDetailModalProps = {
   open: boolean;
-  categoryId: LoreCategoryId | null;
+  slug: string | null;
   contents: LoreDocumentHtml[];
   onClose: () => void;
-  onNavigate: (id: LoreCategoryId) => void;
+  onNavigate: (slug: string) => void;
 };
 
-/** HELIOS 아카이브 상세 모달 — 선택한 카테고리 콘텐츠 + 이전/다음 네비게이션 */
+/** HELIOS 아카이브 상세 모달 — 선택한 문서 콘텐츠 + 이전/다음 네비게이션 */
 export function LoreDetailModal({
   open,
-  categoryId,
+  slug,
   contents,
   onClose,
   onNavigate,
 }: LoreDetailModalProps) {
   const currentIndex = useMemo(
-    () => LORE_CATEGORIES.findIndex((c) => c.id === categoryId),
-    [categoryId],
+    () => contents.findIndex((c) => c.slug === slug),
+    [contents, slug],
   );
 
-  const category: LoreCategory | undefined = LORE_CATEGORIES[currentIndex];
-  const content = contents.find((c) => c.slug === categoryId);
+  const doc: LoreDocumentHtml | undefined = contents[currentIndex];
 
-  const prevCategory: LoreCategory | undefined =
-    currentIndex > 0 ? LORE_CATEGORIES[currentIndex - 1] : undefined;
-  const nextCategory: LoreCategory | undefined =
-    currentIndex < LORE_CATEGORIES.length - 1
-      ? LORE_CATEGORIES[currentIndex + 1]
-      : undefined;
+  const prevDoc: LoreDocumentHtml | undefined =
+    currentIndex > 0 ? contents[currentIndex - 1] : undefined;
+  const nextDoc: LoreDocumentHtml | undefined =
+    currentIndex < contents.length - 1 ? contents[currentIndex + 1] : undefined;
 
   const handlePrev = useCallback(() => {
-    if (prevCategory) onNavigate(prevCategory.id);
-  }, [prevCategory, onNavigate]);
+    if (prevDoc) onNavigate(prevDoc.slug);
+  }, [prevDoc, onNavigate]);
 
   const handleNext = useCallback(() => {
-    if (nextCategory) onNavigate(nextCategory.id);
-  }, [nextCategory, onNavigate]);
+    if (nextDoc) onNavigate(nextDoc.slug);
+  }, [nextDoc, onNavigate]);
 
-  if (!open || !category) return null;
+  if (!open || !doc) return null;
+
+  const codeDisplay = doc.slug.toUpperCase().replace(/-/g, "-");
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel={`${category.label} 아카이브`}
+      ariaLabel={`${doc.title} 아카이브`}
       className="max-w-2xl md:max-w-4xl"
     >
       {/* 헤더 */}
@@ -64,39 +62,39 @@ export function LoreDetailModal({
           <span className="font-mono text-[0.625rem] text-text-secondary tracking-wider">
             FILE_{String(currentIndex + 1).padStart(3, "0")} // ACCESSING
           </span>
-          <ClearanceBadge level={category.clearanceLevel} className="ml-auto" />
+          <ClearanceBadge level={doc.clearanceLevel} className="ml-auto" />
         </div>
         <p className="font-mono text-[0.6875rem] text-primary tracking-wider mb-0.5">
-          SECTION::{category.codeName}
+          SECTION::{codeDisplay}
         </p>
-        <h2 className="text-base font-bold text-text">{category.label}</h2>
+        <h2 className="text-base font-bold text-text">{doc.title}</h2>
       </div>
 
       {/* 콘텐츠 */}
       <div className="px-4 pt-2 pb-4 max-h-[60dvh] overflow-y-auto">
-        <LoreContent html={content?.html ?? ""} className="first-heading-no-mt" />
+        <LoreContent html={doc.html} className="first-heading-no-mt" />
       </div>
 
       {/* 하단 네비게이션 */}
       <div className="border-t border-border px-4 py-3 flex items-center justify-between">
-        {prevCategory ? (
+        {prevDoc ? (
           <button
             type="button"
             onClick={handlePrev}
             className="text-xs text-text-secondary hover:text-primary transition-colors"
           >
-            ← {prevCategory.label}
+            ← {prevDoc.title}
           </button>
         ) : (
           <span />
         )}
-        {nextCategory ? (
+        {nextDoc ? (
           <button
             type="button"
             onClick={handleNext}
             className="text-xs text-text-secondary hover:text-primary transition-colors"
           >
-            {nextCategory.label} →
+            {nextDoc.title} →
           </button>
         ) : (
           <span />
