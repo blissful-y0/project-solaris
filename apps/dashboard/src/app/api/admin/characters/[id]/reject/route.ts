@@ -30,7 +30,7 @@ export async function POST(
       .from("characters")
       .update({ status: "rejected", rejection_reason: reason })
       .eq("id", id)
-      .select("id, user_id, status")
+      .select("id, user_id, status, name")
       .single();
 
     if (error || !data) {
@@ -42,8 +42,8 @@ export async function POST(
         userId: data.user_id,
         scope: "user",
         type: "character_rejected",
-        title: "캐릭터 반려 안내",
-        body: "캐릭터가 반려되었습니다.",
+        title: "[SOLARIS] 캐릭터 반려 안내",
+        body: `캐릭터 **${data.name}**이(가) 반려되었습니다.\n\n반려 사유: ${reason}`,
         channel: "discord_dm",
         payload: { characterId: data.id },
       }, supabase);

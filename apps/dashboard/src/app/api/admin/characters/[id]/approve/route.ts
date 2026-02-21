@@ -17,7 +17,7 @@ export async function POST(
       .from("characters")
       .update({ status: "approved", rejection_reason: null })
       .eq("id", id)
-      .select("id, user_id, status")
+      .select("id, user_id, status, name")
       .single();
 
     if (error || !data) {
@@ -29,8 +29,8 @@ export async function POST(
         userId: data.user_id,
         scope: "user",
         type: "character_approved",
-        title: "캐릭터 승인 완료",
-        body: "캐릭터가 승인되었습니다.",
+        title: "[SOLARIS] 캐릭터 승인 완료",
+        body: `캐릭터 **${data.name}**이(가) 승인되었습니다.\n이제 작전에 참여하실 수 있습니다.`,
         channel: "discord_dm",
         payload: { characterId: data.id },
       }, supabase);

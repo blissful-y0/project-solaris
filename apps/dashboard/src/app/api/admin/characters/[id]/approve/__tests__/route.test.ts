@@ -27,7 +27,7 @@ describe("POST /api/admin/characters/[id]/approve", () => {
     });
 
     mockSingle.mockResolvedValue({
-      data: { id: "char_001", user_id: "user_1", status: "approved" },
+      data: { id: "char_001", user_id: "user_1", status: "approved", name: "아마츠키 레이" },
       error: null,
     });
 
@@ -54,7 +54,13 @@ describe("POST /api/admin/characters/[id]/approve", () => {
     const response = await POST(request, { params: { id: "char_001" } });
 
     expect(response.status).toBe(200);
-    expect(mockCreateNotification).toHaveBeenCalled();
+    expect(mockCreateNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "[SOLARIS] 캐릭터 승인 완료",
+        body: expect.stringContaining("아마츠키 레이"),
+      }),
+      expect.anything(),
+    );
   });
 
   it("알림 생성 실패해도 승인 자체는 200으로 응답한다", async () => {
