@@ -62,14 +62,15 @@ describe("ActionInput", () => {
     expect(screen.getByText(/압축 역장/)).toBeInTheDocument();
   });
 
-  it("attack 선택 시 적군이 대상 목록에 표시된다", () => {
+  it("attack 선택 시 참가자 전원이 대상 목록에 표시된다", () => {
     render(<ActionInput {...defaultProps} />);
 
-    /* attack이 기본 선택이므로 적군이 대상 목록에 표시 */
+    /* 행동 유형과 무관하게 전원 대상 */
+    expect(screen.getByText("카이 안데르센")).toBeInTheDocument();
     expect(screen.getByText("나디아 볼코프")).toBeInTheDocument();
   });
 
-  it("defend 선택 시 아군이 대상 목록에 표시된다", async () => {
+  it("defend 선택 시에도 참가자 전원이 대상 목록에 표시된다", async () => {
     const user = userEvent.setup();
     render(<ActionInput {...defaultProps} />);
 
@@ -79,6 +80,7 @@ describe("ActionInput", () => {
     const options = targetSelect.querySelectorAll("option");
     const optionTexts = Array.from(options).map((o) => o.textContent);
     expect(optionTexts).toContain("카이 안데르센");
+    expect(optionTexts).toContain("나디아 볼코프");
   });
 
   it("능력 선택 시 코스트 프리뷰가 표시된다", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/format-time";
@@ -20,6 +20,34 @@ type RoomChatLogProps = {
   /** 메시지 클릭 시 호출 */
   onMessageSelect?: (messageId: string) => void;
 };
+
+const CHAT_MESSAGE_INLINE_LIMIT = 2000;
+
+function NarrationContent({ content }: { content: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = content.length > CHAT_MESSAGE_INLINE_LIMIT;
+  const displayContent = !isLong || expanded
+    ? content
+    : `${content.slice(0, CHAT_MESSAGE_INLINE_LIMIT)}...`;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[0.9375rem] leading-relaxed text-text whitespace-pre-wrap">
+        {displayContent}
+      </p>
+      {isLong && (
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="text-xs text-primary hover:underline"
+          aria-label={expanded ? "메시지 접기" : "메시지 더보기"}
+        >
+          {expanded ? "접기" : "더보기"}
+        </button>
+      )}
+    </div>
+  );
+}
 
 /** 내 서술 (우측 말풍선) */
 function MyNarration({
@@ -49,9 +77,7 @@ function MyNarration({
             selectable && !highlighted && "hover:border-primary/50",
           )}
         >
-          <p className="text-[0.9375rem] leading-relaxed text-text whitespace-pre-wrap">
-            {message.content}
-          </p>
+          <NarrationContent content={message.content} />
         </div>
         <time className="text-[0.6rem] text-text-secondary mt-1 px-1">
           {formatTime(message.timestamp)}
@@ -100,9 +126,7 @@ function OtherNarration({
             selectable && !highlighted && "hover:border-primary/50",
           )}
         >
-          <p className="text-[0.9375rem] leading-relaxed text-text whitespace-pre-wrap">
-            {message.content}
-          </p>
+          <NarrationContent content={message.content} />
         </div>
         <time className="text-[0.6rem] text-text-secondary mt-1 px-1">
           {formatTime(message.timestamp)}

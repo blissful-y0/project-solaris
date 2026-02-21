@@ -1,10 +1,15 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui";
 
 import type { OperationItem } from "./types";
 
 type MainStoryBannerProps = {
   event: OperationItem | null;
-  onJoin?: (event: OperationItem) => void;
 };
 
 /** 개설일 포맷 (YYYY.MM.DD) */
@@ -18,11 +23,36 @@ function formatDate(isoDate: string): string {
 
 /** 참가자 총 인원 */
 function participantCount(item: OperationItem): number {
-  return item.teamA.length + item.teamB.length;
+  const uniqueIds = new Set<string>();
+  for (const member of [...item.teamA, ...item.teamB]) {
+    if (member.id) uniqueIds.add(member.id);
+  }
+  return uniqueIds.size;
 }
 
 /** 운영자 MAIN STORY LIVE 배너 */
-export function MainStoryBanner({ event, onJoin }: MainStoryBannerProps) {
+export function MainStoryBanner({ event }: MainStoryBannerProps) {
+  const router = useRouter();
+  const [joining, setJoining] = useState(false);
+
+  const handleJoin = useCallback(async () => {
+    if (!event || joining) return;
+    setJoining(true);
+    try {
+      const response = await fetch(`/api/operations/${event.id}/join`, {
+        method: "POST",
+      });
+      if (response.ok) {
+        router.push(`/operation/${event.id}`);
+      } else {
+        const body = await response.json().catch(() => null);
+        toast.error(body?.error ?? "JOIN_FAILED");
+      }
+    } finally {
+      setJoining(false);
+    }
+  }, [event, joining, router]);
+
   if (!event) return null;
 
   return (
@@ -48,9 +78,14 @@ export function MainStoryBanner({ event, onJoin }: MainStoryBannerProps) {
           <span className="mx-1.5 text-text-secondary/40">·</span>
           {formatDate(event.createdAt)} 개설
         </p>
-        <Button variant="primary" size="sm" onClick={() => onJoin?.(event)}>
-          작전 참가 ▸
-        </Button>
+        <div className="flex gap-1.5">
+          <Button variant="ghost" size="sm" onClick={() => router.push(`/operation/${event.id}`)}>
+            관전
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleJoin} disabled={joining}>
+            {joining ? "..." : "입장 ▸"}
+          </Button>
+        </div>
       </div>
     </section>
   );

@@ -102,10 +102,13 @@ export const mockRoomMessages: RoomMessage[] = [
     timestamp: "2026-02-18T20:08:00Z",
     isMine: false,
     narrativeRequest: {
+      id: "nr-1",
       requesterId: "p1",
       rangeStart: "msg-4",
       rangeEnd: "msg-9",
-      status: "pending",
+      status: "voting",
+      votes: {},
+      totalParticipants: 3,
     },
   },
   {

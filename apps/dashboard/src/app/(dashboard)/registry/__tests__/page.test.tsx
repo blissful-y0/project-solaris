@@ -113,15 +113,15 @@ describe("CharactersPage", () => {
     await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
   });
 
-  it("로딩 중 Skeleton을 표시한다", async () => {
+  it("로딩 중에는 빈 영역을 표시한다 (전역 스피너 위임)", async () => {
     const originalFetch = global.fetch;
     global.fetch = vi.fn().mockImplementation(
       () => new Promise(() => {}),
     ) as unknown as typeof fetch;
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     render(<CharactersPage />);
-    const skeletons = document.querySelectorAll(".h-\\[170px\\]");
-    expect(skeletons.length).toBe(6);
+    /* 로컬 스피너 제거 → role="status" 없음, 빈 영역(py-16)만 존재 */
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     await Promise.resolve();
     expect(consoleErrorSpy).not.toHaveBeenCalled();
     consoleErrorSpy.mockRestore();
