@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { envServer } from "@/lib/env.server";
+import { getServiceClient } from "@/lib/supabase/service";
+import { createNotification } from "@/app/actions/notification";
 
 function isSafeInternalPath(path: string) {
   return path.startsWith("/") && !path.startsWith("//");
@@ -66,6 +68,14 @@ export async function GET(request: Request) {
         user.email ??
         `user-${user.id.slice(0, 8)}`;
 
+      // 신규 회원 여부 확인 (upsert 전)
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+      const isNewUser = !existingUser;
+
       const { error: upsertError } = await supabase.from("users").upsert(
         {
           id: user.id,
@@ -78,6 +88,25 @@ export async function GET(request: Request) {
 
       if (upsertError) {
         return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+      }
+
+      // 신규 회원 가입 시 어드민 웹훅 알림 (실패해도 로그인 차단 안 함)
+      if (isNewUser) {
+        try {
+          await createNotification(
+            {
+              userId: null,
+              scope: "broadcast",
+              type: "character_new_member",
+              channel: "discord_webhook",
+              title: "[신규 가입] 새 회원 등록",
+              body: `Discord: @${discordUsername}`,
+            },
+            getServiceClient(),
+          );
+        } catch (notifError) {
+          console.error("[auth/callback] 신규 회원 웹훅 알림 실패:", notifError);
+        }
       }
 
       // Discord 서버 자동 가입 (실패해도 로그인 차단 안 함)
