@@ -8,6 +8,8 @@ const {
   mockCharacterMaybeSingle,
   mockOperationMaybeSingle,
   mockParticipantMaybeSingle,
+  mockInsert,
+  mockInsertSelectSingle,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
@@ -16,6 +18,8 @@ const {
   mockCharacterMaybeSingle: vi.fn(),
   mockOperationMaybeSingle: vi.fn(),
   mockParticipantMaybeSingle: vi.fn(),
+  mockInsert: vi.fn(),
+  mockInsertSelectSingle: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -70,6 +74,7 @@ describe("POST /api/operations/[id]/join", () => {
               }),
             }),
           }),
+          insert: mockInsert,
         };
       }
 
@@ -78,6 +83,15 @@ describe("POST /api/operations/[id]/join", () => {
 
     mockRpc.mockResolvedValue({
       data: { state: "joined", participant_id: "opp-new", team: "bureau", role: "member" },
+      error: null,
+    });
+    mockInsert.mockImplementation(() => ({
+      select: () => ({
+        single: mockInsertSelectSingle,
+      }),
+    }));
+    mockInsertSelectSingle.mockResolvedValue({
+      data: { id: "opp-legacy", team: "bureau", role: "member" },
       error: null,
     });
   });
@@ -154,6 +168,34 @@ describe("POST /api/operations/[id]/join", () => {
     mockRpc.mockResolvedValue({
       data: null,
       error: { code: "23505", message: "duplicate key value violates unique constraint" },
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual(
+      expect.objectContaining({
+        participantId: "opp-1",
+        alreadyJoined: true,
+      }),
+    );
+  });
+
+  it("RPC에서 already_joined를 반환하면 200으로 처리한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockRpc.mockResolvedValue({
+      data: { state: "already_joined", participant_id: "opp-1", team: "bureau", role: "member" },
+      error: null,
     });
 
     const { POST } = await import("../route");
@@ -334,5 +376,38 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(409);
     expect(body).toEqual({ error: "OPERATION_FULL" });
+  });
+
+  it("RPC 함수가 아직 없으면 legacy insert 경로로 폴백한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "downtime", status: "waiting", max_participants: 8, created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { code: "42883", message: "function join_operation_participant does not exist" },
+    });
+    mockInsertSelectSingle.mockResolvedValue({
+      data: { id: "opp-legacy", team: "bureau", role: "member" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body.data).toEqual(
+      expect.objectContaining({
+        participantId: "opp-legacy",
+        alreadyJoined: false,
+      }),
+    );
+    expect(mockInsert).toHaveBeenCalled();
   });
 });

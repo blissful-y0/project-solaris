@@ -6,12 +6,87 @@ function isDuplicateKeyError(error: unknown) {
   return code === "23505";
 }
 
+function isUndefinedFunctionError(error: unknown) {
+  const code = (error as { code?: string } | null)?.code;
+  return code === "42883";
+}
+
 function mapJoinRpcError(message: string): { code: string; status: number } {
   if (message.includes("NOT_FOUND")) return { code: "NOT_FOUND", status: 404 };
   if (message.includes("OPERATION_CLOSED")) return { code: "OPERATION_CLOSED", status: 409 };
   if (message.includes("OPERATION_FULL")) return { code: "OPERATION_FULL", status: 409 };
   if (message.includes("FORBIDDEN")) return { code: "FORBIDDEN", status: 403 };
   return { code: "FAILED_TO_JOIN_OPERATION", status: 500 };
+}
+
+async function joinWithLegacyInsert({
+  supabase,
+  operationId,
+  characterId,
+  team,
+}: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  operationId: string;
+  characterId: string;
+  team: "bureau" | "static" | "defector";
+}) {
+  const { data: inserted, error: insertError } = await supabase
+    .from("operation_participants")
+    .insert({
+      id: `opp_${crypto.randomUUID()}`,
+      operation_id: operationId,
+      character_id: characterId,
+      team,
+      role: "member",
+    })
+    .select("id, team, role")
+    .single();
+
+  if (insertError) {
+    if (isDuplicateKeyError(insertError)) {
+      const { data: concurrentExisting, error: concurrentExistingError } = await supabase
+        .from("operation_participants")
+        .select("id, team, role")
+        .eq("operation_id", operationId)
+        .eq("character_id", characterId)
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (!concurrentExistingError && concurrentExisting) {
+        return {
+          ok: true as const,
+          status: 200,
+          body: {
+            data: {
+              participantId: concurrentExisting.id,
+              team: concurrentExisting.team,
+              role: concurrentExisting.role,
+              alreadyJoined: true,
+            },
+          },
+        };
+      }
+    }
+
+    return {
+      ok: false as const,
+      status: 500,
+      body: { error: "FAILED_TO_JOIN_OPERATION" },
+    };
+  }
+
+  return {
+    ok: true as const,
+    status: 201,
+    body: {
+      data: {
+        participantId: inserted.id,
+        team: inserted.team,
+        role: inserted.role,
+        alreadyJoined: false,
+      },
+    },
+  };
 }
 
 function mapFactionToTeam(faction: string | null | undefined): "bureau" | "static" | "defector" | null {
@@ -121,6 +196,17 @@ export async function POST(
     });
 
     if (joinError) {
+      if (isUndefinedFunctionError(joinError)) {
+        const legacy = await joinWithLegacyInsert({
+          supabase,
+          operationId,
+          characterId: myCharacter.id,
+          team,
+        });
+
+        return NextResponse.json(legacy.body, { status: legacy.status });
+      }
+
       if (isDuplicateKeyError(joinError)) {
         const { data: concurrentExisting, error: concurrentExistingError } = await supabase
           .from("operation_participants")
