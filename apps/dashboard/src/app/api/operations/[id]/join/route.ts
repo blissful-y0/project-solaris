@@ -6,6 +6,14 @@ function isDuplicateKeyError(error: unknown) {
   return code === "23505";
 }
 
+function mapJoinRpcError(message: string): { code: string; status: number } {
+  if (message.includes("NOT_FOUND")) return { code: "NOT_FOUND", status: 404 };
+  if (message.includes("OPERATION_CLOSED")) return { code: "OPERATION_CLOSED", status: 409 };
+  if (message.includes("OPERATION_FULL")) return { code: "OPERATION_FULL", status: 409 };
+  if (message.includes("FORBIDDEN")) return { code: "FORBIDDEN", status: 403 };
+  return { code: "FAILED_TO_JOIN_OPERATION", status: 500 };
+}
+
 function mapFactionToTeam(faction: string | null | undefined): "bureau" | "static" | "defector" | null {
   if (faction === "bureau") return "bureau";
   if (faction === "static") return "static";
@@ -54,7 +62,7 @@ export async function POST(
 
     const { data: operation, error: operationError } = await supabase
       .from("operations")
-      .select("id, type, status, max_participants, created_by")
+      .select("id, type, status, created_by")
       .eq("id", operationId)
       .is("deleted_at", null)
       .maybeSingle();
@@ -105,37 +113,15 @@ export async function POST(
       return NextResponse.json({ error: "INVALID_FACTION" }, { status: 422 });
     }
 
-    const { data: activeParticipants, error: activeParticipantsError } = await supabase
-      .from("operation_participants")
-      .select("id")
-      .eq("operation_id", operationId)
-      .is("deleted_at", null);
+    const { data: joinResult, error: joinError } = await supabase.rpc("join_operation_participant", {
+      p_operation_id: operationId,
+      p_character_id: myCharacter.id,
+      p_team: team,
+      p_participant_id: `opp_${crypto.randomUUID()}`,
+    });
 
-    if (activeParticipantsError) {
-      return NextResponse.json(
-        { error: "FAILED_TO_FETCH_OPERATION_PARTICIPANTS" },
-        { status: 500 },
-      );
-    }
-
-    if ((activeParticipants?.length ?? 0) >= operation.max_participants) {
-      return NextResponse.json({ error: "OPERATION_FULL" }, { status: 409 });
-    }
-
-    const { data: inserted, error: insertError } = await supabase
-      .from("operation_participants")
-      .insert({
-        id: `opp_${crypto.randomUUID()}`,
-        operation_id: operationId,
-        character_id: myCharacter.id,
-        team,
-        role: "member",
-      })
-      .select("id, team, role")
-      .single();
-
-    if (insertError) {
-      if (isDuplicateKeyError(insertError)) {
+    if (joinError) {
+      if (isDuplicateKeyError(joinError)) {
         const { data: concurrentExisting, error: concurrentExistingError } = await supabase
           .from("operation_participants")
           .select("id, team, role")
@@ -159,15 +145,44 @@ export async function POST(
         }
       }
 
-      return NextResponse.json({ error: "FAILED_TO_JOIN_OPERATION" }, { status: 500 });
+      const mapped = mapJoinRpcError(joinError.message);
+      return NextResponse.json({ error: mapped.code }, { status: mapped.status });
+    }
+
+    const normalized = joinResult as
+      | { state: "joined"; participant_id: string; team: string; role: string }
+      | { state: "already_joined"; participant_id: string; team: string; role: string }
+      | { state: "operation_full" };
+
+    if (normalized?.state === "operation_full") {
+      return NextResponse.json({ error: "OPERATION_FULL" }, { status: 409 });
+    }
+
+    if (
+      normalized?.state === "already_joined" &&
+      normalized.participant_id &&
+      normalized.team &&
+      normalized.role
+    ) {
+      return NextResponse.json(
+        {
+          data: {
+            participantId: normalized.participant_id,
+            team: normalized.team,
+            role: normalized.role,
+            alreadyJoined: true,
+          },
+        },
+        { status: 200 },
+      );
     }
 
     return NextResponse.json(
       {
         data: {
-          participantId: inserted.id,
-          team: inserted.team,
-          role: inserted.role,
+          participantId: normalized.participant_id,
+          team: normalized.team,
+          role: normalized.role,
           alreadyJoined: false,
         },
       },

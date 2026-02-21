@@ -4,22 +4,18 @@ const {
   mockCreateClient,
   mockGetUser,
   mockFrom,
+  mockRpc,
   mockCharacterMaybeSingle,
   mockOperationMaybeSingle,
   mockParticipantMaybeSingle,
-  mockActiveParticipantsSelect,
-  mockInsertSelectSingle,
-  mockInsert,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
   mockFrom: vi.fn(),
+  mockRpc: vi.fn(),
   mockCharacterMaybeSingle: vi.fn(),
   mockOperationMaybeSingle: vi.fn(),
   mockParticipantMaybeSingle: vi.fn(),
-  mockActiveParticipantsSelect: vi.fn(),
-  mockInsertSelectSingle: vi.fn(),
-  mockInsert: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -33,6 +29,7 @@ describe("POST /api/operations/[id]/join", () => {
     mockCreateClient.mockResolvedValue({
       auth: { getUser: mockGetUser },
       from: mockFrom,
+      rpc: mockRpc,
     });
 
     mockFrom.mockImplementation((table: string) => {
@@ -64,39 +61,25 @@ describe("POST /api/operations/[id]/join", () => {
 
       if (table === "operation_participants") {
         return {
-          select: (columns?: string) => {
-            if (columns === "id, team, role") {
-              return {
-                eq: () => ({
-                  eq: () => ({
-                    is: () => ({
-                      maybeSingle: mockParticipantMaybeSingle,
-                    }),
-                  }),
-                }),
-              };
-            }
-
-            return {
+          select: () => ({
+            eq: () => ({
               eq: () => ({
-                is: mockActiveParticipantsSelect,
+                is: () => ({
+                  maybeSingle: mockParticipantMaybeSingle,
+                }),
               }),
-            };
-          },
-          insert: mockInsert,
+            }),
+          }),
         };
       }
 
       throw new Error(`unexpected table: ${table}`);
     });
 
-    mockInsert.mockImplementation(() => ({
-      select: () => ({
-        single: mockInsertSelectSingle,
-      }),
-    }));
-
-    mockActiveParticipantsSelect.mockResolvedValue({ data: [], error: null });
+    mockRpc.mockResolvedValue({
+      data: { state: "joined", participant_id: "opp-new", team: "bureau", role: "member" },
+      error: null,
+    });
   });
 
   it("미인증이면 401", async () => {
@@ -140,11 +123,6 @@ describe("POST /api/operations/[id]/join", () => {
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
-    mockInsertSelectSingle.mockResolvedValue({
-      data: { id: "opp-new", team: "bureau", role: "member" },
-      error: null,
-    });
-
     const { POST } = await import("../route");
     const response = await POST(new Request("http://localhost", { method: "POST" }), {
       params: Promise.resolve({ id: "op-1" }),
@@ -173,7 +151,7 @@ describe("POST /api/operations/[id]/join", () => {
         data: { id: "opp-1", team: "bureau", role: "member" },
         error: null,
       });
-    mockInsertSelectSingle.mockResolvedValue({
+    mockRpc.mockResolvedValue({
       data: null,
       error: { code: "23505", message: "duplicate key value violates unique constraint" },
     });
@@ -201,11 +179,6 @@ describe("POST /api/operations/[id]/join", () => {
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
-    mockInsertSelectSingle.mockResolvedValue({
-      data: { id: "opp-new", team: "bureau", role: "member" },
-      error: null,
-    });
-
     const { POST } = await import("../route");
     const response = await POST(new Request("http://localhost", { method: "POST" }), {
       params: Promise.resolve({ id: "op-1" }),
@@ -214,11 +187,11 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(201);
     expect(body.data.team).toBe("bureau");
-    expect(mockInsert).toHaveBeenCalledWith(
+    expect(mockRpc).toHaveBeenCalledWith("join_operation_participant",
       expect.objectContaining({
-        operation_id: "op-1",
-        character_id: "ch-host",
-        team: "bureau",
+        p_operation_id: "op-1",
+        p_character_id: "ch-host",
+        p_team: "bureau",
       }),
     );
   });
@@ -231,11 +204,6 @@ describe("POST /api/operations/[id]/join", () => {
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
-    mockInsertSelectSingle.mockResolvedValue({
-      data: { id: "opp-new", team: "bureau", role: "member" },
-      error: null,
-    });
-
     const { POST } = await import("../route");
     const response = await POST(new Request("http://localhost", { method: "POST" }), {
       params: Promise.resolve({ id: "op-1" }),
@@ -244,11 +212,11 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(201);
     expect(body.data.team).toBe("bureau");
-    expect(mockInsert).toHaveBeenCalledWith(
+    expect(mockRpc).toHaveBeenCalledWith("join_operation_participant",
       expect.objectContaining({
-        operation_id: "op-1",
-        character_id: "ch-host",
-        team: "bureau",
+        p_operation_id: "op-1",
+        p_character_id: "ch-host",
+        p_team: "bureau",
       }),
     );
   });
@@ -261,8 +229,8 @@ describe("POST /api/operations/[id]/join", () => {
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
-    mockInsertSelectSingle.mockResolvedValue({
-      data: { id: "opp-new", team: "static", role: "member" },
+    mockRpc.mockResolvedValue({
+      data: { state: "joined", participant_id: "opp-new", team: "static", role: "member" },
       error: null,
     });
 
@@ -274,11 +242,11 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(201);
     expect(body.data.team).toBe("static");
-    expect(mockInsert).toHaveBeenCalledWith(
+    expect(mockRpc).toHaveBeenCalledWith("join_operation_participant",
       expect.objectContaining({
-        operation_id: "op-1",
-        character_id: "ch-static",
-        team: "static",
+        p_operation_id: "op-1",
+        p_character_id: "ch-static",
+        p_team: "static",
       }),
     );
   });
@@ -300,7 +268,7 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(422);
     expect(body).toEqual({ error: "INVALID_FACTION" });
-    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
   it("완료된 작전에는 참가할 수 없다 (409)", async () => {
@@ -319,19 +287,19 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(409);
     expect(body).toEqual({ error: "OPERATION_CLOSED" });
-    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
   it("정원이 가득 찬 작전에는 참가할 수 없다 (409)", async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
     mockOperationMaybeSingle.mockResolvedValue({
-      data: { id: "op-1", type: "operation", status: "waiting", max_participants: 2, created_by: "ch-host" },
+      data: { id: "op-1", type: "operation", status: "waiting", created_by: "ch-host" },
       error: null,
     });
     mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
-    mockActiveParticipantsSelect.mockResolvedValue({
-      data: [{ id: "opp-1" }, { id: "opp-2" }],
+    mockRpc.mockResolvedValue({
+      data: { state: "operation_full" },
       error: null,
     });
 
@@ -343,6 +311,28 @@ describe("POST /api/operations/[id]/join", () => {
 
     expect(response.status).toBe(409);
     expect(body).toEqual({ error: "OPERATION_FULL" });
-    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("RPC가 OPERATION_FULL 예외를 반환하면 409로 매핑한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({ data: { id: "ch-1", faction: "bureau" }, error: null });
+    mockOperationMaybeSingle.mockResolvedValue({
+      data: { id: "op-1", type: "operation", status: "waiting", created_by: "ch-host" },
+      error: null,
+    });
+    mockParticipantMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { message: "OPERATION_FULL" },
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ id: "op-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toEqual({ error: "OPERATION_FULL" });
   });
 });
