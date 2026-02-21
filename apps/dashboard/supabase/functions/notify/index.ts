@@ -44,7 +44,10 @@ function isTrustedDiscordWebhookUrl(url: string): boolean {
 
 function parseNotification(body: unknown): NotificationRow | null {
   if (!body || typeof body !== "object") return null;
-  const candidate = (body as Record<string, unknown>).record ?? (body as Record<string, unknown>).new ?? body;
+  const candidate =
+    (body as Record<string, unknown>).record ??
+    (body as Record<string, unknown>).new ??
+    body;
   if (!candidate || typeof candidate !== "object") return null;
   return candidate as NotificationRow;
 }
@@ -66,7 +69,11 @@ function getWebhookUrl(notification: NotificationRow): string | null {
   return Deno.env.get("DISCORD_WEBHOOK_DEFAULT") ?? null;
 }
 
-async function sendDiscordWebhook(webhookUrl: string, title: string, body: string) {
+async function sendDiscordWebhook(
+  webhookUrl: string,
+  title: string,
+  body: string,
+) {
   if (!isTrustedDiscordWebhookUrl(webhookUrl)) {
     throw new Error("WEBHOOK_URL_NOT_ALLOWED");
   }
@@ -110,25 +117,37 @@ async function fetchWithRateLimitRetry(
       return response;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, getRetryDelay(response)));
+    await new Promise((resolve) =>
+      setTimeout(resolve, getRetryDelay(response)),
+    );
     attempt += 1;
   }
 
   throw new Error("UNREACHABLE_RETRY_STATE");
 }
 
-async function sendDiscordDm(botToken: string, discordUserId: string, title: string, body: string) {
-  const createChannelResponse = await fetchWithRateLimitRetry("https://discord.com/api/v10/users/@me/channels", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bot ${botToken}`,
+async function sendDiscordDm(
+  botToken: string,
+  discordUserId: string,
+  title: string,
+  body: string,
+) {
+  const createChannelResponse = await fetchWithRateLimitRetry(
+    "https://discord.com/api/v10/users/@me/channels",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bot ${botToken}`,
+      },
+      body: JSON.stringify({ recipient_id: discordUserId }),
     },
-    body: JSON.stringify({ recipient_id: discordUserId }),
-  });
+  );
 
   if (!createChannelResponse.ok) {
-    throw new Error(`DISCORD_DM_CHANNEL_FAILED:${createChannelResponse.status}`);
+    throw new Error(
+      `DISCORD_DM_CHANNEL_FAILED:${createChannelResponse.status}`,
+    );
   }
 
   const channel = (await createChannelResponse.json()) as { id?: string };
@@ -207,13 +226,19 @@ Deno.serve(async (request) => {
     if (notification.channel === "in_app") {
       await supabase
         .from("notifications")
-        .update({ delivery_status: "skipped", updated_at: new Date().toISOString() })
+        .update({
+          delivery_status: "skipped",
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", notification.id);
 
-      return new Response(JSON.stringify({ ok: true, delivery_status: "skipped" }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ ok: true, delivery_status: "skipped" }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      );
     }
 
     if (notification.channel === "discord_dm") {
@@ -237,7 +262,12 @@ Deno.serve(async (request) => {
         throw new Error("MISSING_DISCORD_BOT_TOKEN");
       }
 
-      await sendDiscordDm(botToken, dmUser.discord_id, notification.title, notification.body);
+      await sendDiscordDm(
+        botToken,
+        dmUser.discord_id,
+        notification.title,
+        notification.body,
+      );
     }
 
     if (notification.channel === "discord_webhook") {
@@ -246,7 +276,11 @@ Deno.serve(async (request) => {
         throw new Error("WEBHOOK_URL_NOT_FOUND");
       }
 
-      await sendDiscordWebhook(webhookUrl, notification.title, notification.body);
+      await sendDiscordWebhook(
+        webhookUrl,
+        notification.title,
+        notification.body,
+      );
     }
 
     await supabase
