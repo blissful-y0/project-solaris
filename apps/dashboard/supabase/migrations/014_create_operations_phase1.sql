@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS operation_participants (
   id text PRIMARY KEY,
   operation_id text NOT NULL REFERENCES operations(id) ON DELETE CASCADE,
   character_id text NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-  team text NOT NULL CHECK (team IN ('ally', 'enemy', 'host')),
+  team text NOT NULL CHECK (team IN ('bureau', 'static', 'defector')),
   role text NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'observer')),
   deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
