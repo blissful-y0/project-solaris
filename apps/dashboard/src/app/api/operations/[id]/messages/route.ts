@@ -28,7 +28,7 @@ export async function POST(
     const body = await request.json().catch(() => null);
     const content = typeof body?.content === "string" ? body.content.trim() : "";
 
-    if (!content) {
+    if (!content || content.length > 2000) {
       return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
     }
 
