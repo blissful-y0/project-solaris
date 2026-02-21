@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
 import { TopBar } from "./TopBar";
 import { SolarisTicker } from "./SolarisTicker";
 import { MobileTabBar } from "./MobileTabBar";
