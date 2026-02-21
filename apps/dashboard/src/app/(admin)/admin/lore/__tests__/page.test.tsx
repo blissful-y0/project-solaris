@@ -3,6 +3,31 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 global.fetch = vi.fn();
 
+vi.mock("@uiw/react-md-editor", () => ({
+  default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <textarea
+      data-testid="md-editor"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  ),
+}));
+
+vi.mock("next/dynamic", () => ({
+  default: (importFn: () => Promise<{ default: unknown }>) => {
+    let Component: React.ComponentType<unknown> | null = null;
+    importFn().then((mod) => {
+      Component = mod.default as React.ComponentType<unknown>;
+    });
+    const DynamicWrapper = (props: unknown) => {
+      if (!Component) return null;
+      return <Component {...(props as object)} />;
+    };
+    DynamicWrapper.displayName = "DynamicWrapper";
+    return DynamicWrapper;
+  },
+}));
+
 describe("AdminLorePage", () => {
   beforeEach(() => {
     vi.clearAllMocks();

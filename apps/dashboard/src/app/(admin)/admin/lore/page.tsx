@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 
 import { Button, Card, Input, Modal } from "@/components/ui";
 import { CLEARANCE_CONFIG, type ClearanceLevel } from "@/components/lore";
 import { cn } from "@/lib/utils";
+
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 /** API 응답 문서 메타 (DB 컬럼명 기준) */
 type DocMeta = {
@@ -50,10 +53,11 @@ export default function AdminLorePage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /* ── 목록 불러오기 ── */
-  const loadDocs = async () => {
+  const loadDocs = useCallback(async () => {
     setLoadState("loading");
     const res = await fetch("/api/admin/lore");
     if (!res.ok) {
@@ -63,11 +67,11 @@ export default function AdminLorePage() {
     const body = (await res.json()) as { data?: DocMeta[] };
     setDocs(body.data ?? []);
     setLoadState("ready");
-  };
+  }, []);
 
   useEffect(() => {
     void loadDocs();
-  }, []);
+  }, [loadDocs]);
 
   /* ── 폼 열기 ── */
   const openCreate = () => {
@@ -173,15 +177,16 @@ export default function AdminLorePage() {
   /* ── 삭제 ── */
   const handleDelete = async (id: string) => {
     setDeletingId(id);
+    setDeleteError(null);
     try {
       const res = await fetch(`/api/admin/lore/${id}`, { method: "DELETE" });
       if (!res.ok) {
-        alert("삭제에 실패했습니다.");
+        setDeleteError("삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
         return;
       }
       await loadDocs();
     } catch {
-      alert("네트워크 오류가 발생했습니다.");
+      setDeleteError("네트워크 오류가 발생했습니다.");
     } finally {
       setDeletingId(null);
     }
@@ -201,6 +206,11 @@ export default function AdminLorePage() {
             새 문서
           </Button>
         </div>
+
+        {/* 삭제 오류 메시지 */}
+        {deleteError && (
+          <p className="text-xs text-accent">{deleteError}</p>
+        )}
 
         {/* 목록 카드 */}
         <Card hud className="overflow-x-auto">
@@ -388,20 +398,14 @@ export default function AdminLorePage() {
                 )}
               </div>
             ) : (
-              <textarea
-                value={form.content}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, content: e.target.value }))
-                }
-                rows={10}
-                placeholder="마크다운 형식으로 입력하세요..."
-                className={cn(
-                  "w-full bg-bg-secondary border border-border rounded-md px-3 py-2",
-                  "text-text text-sm font-mono placeholder:text-text-secondary/50",
-                  "focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50",
-                  "transition-colors resize-y",
-                )}
-              />
+              <div data-color-mode="dark">
+                <MDEditor
+                  value={form.content}
+                  onChange={(v) => setForm((prev) => ({ ...prev, content: v ?? "" }))}
+                  height={300}
+                  preview="edit"
+                />
+              </div>
             )}
           </div>
 
