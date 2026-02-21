@@ -32,11 +32,11 @@ describe("WorldPage (LorePageClient)", () => {
 
   it("카테고리들을 모두 표시한다", () => {
     render(<LorePageClient contents={mockContents} />);
-    expect(screen.getByText("WORLD-OVERVIEW")).toBeInTheDocument();
-    expect(screen.getByText("CIVIC-STRUCTURE")).toBeInTheDocument();
-    expect(screen.getByText("RESONANCE-PROTOCOL")).toBeInTheDocument();
-    expect(screen.getByText("ABILITY-REGISTRY")).toBeInTheDocument();
-    expect(screen.getByText("FACTION-INTEL")).toBeInTheDocument();
-    expect(screen.getByText("COMBAT-DOCTRINE")).toBeInTheDocument();
+    expect(screen.getByText("OVERVIEW")).toBeInTheDocument();
+    expect(screen.getByText("SOCIETY")).toBeInTheDocument();
+    expect(screen.getByText("RESONANCE")).toBeInTheDocument();
+    expect(screen.getByText("ABILITIES")).toBeInTheDocument();
+    expect(screen.getByText("FACTIONS")).toBeInTheDocument();
+    expect(screen.getByText("BATTLE-RULES")).toBeInTheDocument();
   });
 });

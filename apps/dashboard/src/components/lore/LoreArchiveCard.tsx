@@ -21,7 +21,7 @@ export function LoreArchiveCard({
   className,
 }: LoreArchiveCardProps) {
   const config = CLEARANCE_CONFIG[doc.clearanceLevel];
-  const codeDisplay = doc.slug.toUpperCase().replace(/-/g, "-");
+  const codeDisplay = doc.slug.toUpperCase();
 
   return (
     <button

@@ -46,7 +46,7 @@ export function LoreDetailModal({
 
   if (!open || !doc) return null;
 
-  const codeDisplay = doc.slug.toUpperCase().replace(/-/g, "-");
+  const codeDisplay = doc.slug.toUpperCase();
 
   return (
     <Modal
