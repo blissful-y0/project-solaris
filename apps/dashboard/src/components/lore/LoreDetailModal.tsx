@@ -63,6 +63,7 @@ export function LoreDetailModal({
       onClose={onClose}
       ariaLabel={`${doc.title} 기밀문서`}
       className="max-w-3xl"
+      closeButtonClassName="font-mono text-[0.625rem] tracking-widest hover:text-primary"
     >
       {/* ── 상단 컬러 밴드 ── */}
       <div className={cn("-mx-4 -mt-4 h-1.5", accentBg)} />
