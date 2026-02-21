@@ -54,7 +54,7 @@ export async function POST(
 
     const { data: operation, error: operationError } = await supabase
       .from("operations")
-      .select("id, type, created_by")
+      .select("id, type, status, created_by")
       .eq("id", operationId)
       .is("deleted_at", null)
       .maybeSingle();
@@ -65,6 +65,10 @@ export async function POST(
 
     if (!operation) {
       return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+    }
+
+    if (operation.status === "completed") {
+      return NextResponse.json({ error: "OPERATION_CLOSED" }, { status: 409 });
     }
 
     const { data: existing, error: existingError } = await supabase
