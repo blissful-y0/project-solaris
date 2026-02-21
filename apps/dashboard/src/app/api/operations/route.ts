@@ -146,7 +146,8 @@ export async function POST(request: NextRequest) {
         summary: summary || null,
         status: "waiting",
         is_main_story: false,
-        max_participants: type === "operation" ? 4 : 20,
+        // DB CHECK 제약(2~12)을 준수해야 insert가 실패하지 않는다.
+        max_participants: type === "operation" ? 4 : 8,
         created_by: myCharacter.id,
       })
       .select("id, title, type, status, summary, is_main_story, max_participants, created_at, created_by")
