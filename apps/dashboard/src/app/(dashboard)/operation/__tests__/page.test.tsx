@@ -48,7 +48,7 @@ function makeApprovedFetch() {
     }
     return Promise.resolve({
       ok: true,
-      json: async () => ({ data: MOCK_OPERATIONS }),
+      json: async () => ({ data: MOCK_OPERATIONS, page: { hasMore: false, nextOffset: null } }),
     });
   });
 }
@@ -108,7 +108,7 @@ describe("OperationPage", () => {
       expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(2);
     });
 
-    const operationCalls = fetchMock.mock.calls.filter(([url]) => url === "/api/operations");
+    const operationCalls = fetchMock.mock.calls.filter(([url]) => String(url).startsWith("/api/operations"));
     expect(operationCalls.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -129,9 +129,9 @@ describe("OperationPage", () => {
         });
       }
 
-      if (url === "/api/operations") {
-        if (fetchMock.mock.calls.filter(([u]) => u === "/api/operations").length === 1) {
-          return Promise.resolve({ ok: true, json: async () => ({ data: MOCK_OPERATIONS }) });
+      if (String(url).startsWith("/api/operations")) {
+        if (fetchMock.mock.calls.filter(([u]) => String(u).startsWith("/api/operations")).length === 1) {
+          return Promise.resolve({ ok: true, json: async () => ({ data: MOCK_OPERATIONS, page: { hasMore: false, nextOffset: null } }) });
         }
         return Promise.reject(new Error("temporary network error"));
       }
@@ -147,7 +147,7 @@ describe("OperationPage", () => {
     });
 
     act(() => {
-      window.dispatchEvent(new Event("focus"));
+      document.dispatchEvent(new Event("visibilitychange"));
     });
 
     await waitFor(() => {
@@ -164,12 +164,12 @@ describe("OperationPage", () => {
         });
       }
 
-      if (url === "/api/operations") {
-        const attempts = fetchMock.mock.calls.filter(([u]) => u === "/api/operations").length;
+      if (String(url).startsWith("/api/operations")) {
+        const attempts = fetchMock.mock.calls.filter(([u]) => String(u).startsWith("/api/operations")).length;
         if (attempts <= 1) {
           return Promise.reject(new Error("cold start timeout"));
         }
-        return Promise.resolve({ ok: true, json: async () => ({ data: MOCK_OPERATIONS }) });
+        return Promise.resolve({ ok: true, json: async () => ({ data: MOCK_OPERATIONS, page: { hasMore: false, nextOffset: null } }) });
       }
 
       return Promise.resolve({ ok: true, json: async () => ({}) });
@@ -179,7 +179,7 @@ describe("OperationPage", () => {
     render(<OperationPage />);
 
     await act(async () => {
-      window.dispatchEvent(new Event("pageshow"));
+      document.dispatchEvent(new Event("visibilitychange"));
     });
 
     await waitFor(() => {
@@ -198,8 +198,8 @@ describe("OperationPage", () => {
         });
       }
 
-      if (url === "/api/operations") {
-        const attempts = fetchMock.mock.calls.filter(([u]) => u === "/api/operations").length;
+      if (String(url).startsWith("/api/operations")) {
+        const attempts = fetchMock.mock.calls.filter(([u]) => String(u).startsWith("/api/operations")).length;
         if (attempts === 1) {
           return new Promise((_, reject) => {
             rejectFirstOpsRequest = reject;
@@ -207,7 +207,7 @@ describe("OperationPage", () => {
         }
         return Promise.resolve({
           ok: true,
-          json: async () => ({ data: MOCK_OPERATIONS }),
+          json: async () => ({ data: MOCK_OPERATIONS, page: { hasMore: false, nextOffset: null } }),
         });
       }
 
@@ -218,13 +218,13 @@ describe("OperationPage", () => {
     render(<OperationPage />);
 
     await waitFor(() => {
-      const opCalls = fetchMock.mock.calls.filter(([u]) => u === "/api/operations");
+      const opCalls = fetchMock.mock.calls.filter(([u]) => String(u).startsWith("/api/operations"));
       expect(opCalls.length).toBeGreaterThanOrEqual(1);
     });
 
     await act(async () => {
       await Promise.resolve();
-      window.dispatchEvent(new Event("pageshow"));
+      document.dispatchEvent(new Event("visibilitychange"));
     });
 
     await waitFor(() => {

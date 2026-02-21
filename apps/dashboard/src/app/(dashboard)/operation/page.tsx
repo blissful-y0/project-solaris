@@ -14,6 +14,9 @@ export default function OperationPage() {
   const [operations, setOperations] = useState<OperationItem[]>([]);
   const [statusLoading, setStatusLoading] = useState(true);
   const [operationsLoading, setOperationsLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextOffset, setNextOffset] = useState<number | null>(null);
   const isMountedRef = useRef(true);
   const operationsRef = useRef<OperationItem[]>([]);
   const operationLoadRequestSeqRef = useRef(0);
@@ -57,23 +60,36 @@ export default function OperationPage() {
 
   /* 작전 목록 — 승인된 경우만 */
   const loadOperations = useCallback(
-    async (options?: { silent?: boolean; retries?: number }) => {
+    async (options?: { silent?: boolean; retries?: number; append?: boolean; offset?: number }) => {
       if (!isMountedRef.current) return;
       const silent = options?.silent ?? false;
       const retries = options?.retries ?? 0;
+      const append = options?.append ?? false;
+      const offset = options?.offset ?? 0;
       const requestId = ++operationLoadRequestSeqRef.current;
 
-      if (!silent) {
+      if (append) {
+        setLoadingMore(true);
+      } else if (!silent) {
         setOperationsLoading(true);
       }
       const run = async () => {
-        const response = await fetch("/api/operations", { cache: "no-store" });
+        const response = await fetch(`/api/operations?limit=20&offset=${offset}`, { cache: "no-store" });
         if (!response.ok) {
           throw new Error(`FAILED_TO_FETCH_OPERATIONS:${response.status}`);
         }
         const body = await response.json();
         if (!isMountedRef.current || requestId !== operationLoadRequestSeqRef.current) return;
-        setOperations(body?.data ?? []);
+        const incoming = (body?.data ?? []) as OperationItem[];
+        setHasMore(Boolean(body?.page?.hasMore));
+        setNextOffset(typeof body?.page?.nextOffset === "number" ? body.page.nextOffset : null);
+        setOperations((prev) => {
+          if (!append) return incoming;
+
+          const byId = new Map(prev.map((item) => [item.id, item]));
+          for (const item of incoming) byId.set(item.id, item);
+          return Array.from(byId.values());
+        });
       };
 
       try {
@@ -94,7 +110,9 @@ export default function OperationPage() {
         }
       } finally {
         if (!isMountedRef.current || requestId !== operationLoadRequestSeqRef.current) return;
-        if (!silent) {
+        if (append) {
+          setLoadingMore(false);
+        } else if (!silent) {
           setOperationsLoading(false);
         }
       }
@@ -110,7 +128,7 @@ export default function OperationPage() {
   useEffect(() => {
     if (!isApproved) return;
 
-    // 복귀 이벤트(BFCache/pageshow, focus, visibilitychange)에서 목록을 재검증한다.
+    // 복귀 시점은 visibilitychange 하나로 통합한다.
     const reload = () => {
       void loadOperations({
         silent: operationsRef.current.length > 0,
@@ -124,13 +142,9 @@ export default function OperationPage() {
       }
     };
 
-    window.addEventListener("focus", reload);
-    window.addEventListener("pageshow", reload);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("focus", reload);
-      window.removeEventListener("pageshow", reload);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isApproved, loadOperations]);
@@ -146,7 +160,7 @@ export default function OperationPage() {
       if (timer) return;
       timer = setTimeout(() => {
         timer = null;
-        loadOperations();
+        void loadOperations({ silent: true, retries: 0 });
       }, 150);
     };
 
@@ -171,24 +185,24 @@ export default function OperationPage() {
   }, [isApproved, loadOperations]);
 
   if (statusLoading) {
-    return (
-      <div className="py-12 text-center text-sm text-text-secondary">
-        확인 중...
-      </div>
-    );
+    return <div className="pb-6" />;
   }
 
   return (
     <div className="pb-6">
       {isApproved ? (
-        operationsLoading ? (
-          <div className="text-sm text-text-secondary py-8">
-            작전 목록을 불러오는 중...
-          </div>
+        operationsLoading && operations.length === 0 ? (
+          <div className="py-8" />
         ) : (
           <>
             <OperationHub
               operations={operations}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={() => {
+                if (!hasMore || nextOffset == null) return;
+                void loadOperations({ append: true, offset: nextOffset, retries: 1 });
+              }}
               onOperationCreated={() => {
                 void loadOperations({ retries: 1 });
               }}

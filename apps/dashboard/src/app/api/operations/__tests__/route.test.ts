@@ -35,12 +35,14 @@ describe("GET /api/operations", () => {
       if (table === "operations") {
         const chain: Record<string, any> = {};
         chain.eq = vi.fn(() => chain);
-        chain.order = mockOpSelect;
+        chain.order = vi.fn(() => chain);
+        chain.range = mockOpSelect;
         return {
           select: () => ({
             is: () => ({
               eq: chain.eq,
               order: chain.order,
+              range: chain.range,
             }),
           }),
           insert: () => ({

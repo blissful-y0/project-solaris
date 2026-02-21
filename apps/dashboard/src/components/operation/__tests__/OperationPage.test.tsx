@@ -51,11 +51,13 @@ describe("OperationPage", () => {
     mockSubscribe.mockReset();
   });
 
-  it("로딩 중에는 확인 중... 문구를 표시한다", () => {
+  it("로딩 중에는 빈 영역을 표시한다 (전역 스피너 위임)", () => {
     // fetch가 완료되지 않은 상태 유지
     mockFetch.mockReturnValue(new Promise(() => {}));
-    render(<OperationPage />);
-    expect(screen.getByText("확인 중...")).toBeInTheDocument();
+    const { container } = render(<OperationPage />);
+    /* 로컬 텍스트 제거 → 빈 div만 존재 */
+    expect(screen.queryByText("확인 중...")).not.toBeInTheDocument();
+    expect(container.querySelector(".pb-6")).toBeInTheDocument();
   });
 
   it("승인된 캐릭터가 있으면 OperationHub를 표시한다", async () => {
@@ -63,8 +65,8 @@ describe("OperationPage", () => {
       if (url === "/api/me") {
         return makeFetchResponse({ character: { status: "approved" } });
       }
-      if (url === "/api/operations") {
-        return makeFetchResponse({ data: [] });
+      if (url.startsWith("/api/operations")) {
+        return makeFetchResponse({ data: [], page: { hasMore: false, nextOffset: null } });
       }
       return makeFetchResponse({});
     });
@@ -137,8 +139,8 @@ describe("OperationPage", () => {
       if (url === "/api/me") {
         return makeFetchResponse({ character: { status: "approved" } });
       }
-      if (url === "/api/operations") {
-        return makeFetchResponse({ data: [] });
+      if (url.startsWith("/api/operations")) {
+        return makeFetchResponse({ data: [], page: { hasMore: false, nextOffset: null } });
       }
       return makeFetchResponse({});
     });
@@ -149,13 +151,13 @@ describe("OperationPage", () => {
       expect(screen.getByText("OPERATION // TACTICAL HUB")).toBeInTheDocument();
     });
 
-    expect(mockFetch).toHaveBeenCalledWith("/api/operations", { cache: "no-store" });
-    const initialCalls = mockFetch.mock.calls.filter((args) => args[0] === "/api/operations").length;
+    expect(mockFetch).toHaveBeenCalledWith("/api/operations?limit=20&offset=0", { cache: "no-store" });
+    const initialCalls = mockFetch.mock.calls.filter((args) => String(args[0]).startsWith("/api/operations")).length;
 
     realtimeHandler?.();
 
     await waitFor(() => {
-      const calls = mockFetch.mock.calls.filter((args) => args[0] === "/api/operations").length;
+      const calls = mockFetch.mock.calls.filter((args) => String(args[0]).startsWith("/api/operations")).length;
       expect(calls).toBeGreaterThan(initialCalls);
     });
   });

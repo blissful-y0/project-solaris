@@ -25,6 +25,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
     const status = searchParams.get("status");
+    const rawLimit = Number(searchParams.get("limit") ?? 20);
+    const rawOffset = Number(searchParams.get("offset") ?? 0);
+    const limit = Number.isFinite(rawLimit) ? Math.min(50, Math.max(1, Math.floor(rawLimit))) : 20;
+    const offset = Number.isFinite(rawOffset) ? Math.max(0, Math.floor(rawOffset)) : 0;
 
     let query = supabase
       .from("operations")
@@ -41,7 +45,7 @@ export async function GET(request: Request) {
       query = query.eq("status", status);
     }
 
-    query = query.order("created_at", { ascending: false });
+    query = query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
 
     const { data: operations, error } = await query;
 
@@ -54,7 +58,15 @@ export async function GET(request: Request) {
     const operationIds = operationRows.map((item) => item.id);
 
     if (operationIds.length === 0) {
-      return NextResponse.json({ data: [] });
+      return NextResponse.json({
+        data: [],
+        page: {
+          limit,
+          offset,
+          hasMore: false,
+          nextOffset: null,
+        },
+      });
     }
 
     const { data: participants, error: participantsError } = await supabase
@@ -83,7 +95,16 @@ export async function GET(request: Request) {
       mapOperationListItem(row, participantsByOperation.get(row.id) ?? []),
     );
 
-    return NextResponse.json({ data });
+    const hasMore = operationRows.length === limit;
+    return NextResponse.json({
+      data,
+      page: {
+        limit,
+        offset,
+        hasMore,
+        nextOffset: hasMore ? offset + limit : null,
+      },
+    });
   } catch (error) {
     console.error("[api/operations] unexpected error:", error);
     return NextResponse.json({ error: "INTERNAL_SERVER_ERROR" }, { status: 500 });

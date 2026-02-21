@@ -12,6 +12,9 @@ import type { OperationItem, StatusFilter, TypeFilter } from "./types";
 
 type OperationHubProps = {
   operations: OperationItem[];
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
   /** 작전 생성 성공 후 목록 새로고침 콜백 */
   onOperationCreated?: () => void;
 };
@@ -30,7 +33,13 @@ const STATUS_OPTIONS: FilterChipOption<StatusFilter>[] = [
 ];
 
 /** 작전 허브 — MAIN STORY 배너 + 타입/상태 필터 + 카드 그리드 */
-export function OperationHub({ operations, onOperationCreated }: OperationHubProps) {
+export function OperationHub({
+  operations,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
+  onOperationCreated,
+}: OperationHubProps) {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -114,11 +123,25 @@ export function OperationHub({ operations, onOperationCreated }: OperationHubPro
           )}
         </div>
       ) : (
-        <div className="grid gap-3 lg:grid-cols-2">
-          {filtered.map((item) => (
-            <OperationCard key={item.id} item={item} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {filtered.map((item) => (
+              <OperationCard key={item.id} item={item} />
+            ))}
+          </div>
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onLoadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore ? "불러오는 중..." : "더 보기"}
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* 생성 모달 */}
