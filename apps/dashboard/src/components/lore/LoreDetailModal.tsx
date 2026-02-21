@@ -6,13 +6,13 @@ import { Modal } from "@/components/ui";
 
 import { ClearanceBadge } from "./ClearanceBadge";
 import { LoreContent } from "./LoreContent";
-import type { LoreCategory, LoreCategoryContent, LoreCategoryId } from "./types";
+import type { LoreCategory, LoreCategoryId, LoreDocumentHtml } from "./types";
 import { LORE_CATEGORIES } from "./types";
 
 type LoreDetailModalProps = {
   open: boolean;
   categoryId: LoreCategoryId | null;
-  contents: LoreCategoryContent[];
+  contents: LoreDocumentHtml[];
   onClose: () => void;
   onNavigate: (id: LoreCategoryId) => void;
 };
@@ -31,7 +31,7 @@ export function LoreDetailModal({
   );
 
   const category: LoreCategory | undefined = LORE_CATEGORIES[currentIndex];
-  const content = contents.find((c) => c.id === categoryId);
+  const content = contents.find((c) => c.slug === categoryId);
 
   const prevCategory: LoreCategory | undefined =
     currentIndex > 0 ? LORE_CATEGORIES[currentIndex - 1] : undefined;

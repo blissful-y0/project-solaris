@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils";
 
 import { LoreArchiveCard } from "./LoreArchiveCard";
 import { LoreDetailModal } from "./LoreDetailModal";
-import type { LoreCategoryContent, LoreCategoryId } from "./types";
+import type { LoreCategoryId, LoreDocumentHtml } from "./types";
 import { LORE_CATEGORIES } from "./types";
 
 type ArchiveTab = "database" | "incident-log";
 
 type LorePageClientProps = {
-  contents: LoreCategoryContent[];
+  contents: LoreDocumentHtml[];
 };
 
 /** Lore 페이지 — HELIOS 풀스크린 터미널 + 모달 상세 */

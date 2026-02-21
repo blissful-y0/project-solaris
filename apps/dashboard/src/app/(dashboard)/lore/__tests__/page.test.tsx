@@ -2,15 +2,26 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { LorePageClient } from "@/components/lore";
-import type { LoreCategoryContent } from "@/components/lore";
+import type { LoreDocumentHtml } from "@/components/lore";
 
-const mockContents: LoreCategoryContent[] = [
-  { id: "overview", html: "<h2>세계 개요</h2><p>2174년 솔라리스</p>" },
-  { id: "society", html: "<p>사회 구조 내용</p>" },
-  { id: "resonance", html: "<p>공명율 내용</p>" },
-  { id: "abilities", html: "<p>능력 분류 내용</p>" },
-  { id: "factions", html: "<p>대립 구도 내용</p>" },
-  { id: "battle-rules", html: "<p>배틀룰 내용</p>" },
+const makeDoc = (slug: string, html: string, title: string, i: number): LoreDocumentHtml => ({
+  id: `mock-uuid-${i}`,
+  title,
+  slug,
+  clearanceLevel: 1,
+  orderIndex: i,
+  createdAt: "2026-01-01T00:00:00Z",
+  updatedAt: "2026-01-01T00:00:00Z",
+  html,
+});
+
+const mockContents: LoreDocumentHtml[] = [
+  makeDoc("overview", "<h2>세계 개요</h2><p>2174년 솔라리스</p>", "세계 개요", 0),
+  makeDoc("society", "<p>사회 구조 내용</p>", "사회 구조", 1),
+  makeDoc("resonance", "<p>공명율 내용</p>", "공명율과 능력체계", 2),
+  makeDoc("abilities", "<p>능력 분류 내용</p>", "능력 분류", 3),
+  makeDoc("factions", "<p>대립 구도 내용</p>", "대립 구도", 4),
+  makeDoc("battle-rules", "<p>배틀룰 내용</p>", "전투 규칙", 5),
 ];
 
 describe("WorldPage (LorePageClient)", () => {
