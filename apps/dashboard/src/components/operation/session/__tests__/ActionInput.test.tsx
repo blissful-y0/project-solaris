@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 
@@ -119,27 +119,6 @@ describe("ActionInput", () => {
     await user.selectOptions(screen.getByTestId("target-select"), "p2");
 
     expect(screen.getByTestId("submit-btn")).toBeDisabled();
-  });
-
-  it("한글 조합 중 Enter는 제출하지 않는다", async () => {
-    const onSubmit = vi.fn();
-    const user = userEvent.setup();
-    render(<ActionInput {...defaultProps} onSubmit={onSubmit} />);
-
-    await user.selectOptions(screen.getByTestId("ability-select"), "a1");
-    await user.selectOptions(screen.getByTestId("target-select"), "p2");
-
-    const input = screen.getByTestId("narration-input");
-    await user.type(input, "ㅋㅋㅋ");
-
-    fireEvent.keyDown(input, {
-      key: "Enter",
-      shiftKey: false,
-      isComposing: true,
-      keyCode: 229,
-    });
-
-    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it("코스트 부족 시 경고 표시 + 제출 비활성화", async () => {

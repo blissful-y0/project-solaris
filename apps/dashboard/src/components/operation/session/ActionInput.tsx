@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui";
@@ -61,6 +61,7 @@ export function ActionInput({
   const [selectedTargetId, setSelectedTargetId] = useState<string>("");
   const [narration, setNarration] = useState("");
   const [configExpanded, setConfigExpanded] = useState(true);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isMyTurn = phase === "my_turn";
 
@@ -123,6 +124,14 @@ export function ActionInput({
     setNarration("");
   }, [canSubmit, onSubmit, selectedAction, selectedAbilityId, selectedTargetId, narration]);
 
+  /* textarea 자동 높이 조절 */
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
+  }, [narration]);
+
   /* 모바일: 행동+능력+대상 모두 선택 시 설정 패널 자동 접기 */
   useEffect(() => {
     if (
@@ -138,11 +147,6 @@ export function ActionInput({
   /* Enter로 제출 (Shift+Enter는 줄바꿈) */
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      // 한글/일본어 IME 조합 중 Enter는 입력 확정 키다.
-      if (e.nativeEvent.isComposing || (e as unknown as { keyCode?: number }).keyCode === 229) {
-        return;
-      }
-
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSubmit();
@@ -364,6 +368,7 @@ export function ActionInput({
       {/* ── 서술 입력 + 제출 ── */}
       <div className="flex items-end gap-2 px-3 pb-3 pt-1">
         <textarea
+          ref={textareaRef}
           data-testid="narration-input"
           value={narration}
           onChange={(e) => setNarration(e.target.value)}
@@ -378,7 +383,7 @@ export function ActionInput({
             "placeholder:text-text-secondary/40",
             "focus:outline-none focus:border-primary/40",
             "transition-colors",
-            "h-[96px]",
+            "min-h-[72px] max-h-[180px]",
           )}
         />
 

@@ -15,7 +15,7 @@ type NarrativeRequestCardProps = {
 
 /** 상태 표시 */
 const statusConfig: Record<string, { label: string; color: string }> = {
-  voting: { label: "관리자 검토 대기중", color: "text-amber-400" },
+  pending: { label: "관리자 검토 대기중", color: "text-amber-400" },
   approved: { label: "서사 반영 승인됨", color: "text-emerald-400" },
   rejected: { label: "서사 반영 반려됨", color: "text-accent" },
 };
@@ -32,7 +32,7 @@ export function NarrativeRequestCard({
   messages,
 }: NarrativeRequestCardProps) {
   const requester = participants.find((p) => p.id === request.requesterId);
-  const config = statusConfig[request.status] ?? statusConfig.voting;
+  const config = statusConfig[request.status] ?? statusConfig.pending;
 
   /* 범위 내 narration 메시지 추출 */
   const rangeMessages = useMemo(() => {

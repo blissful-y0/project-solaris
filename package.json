@@ -3,15 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev",
-    "dev:local": "pnpm --filter @solaris/dashboard dev:local",
-    "dev:dev": "pnpm --filter @solaris/dashboard dev:dev",
-    "dev:prd": "pnpm --filter @solaris/dashboard dev:prd",
     "build": "turbo build",
-    "build:local": "pnpm --filter @solaris/dashboard build:local",
-    "build:dev": "pnpm --filter @solaris/dashboard build:dev",
-    "test": "pnpm --filter @solaris/dashboard test",
-    "test:watch": "pnpm --filter @solaris/dashboard test:watch",
-    "test:coverage": "pnpm --filter @solaris/dashboard test:coverage",
     "lint": "turbo lint"
   },
   "devDependencies": {

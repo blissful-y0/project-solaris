@@ -1,10 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockUseDashboardSession, mockRefetch } = vi.hoisted(() => ({
-  mockUseDashboardSession: vi.fn(),
-  mockRefetch: vi.fn().mockResolvedValue(undefined),
+const { mockGetUser } = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+}));
+const { mockMaybeSingle } = vi.hoisted(() => ({
+  mockMaybeSingle: vi.fn(),
 }));
 
 vi.mock("next/link", () => ({
@@ -25,131 +27,187 @@ vi.mock("@/components/home", () => ({
   CitizenIDCard: ({ citizen }: any) => (
     <div data-testid="citizen-id-card">{citizen ? citizen.name : "미등록"}</div>
   ),
+  mockCitizen: { name: "목시민", faction: "Enforcer", resonanceRate: 87 },
 }));
 
-vi.mock("@/components/layout", async () => {
-  const actual = await vi.importActual<typeof import("@/components/layout")>("@/components/layout");
-  return {
-    ...actual,
-    useDashboardSession: mockUseDashboardSession,
-  };
-});
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: {
+      getUser: mockGetUser,
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          is: () => ({
+            maybeSingle: mockMaybeSingle,
+          }),
+        }),
+      }),
+    }),
+  }),
+}));
 
 import HomePage from "../page";
 
-describe("Dashboard HomePage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockUseDashboardSession.mockReturnValue({
-      me: {
-        user: {
-          id: "user-1",
-          email: "user@solaris.test",
-          displayName: "ambiguousmorality",
-        },
-        character: null,
-      },
-      loading: false,
-      error: null,
-      refetch: mockRefetch,
-    });
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
   });
 
-  it("로딩 상태를 표시한다", () => {
-    mockUseDashboardSession.mockReturnValue({
-      me: null,
-      loading: true,
-      error: null,
-      refetch: mockRefetch,
-    });
+  return { promise, resolve, reject };
+}
+
+describe("Dashboard HomePage", () => {
+  beforeEach(() => {
+    mockGetUser.mockReset();
+    mockMaybeSingle.mockReset();
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("getUser 응답 전에는 로딩 상태를 표시한다", () => {
+    const deferred = createDeferred<{ data: { user: null } }>();
+    mockGetUser.mockReturnValue(deferred.promise);
 
     render(<HomePage />);
 
     expect(screen.getByText("사용자 정보를 불러오는 중...")).toBeInTheDocument();
   });
 
-  it("에러 시 메시지와 재시도 버튼을 표시한다", async () => {
+  it("getUser 실패 시 에러 메시지와 재시도 버튼을 표시한다", async () => {
     const user = userEvent.setup();
-    mockUseDashboardSession.mockReturnValue({
-      me: null,
-      loading: false,
-      error: "FAILED_TO_FETCH_ME",
-      refetch: mockRefetch,
-    });
+    mockGetUser
+      .mockRejectedValueOnce(new Error("network"))
+      .mockResolvedValueOnce({ data: { user: null } });
 
     render(<HomePage />);
 
-    expect(screen.getByText("사용자 정보를 불러오지 못했습니다.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("사용자 정보를 불러오지 못했습니다."),
+    ).toBeInTheDocument();
+
     await user.click(screen.getByRole("button", { name: "다시 시도" }));
-    expect(mockRefetch).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => {
+      expect(mockGetUser).toHaveBeenCalledTimes(2);
+    });
   });
 
-  it("캐릭터 미등록 시 CitizenIDCard에 null이 전달된다", () => {
-    render(<HomePage />);
-    expect(screen.getByTestId("citizen-id-card")).toHaveTextContent("미등록");
-  });
-
-  it("캐릭터가 approved면 환영 문구에 캐릭터 이름을 우선 표시한다", () => {
-    mockUseDashboardSession.mockReturnValue({
-      me: {
+  it("캐릭터 미등록 시 CitizenIDCard에 null이 전달된다", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
         user: {
           id: "user-1",
           email: "user@solaris.test",
-          displayName: "ambiguousmorality",
-        },
-        character: {
-          id: "char-1",
-          name: "아마츠키 레이",
-          faction: "bureau",
-          ability_class: "field",
-          hp_max: 80,
-          hp_current: 80,
-          will_max: 250,
-          will_current: 230,
-          profile_image_url: null,
-          resonance_rate: 87,
-          status: "approved",
-          created_at: "2026-02-18T00:00:00.000Z",
+          user_metadata: {
+            full_name: "테스트 오퍼레이터",
+            avatar_url: "https://evil.example/avatar.png",
+          },
         },
       },
-      loading: false,
-      error: null,
-      refetch: mockRefetch,
     });
 
     render(<HomePage />);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("아마츠키 레이");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("citizen-id-card")).toHaveTextContent("미등록");
+    });
   });
 
-  it("캐릭터가 approved가 아니면 환영 문구에 displayName을 표시한다", () => {
-    mockUseDashboardSession.mockReturnValue({
-      me: {
+  it("displayName은 32자 제한과 제어문자 제거를 적용한다", async () => {
+    const rawName = "테스트\u0000오퍼레이터_이름길이제한을확인하기위한문자열_123456";
+
+    mockGetUser.mockResolvedValue({
+      data: {
         user: {
           id: "user-1",
           email: "user@solaris.test",
-          displayName: "ambiguousmorality",
-        },
-        character: {
-          id: "char-1",
-          name: "아마츠키 레이",
-          faction: "bureau",
-          ability_class: "field",
-          hp_max: 80,
-          hp_current: 80,
-          will_max: 250,
-          will_current: 230,
-          profile_image_url: null,
-          resonance_rate: 87,
-          status: "pending",
-          created_at: "2026-02-18T00:00:00.000Z",
+          user_metadata: {
+            full_name: rawName,
+          },
         },
       },
-      loading: false,
-      error: null,
-      refetch: mockRefetch,
     });
 
     render(<HomePage />);
-    expect(screen.getByText("ambiguousmorality")).toBeInTheDocument();
+
+    const expected = "테스트오퍼레이터_이름길이제한을확인하기위한문자열_123456".slice(0, 32);
+    const matches = await screen.findAllByText(expected);
+    expect(matches.length).toBeGreaterThan(0);
+  });
+
+  it("캐릭터가 approved면 환영 문구에 캐릭터 이름을 우선 표시한다", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-1",
+          email: "user@solaris.test",
+          user_metadata: {
+            full_name: "ambiguousmorality",
+          },
+        },
+      },
+    });
+    mockMaybeSingle.mockResolvedValue({
+      data: {
+        id: "char-1",
+        name: "아마츠키 레이",
+        faction: "bureau",
+        ability_class: "field",
+        hp_max: 80,
+        hp_current: 80,
+        will_max: 250,
+        will_current: 230,
+        profile_image_url: null,
+        resonance_rate: 87,
+        status: "approved",
+        created_at: "2026-02-18T00:00:00.000Z",
+      },
+      error: null,
+    });
+
+    render(<HomePage />);
+
+    const heading = await screen.findByRole("heading", { level: 1 });
+    expect(heading).toHaveTextContent("아마츠키 레이");
+    expect(screen.queryByText("ambiguousmorality")).not.toBeInTheDocument();
+  });
+
+  it("캐릭터가 approved가 아니면 환영 문구에 Discord 표시명을 표시한다", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-1",
+          email: "user@solaris.test",
+          user_metadata: {
+            full_name: "ambiguousmorality",
+          },
+        },
+      },
+    });
+    mockMaybeSingle.mockResolvedValue({
+      data: {
+        id: "char-1",
+        name: "아마츠키 레이",
+        faction: "bureau",
+        ability_class: "field",
+        hp_max: 80,
+        hp_current: 80,
+        will_max: 250,
+        will_current: 230,
+        profile_image_url: null,
+        resonance_rate: 87,
+        status: "pending",
+        created_at: "2026-02-18T00:00:00.000Z",
+      },
+      error: null,
+    });
+
+    render(<HomePage />);
+
+    expect(await screen.findByText("ambiguousmorality")).toBeInTheDocument();
   });
 });

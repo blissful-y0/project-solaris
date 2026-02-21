@@ -1,152 +1,49 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui";
+import { cn } from "@/lib/utils";
+import { mockOperations } from "@/components/operation";
+import { BattleSession, mockBattleSession } from "@/components/operation/session";
+import type { TurnPhase, BattleSessionData } from "@/components/operation/session";
 import { DowntimeRoom } from "@/components/room";
-import type { RoomMessage, RoomParticipant } from "@/components/room";
+import {
+  mockParticipants,
+  mockRoomMessages,
+} from "@/components/room/mock-room-data";
 
-type OperationDetailResponse = {
-  data: {
-    id: string;
-    title: string;
-    type: "operation" | "downtime";
-    status: "waiting" | "live" | "completed";
-    summary: string;
-    myParticipantId: string | null;
-    participants: Array<{
-      id: string;
-      name: string;
-      avatarUrl?: string | null;
-    }>;
-    messages: Array<{
-      id: string;
-      type: "narration" | "system" | "narrative_request";
-      senderId: string | null;
-      senderName: string | null;
-      senderAvatarUrl: string | null;
-      content: string;
-      timestamp: string;
-      isMine: boolean;
-    }>;
-  };
-};
+const phases: { value: TurnPhase; label: string }[] = [
+  { value: "my_turn", label: "MY TURN" },
+  { value: "waiting", label: "WAITING" },
+  { value: "both_submitted", label: "SUBMITTED" },
+  { value: "judging", label: "JUDGING" },
+];
 
 /**
  * 작전 세션 페이지 — /operation/[id]
- * 실제 API(`/api/operations/[id]`) 데이터를 사용해 방을 렌더링한다.
+ * mock 데이터에서 타입(operation/downtime)을 감지해
+ * BattleSession 또는 DowntimeRoom을 렌더링한다.
  */
 export default function OperationSessionPage() {
   const params = useParams();
   const router = useRouter();
   const operationId = params.id as string;
-  const [loading, setLoading] = useState(true);
-  const [joinLoading, setJoinLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [operation, setOperation] = useState<OperationDetailResponse["data"] | null>(null);
+  const isPhaseSwitcherEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_OPERATION_PHASE_SWITCHER === "true";
 
-  const loadOperation = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/operations/${operationId}`, {
-        method: "GET",
-        cache: "no-store",
-      });
-      const body = await response.json();
+  /* mock 데이터에서 작전 찾기 */
+  const operation = mockOperations.find((op) => op.id === operationId);
 
-      if (!response.ok) {
-        setOperation(null);
-        setError(body?.error ?? "FAILED_TO_FETCH_OPERATION");
-        return;
-      }
+  /* 전투 세션 dev 페이즈 스위처 */
+  const [phase, setPhase] = useState<TurnPhase>(mockBattleSession.phase);
 
-      setOperation(body.data);
-    } catch (e) {
-      console.error("[operation/[id]] 상세 조회 실패:", e);
-      setOperation(null);
-      setError("FAILED_TO_FETCH_OPERATION");
-    } finally {
-      setLoading(false);
-    }
-  }, [operationId]);
-
-  useEffect(() => {
-    void loadOperation();
-  }, [loadOperation]);
-
-  const participants: RoomParticipant[] = useMemo(
-    () =>
-      (operation?.participants ?? []).map((item) => ({
-        id: item.id,
-        name: item.name,
-        avatarUrl: item.avatarUrl ?? undefined,
-      })),
-    [operation?.participants],
-  );
-
-  const messages: RoomMessage[] = useMemo(() => {
-    return (operation?.messages ?? []).map((message) => {
-      const senderFromParticipants = participants.find((item) => item.id === message.senderId);
-      const sender =
-        senderFromParticipants ??
-        (message.senderId
-          ? {
-              id: message.senderId,
-              name: message.senderName ?? "알 수 없음",
-              avatarUrl: message.senderAvatarUrl ?? undefined,
-            }
-          : undefined);
-
-      return {
-        id: message.id,
-        type: message.type,
-        sender,
-        content: message.content,
-        timestamp: message.timestamp,
-        isMine: message.isMine,
-      } as RoomMessage;
-    });
-  }, [operation?.messages, participants]);
-
-  const isJoined = useMemo(() => {
-    if (!operation?.myParticipantId) return false;
-    return participants.some((participant) => participant.id === operation.myParticipantId);
-  }, [operation?.myParticipantId, participants]);
-
-  const handleJoin = useCallback(async () => {
-    if (!operationId) return;
-    setJoinLoading(true);
-    try {
-      const response = await fetch(`/api/operations/${operationId}/join`, {
-        method: "POST",
-      });
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        alert(body?.error ?? "JOIN_FAILED");
-        return;
-      }
-      await loadOperation();
-    } finally {
-      setJoinLoading(false);
-    }
-  }, [operationId, loadOperation]);
-
-  if (loading) {
-    return (
-      <div className="py-12 text-center text-sm text-text-secondary">
-        작전 정보를 불러오는 중...
-      </div>
-    );
-  }
-
-  if (!operation || error) {
+  /* 작전을 찾지 못한 경우 */
+  if (!operation) {
     return (
       <div className="py-12 text-center space-y-4">
         <p className="text-sm text-text-secondary">
           작전을 찾을 수 없습니다. (ID: {operationId})
-          {error ? ` / error: ${error}` : ""}
         </p>
         <button
           type="button"
@@ -164,27 +61,11 @@ export default function OperationSessionPage() {
     return (
       <div className="fixed top-22 bottom-16 left-0 right-0 md:bottom-0">
         <div className="w-full max-w-7xl mx-auto h-full">
-          {!isJoined && (
-            <div className="mx-4 mb-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-text-secondary">
-              <div className="mb-2">
-                현재 이 방 참가자로 등록되어 있지 않습니다. 참가 후 메시지 반영/참가자 목록이 정상화됩니다.
-              </div>
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={joinLoading}
-                onClick={handleJoin}
-              >
-                {joinLoading ? "참가 처리 중..." : "방 참가하기"}
-              </Button>
-            </div>
-          )}
           <DowntimeRoom
             roomTitle={operation.title}
-            operationId={operation.id}
-            participants={participants}
-            initialMessages={messages}
-            currentUserId={operation.myParticipantId ?? ""}
+            participants={mockParticipants}
+            initialMessages={mockRoomMessages}
+            currentUserId="p2"
           />
         </div>
       </div>
@@ -192,17 +73,38 @@ export default function OperationSessionPage() {
   }
 
   /* ── OPERATION (전투) ── */
+  const sessionData: BattleSessionData = {
+    ...mockBattleSession,
+    id: operation.id,
+    title: operation.title,
+    phase,
+  };
+
   return (
-    <div className="py-12 text-center space-y-3">
-      <p className="text-sm text-text-secondary">전투 세션(operation) 실연동은 다음 단계에서 구현됩니다.</p>
-      <div>
-        <button
-          type="button"
-          onClick={() => router.push("/operation")}
-          className="text-primary text-sm hover:underline"
-        >
-          ← 작전 목록으로
-        </button>
+    <div className="fixed top-22 bottom-16 left-0 right-0 md:bottom-0">
+      <div className="w-full max-w-7xl mx-auto h-full relative">
+        {/* QA/개발용 플래그: true일 때만 페이즈 강제 전환 UI 노출 */}
+        {isPhaseSwitcherEnabled && (
+          <div className="absolute top-0 right-0 z-50 flex gap-0.5 p-1 bg-bg-secondary/90 border-b border-l border-border rounded-bl-md">
+            {phases.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPhase(p.value)}
+                className={cn(
+                  "px-1.5 py-0.5 text-[0.5rem] font-mono rounded transition-colors",
+                  phase === p.value
+                    ? "bg-primary/20 text-primary"
+                    : "text-text-secondary hover:text-text hover:bg-bg-tertiary/60",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <BattleSession key={phase} initialData={sessionData} className="!h-full" />
       </div>
     </div>
   );

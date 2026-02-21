@@ -1,19 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui";
 
 import type { RoomMessage, RoomParticipant } from "./types";
 import { RoomChatLog } from "./RoomChatLog";
-import { useRoomMessages } from "./use-room-messages";
 
 type DowntimeRoomProps = {
-  /** 실제 operation id가 있을 때만 API/Realtime를 활성화한다. */
-  operationId?: string;
   roomTitle: string;
   participants: RoomParticipant[];
   initialMessages: RoomMessage[];
@@ -22,7 +18,6 @@ type DowntimeRoomProps = {
 };
 
 export function DowntimeRoom({
-  operationId,
   roomTitle,
   participants,
   initialMessages,
@@ -30,8 +25,9 @@ export function DowntimeRoom({
   className,
 }: DowntimeRoomProps) {
   const router = useRouter();
-  const { messages, upsertMessage } = useRoomMessages(operationId, initialMessages);
+  const [messages, setMessages] = useState<RoomMessage[]>(initialMessages);
   const [inputText, setInputText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* ── 서사 반영 범위 선택 상태 ── */
   const [selectingRange, setSelectingRange] = useState(false);
@@ -40,100 +36,12 @@ export function DowntimeRoom({
     end?: string;
   } | null>(null);
 
-  useEffect(() => {
-    // 목 데이터 모드에서는 Realtime 구독을 만들지 않는다.
-    if (!operationId) return;
-
-    const supabase = createClient() as any;
-    const channel = supabase
-      .channel(`operation-messages:${operationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "operation_messages",
-          filter: `operation_id=eq.${operationId}`,
-        },
-        (payload: any) => {
-          const row = payload?.new;
-          if (!row?.id) return;
-
-          const sender = participants.find((participant) => participant.id === row.sender_character_id);
-          const type: RoomMessage["type"] =
-            row.type === "system"
-              ? "system"
-              : row.type === "narrative_request"
-                ? "narrative_request"
-                : "narration";
-
-          upsertMessage({
-            id: row.id,
-            type,
-            sender,
-            content: row.content ?? "",
-            timestamp: row.created_at ?? new Date().toISOString(),
-            isMine: row.sender_character_id === currentUserId,
-          });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [operationId, participants, currentUserId, upsertMessage]);
-
   // 메시지 전송
-  const handleSend = useCallback(async () => {
+  const handleSend = useCallback(() => {
     const text = inputText.trim();
     if (!text) return;
 
     const currentUser = participants.find((p) => p.id === currentUserId);
-    setInputText("");
-
-    if (operationId) {
-      try {
-        // operationId가 있으면 서버 API를 단일 진입점으로 사용한다.
-        const response = await fetch(`/api/operations/${operationId}/messages`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: text }),
-        });
-
-        if (response.ok) {
-          const body = await response.json();
-          const sent = body?.data;
-
-          if (sent?.id) {
-            const sender: RoomParticipant | undefined =
-              sent.senderId
-                ? {
-                    id: sent.senderId,
-                    name: sent.senderName ?? currentUser?.name ?? "알 수 없음",
-                    avatarUrl: sent.senderAvatarUrl ?? currentUser?.avatarUrl,
-                  }
-                : currentUser;
-
-            upsertMessage({
-              id: sent.id,
-              type: "narration",
-              sender,
-              content: sent.content ?? text,
-              timestamp: sent.timestamp ?? new Date().toISOString(),
-              isMine: true,
-            });
-            return;
-          }
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[DowntimeRoom] 메시지 API 전송 실패, 로컬 fallback 사용:", error);
-        }
-      }
-    }
-
-    // API 모드 실패 또는 목 모드일 때는 로컬 fallback 메시지를 표시한다.
     const newMessage: RoomMessage = {
       id: `msg-${Date.now()}`,
       type: "narration",
@@ -142,19 +50,19 @@ export function DowntimeRoom({
       timestamp: new Date().toISOString(),
       isMine: true,
     };
-    upsertMessage(newMessage);
 
-  }, [inputText, participants, currentUserId, operationId, upsertMessage]);
+    setMessages((prev) => [...prev, newMessage]);
+    setInputText("");
+
+    // textarea 높이 리셋
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  }, [inputText, participants, currentUserId]);
 
   // Enter 키로 전송 (Shift+Enter = 줄바꿈)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      // 한글/일본어 IME 조합 중 Enter는 확정 키이므로 전송으로 처리하면 안 된다.
-      // keyCode 229는 일부 브라우저에서 조합 중 키 이벤트로 들어오는 값이다.
-      if (e.nativeEvent.isComposing || (e as unknown as { keyCode?: number }).keyCode === 229) {
-        return;
-      }
-
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();
@@ -163,10 +71,13 @@ export function DowntimeRoom({
     [handleSend],
   );
 
-  // 입력값만 갱신한다. (높이 자동 변경은 레이아웃 흔들림 이슈로 제거)
+  // textarea 자동 높이 조절
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setInputText(e.target.value);
+      const el = e.target;
+      el.style.height = "auto";
+      el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
     },
     [],
   );
@@ -216,20 +127,17 @@ export function DowntimeRoom({
       timestamp: new Date().toISOString(),
       isMine: false,
       narrativeRequest: {
-        id: `nr-${Date.now()}`,
         requesterId: currentUserId,
         rangeStart: selectedRange.start,
         rangeEnd: selectedRange.end,
-        status: "voting",
-        votes: {},
-        totalParticipants: participants.length,
+        status: "pending",
       },
     };
 
-    upsertMessage(requestMessage);
+    setMessages((prev) => [...prev, requestMessage]);
     setSelectingRange(false);
     setSelectedRange(null);
-  }, [selectedRange, participants, currentUserId, upsertMessage]);
+  }, [selectedRange, participants, currentUserId]);
 
   const rangeComplete = selectedRange?.start && selectedRange?.end;
 
@@ -310,6 +218,7 @@ export function DowntimeRoom({
         <div className="border-t border-border bg-bg-secondary/80 backdrop-blur-sm p-3">
           <div className="flex items-end gap-2">
             <textarea
+              ref={textareaRef}
               value={inputText}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
@@ -320,7 +229,7 @@ export function DowntimeRoom({
                 "flex-1 resize-none overflow-y-auto rounded-lg bg-bg-tertiary border border-border px-3 py-2",
                 "text-sm text-text placeholder:text-text-secondary/50",
                 "focus:outline-none focus:border-primary/40 transition-colors",
-                "h-[96px]",
+                "min-h-[72px] max-h-[180px]",
               )}
             />
             <Button
