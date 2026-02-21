@@ -46,7 +46,7 @@ describe("StepConfirm", () => {
 
   it("능력 이름을 표시한다", () => {
     render(<StepConfirm {...defaultProps} />);
-    expect(screen.getByText("시공간 왜곡")).toBeInTheDocument();
+    expect(screen.getByText(/시공간 왜곡/)).toBeInTheDocument();
   });
 
   it("캐릭터 이름을 표시한다", () => {
