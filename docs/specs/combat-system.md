@@ -400,7 +400,7 @@ my_turn → (제출) → waiting → (상대 제출) → both_submitted → (판
   id: string;
   name: string;
   faction: "bureau" | "static" | "defector";
-  team: "ally" | "enemy";          // 서버에서 현재 유저 기준 계산
+  team: "bureau" | "static" | "defector"; // 서버 저장값(= characters.faction)
   hp: { current: number; max: number };
   will: { current: number; max: number };
   abilities: BattleAbility[];
@@ -528,7 +528,7 @@ my_turn → (제출) → waiting → (상대 제출) → both_submitted → (판
 | 대상 지정 | 없음 | `targetId` | 필드 추가 |
 | 판정 구조 | `{ result, damage, commentary }` | 4항목 채점 + 양측 결과 + 스탯 변동 | 대폭 확장 |
 | GM 서사 | 없음 | `gm_narration` 메시지 타입 | AI 생성 서사 추가 |
-| 팀 구분 | `initiator`/`opponent` | `team: "ally" \| "enemy"` | 서버 계산 |
+| 팀 구분 | `initiator`/`opponent` | `team: "bureau" \| "static" \| "defector"` | faction 기준 단일화 |
 | 서사 반영 | 없음 | 투표 시스템 | 완전 신규 |
 | 통합 목록 | battles + rooms 분리 | `OperationItem[]` 통합 | 통합 API |
 | Realtime | 미정의 | phase/message/stat 이벤트 | 전면 설계 필요 |

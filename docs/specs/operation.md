@@ -152,7 +152,7 @@
 > **TODO:** 현재 DB는 구 모델(battles + rooms 별도 테이블)을 기준으로 작성됨.
 > 구현 시 통합 모델로 재설계 필요:
 > - `operations` 테이블: type ENUM('operation', 'downtime'), status ENUM('waiting', 'live', 'completed')
-> - `operation_participants`: team ENUM('ally', 'enemy') — 오퍼레이션만 해당
+> - `operation_participants`: team ENUM('bureau', 'static', 'defector') — 캐릭터 faction 기준
 > - `operation_turns`: 오퍼레이션 전투 턴 로그
 > - `operation_messages`: 다운타임 RP 메시지
 > - 기존 1v1 (challenger/defender) → 2v2 팀 모델 (max 4)
