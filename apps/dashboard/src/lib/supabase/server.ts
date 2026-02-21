@@ -1,12 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { envServer } from "@/lib/env.server";
+import type { Database } from "./database.types";
 
 /** 서버 컴포넌트 / Route Handler용 Supabase 클라이언트 */
-export async function createClient() {
+export async function createClient(): Promise<SupabaseClient<Database>> {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createServerClient<Database>(
     envServer.NEXT_PUBLIC_SUPABASE_URL,
     envServer.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {

@@ -15,6 +15,7 @@ coverage/
 .env
 .env.local
 .env.*.local
+.env.local.*
 
 # IDE
 .vscode/
@@ -30,6 +31,8 @@ pnpm-debug.log*
 
 # Local tooling artifacts
 .playwright-mcp/
+playwright-report/
+test-results/
 
 # Worktrees
 .worktrees/

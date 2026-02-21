@@ -28,6 +28,5 @@ export type AbilityClass = NonNullable<CharacterRow["ability_class"]>;
 export const FACTION_STATS: Record<Faction, { hp: number; will: number }> = {
   bureau: { hp: 80, will: 250 },
   static: { hp: 120, will: 150 },
-  civilian: { hp: 100, will: 100 },
   defector: { hp: 100, will: 200 },
 };

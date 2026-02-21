@@ -1,0 +1,1 @@
+export const MAX_OPERATION_MESSAGE_LENGTH = 5000;
