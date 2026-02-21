@@ -2,12 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ORIGINAL_ENV = { ...process.env };
 
-const { mockExchangeCodeForSession, mockGetUser, mockUpsert, mockMaybeSingle, mockCookies } =
+const { mockExchangeCodeForSession, mockGetUser, mockUpsert, mockCookies } =
   vi.hoisted(() => ({
   mockExchangeCodeForSession: vi.fn(),
   mockGetUser: vi.fn(),
   mockUpsert: vi.fn(),
-  mockMaybeSingle: vi.fn(),
   mockCookies: vi.fn(async () => ({
     getAll: () => [],
     set: vi.fn(),
@@ -22,11 +21,6 @@ vi.mock("@supabase/ssr", () => ({
     },
     from: vi.fn(() => ({
       upsert: mockUpsert,
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: mockMaybeSingle,
-        })),
-      })),
     })),
   })),
 }));
@@ -52,10 +46,19 @@ function setRequiredEnv() {
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
 }
 
+/** 방금 생성된 유저 (신규 회원 판정용) */
+function recentCreatedAt() {
+  return new Date().toISOString();
+}
+
+/** 오래 전 생성된 유저 (기존 회원 판정용) */
+function oldCreatedAt() {
+  return "2025-01-01T00:00:00.000Z";
+}
+
 describe("GET /api/auth/callback", () => {
   beforeEach(() => {
     setRequiredEnv();
-    mockMaybeSingle.mockResolvedValue({ data: null }); // 기본: 신규 회원
   });
 
   afterEach(() => {
@@ -73,6 +76,7 @@ describe("GET /api/auth/callback", () => {
       data: {
         user: {
           id: "0a66be4b-c908-4f8f-8478-48cb12695f11",
+          created_at: oldCreatedAt(),
           user_metadata: {
             provider_id: "1234567890",
             full_name: "solaris-user",
@@ -127,6 +131,7 @@ describe("GET /api/auth/callback", () => {
       data: {
         user: {
           id: "0a66be4b-c908-4f8f-8478-48cb12695f11",
+          created_at: oldCreatedAt(),
           user_metadata: {
             provider_id: "1234567890",
             full_name: "solaris-user",
@@ -155,6 +160,7 @@ describe("GET /api/auth/callback", () => {
       data: {
         user: {
           id: "0a66be4b-c908-4f8f-8478-48cb12695f11",
+          created_at: recentCreatedAt(),
           user_metadata: {
             full_name: "solaris-user",
           },
@@ -176,7 +182,6 @@ describe("GET /api/auth/callback", () => {
 
   it("신규 회원 가입 시 어드민 웹훅 알림을 생성한다", async () => {
     const { createNotification } = await import("@/app/actions/notification");
-    mockMaybeSingle.mockResolvedValue({ data: null }); // 신규 회원
     mockExchangeCodeForSession.mockResolvedValue({
       data: { session: { provider_token: "mock-discord-token" } },
       error: null,
@@ -185,6 +190,7 @@ describe("GET /api/auth/callback", () => {
       data: {
         user: {
           id: "0a66be4b-c908-4f8f-8478-48cb12695f11",
+          created_at: recentCreatedAt(),
           user_metadata: {
             provider_id: "1234567890",
             full_name: "solaris-user",
@@ -213,7 +219,6 @@ describe("GET /api/auth/callback", () => {
 
   it("기존 회원 로그인 시 웹훅 알림을 보내지 않는다", async () => {
     const { createNotification } = await import("@/app/actions/notification");
-    mockMaybeSingle.mockResolvedValue({ data: { id: "existing-user" } }); // 기존 회원
     mockExchangeCodeForSession.mockResolvedValue({
       data: { session: { provider_token: "mock-discord-token" } },
       error: null,
@@ -222,6 +227,7 @@ describe("GET /api/auth/callback", () => {
       data: {
         user: {
           id: "0a66be4b-c908-4f8f-8478-48cb12695f11",
+          created_at: oldCreatedAt(),
           user_metadata: {
             provider_id: "1234567890",
             full_name: "solaris-user",

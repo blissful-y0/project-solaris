@@ -68,13 +68,11 @@ export async function GET(request: Request) {
         user.email ??
         `user-${user.id.slice(0, 8)}`;
 
-      // 신규 회원 여부 확인 (upsert 전)
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-      const isNewUser = !existingUser;
+      // 신규 회원 여부 확인: auth.users의 created_at 기준
+      // (public.users는 auth 트리거가 먼저 생성하므로 테이블 조회로는 판별 불가)
+      const isNewUser = user.created_at
+        ? Date.now() - new Date(user.created_at).getTime() < 60_000
+        : false;
 
       const { error: upsertError } = await supabase.from("users").upsert(
         {
