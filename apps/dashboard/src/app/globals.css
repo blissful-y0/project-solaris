@@ -200,6 +200,16 @@
     }
   }
 
+  /* 전역 API 동기화 인디케이터 — 상단 바 슬라이드 */
+  @keyframes sync-slide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
   /* 글리치 이펙트 — Citizen ID 아바타 */
   @keyframes glitch-shift {
     0% {
