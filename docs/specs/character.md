@@ -180,7 +180,7 @@ CREATE TABLE characters (
   id text PRIMARY KEY,
   user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name text NOT NULL,
-  faction text NOT NULL CHECK (faction IN ('bureau', 'static', 'civilian', 'defector')),
+  faction text NOT NULL CHECK (faction IN ('bureau', 'static', 'defector')),
   ability_class text NULL CHECK (ability_class IN ('field', 'empathy', 'shift', 'compute')),
   hp_max integer NOT NULL,
   hp_current integer NOT NULL,
@@ -278,7 +278,7 @@ CREATE TABLE character_relationships (
 
 ---
 
-### civilian_merits
+### civilian_merits (deprecated)
 
 비능력자 메리트 (정적 시드 데이터).
 
@@ -314,6 +314,5 @@ CREATE INDEX idx_char_rel_target ON character_relationships(target_id) WHERE del
 ```
 bureau:   HP 80,  WILL 250
 static:   HP 120, WILL 150
-civilian: HP 100, WILL 100
 defector: HP 100, WILL 200
 ```
