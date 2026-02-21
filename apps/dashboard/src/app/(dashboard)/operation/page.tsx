@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AccessDenied } from "@/components/common";
 import { OperationHub } from "@/components/operation";
 import type { OperationItem } from "@/components/operation";
-import { useApiActivity } from "@/components/layout";
 import { createClient } from "@/lib/supabase/client";
 
 type CharacterStatus = "approved" | "pending" | "rejected" | null;
@@ -18,7 +17,6 @@ export default function OperationPage() {
   const isMountedRef = useRef(true);
   const operationsRef = useRef<OperationItem[]>([]);
   const operationLoadRequestSeqRef = useRef(0);
-  const { track } = useApiActivity();
 
   const isApproved = characterStatus === "approved";
 
@@ -26,7 +24,7 @@ export default function OperationPage() {
   useEffect(() => {
     let mounted = true;
     setStatusLoading(true);
-    track(() => fetch("/api/me", { cache: "no-store" }))
+    fetch("/api/me", { cache: "no-store" })
       .then((r) => r.json())
       .then((body) => {
         if (!mounted) return;
@@ -44,7 +42,7 @@ export default function OperationPage() {
     return () => {
       mounted = false;
     };
-  }, [track]);
+  }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -79,11 +77,7 @@ export default function OperationPage() {
       };
 
       try {
-        if (silent) {
-          await run();
-        } else {
-          await track(run);
-        }
+        await run();
       } catch {
         if (!isMountedRef.current || requestId !== operationLoadRequestSeqRef.current) return;
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Skeleton } from "@/components/ui";
+import { LoadingSpinner } from "@/components/ui";
 import {
   CharacterCard,
   CharacterProfileModal,
@@ -109,10 +109,8 @@ export default function CharactersPage() {
 
       {/* 로딩 */}
       {loading && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[170px] rounded-lg" />
-          ))}
+        <div className="py-16">
+          <LoadingSpinner label="시민 데이터를 불러오는 중..." />
         </div>
       )}
 

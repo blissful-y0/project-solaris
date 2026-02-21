@@ -4,6 +4,7 @@ export { Button } from "./Button";
 export { Card } from "./Card";
 export { FilterChips } from "./FilterChips";
 export { Input } from "./Input";
+export { LoadingSpinner } from "./LoadingSpinner";
 export { Modal } from "./Modal";
 export { ProgressBar } from "./ProgressBar";
 export { Skeleton } from "./Skeleton";

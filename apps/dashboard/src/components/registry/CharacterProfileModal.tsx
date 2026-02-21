@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-import { Modal, Skeleton } from "@/components/ui";
+import { LoadingSpinner, Modal } from "@/components/ui";
 import { AbilityAccordion, StatBar } from "@/components/common";
 import { cn } from "@/lib/utils";
 import type { RegistryCharacter } from "./registry-data";
@@ -45,30 +45,13 @@ export function CharacterProfileModal({
       {error ? (
         <p className="text-center text-sm text-accent py-8">{error}</p>
       ) : loading || !character ? (
-        <ProfileSkeleton />
+        <div className="py-12">
+          <LoadingSpinner label="캐릭터 프로필을 불러오는 중..." />
+        </div>
       ) : (
         <CharacterDetail character={character} />
       )}
     </Modal>
-  );
-}
-
-function ProfileSkeleton() {
-  return (
-    <div className="space-y-4">
-      <Skeleton className="h-4 w-48" />
-      <div className="flex gap-5">
-        <Skeleton className="h-[200px] w-[160px] rounded-md flex-shrink-0" />
-        <div className="flex-1 space-y-3">
-          <Skeleton className="h-7 w-40" />
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-px w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-        </div>
-      </div>
-    </div>
   );
 }
 

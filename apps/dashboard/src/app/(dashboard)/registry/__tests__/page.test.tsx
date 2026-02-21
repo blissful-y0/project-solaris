@@ -113,15 +113,15 @@ describe("CharactersPage", () => {
     await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
   });
 
-  it("로딩 중 Skeleton을 표시한다", async () => {
+  it("로딩 중 스피너를 표시한다", async () => {
     const originalFetch = global.fetch;
     global.fetch = vi.fn().mockImplementation(
       () => new Promise(() => {}),
     ) as unknown as typeof fetch;
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     render(<CharactersPage />);
-    const skeletons = document.querySelectorAll(".h-\\[170px\\]");
-    expect(skeletons.length).toBe(6);
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByText("시민 데이터를 불러오는 중...")).toBeInTheDocument();
     await Promise.resolve();
     expect(consoleErrorSpy).not.toHaveBeenCalled();
     consoleErrorSpy.mockRestore();

@@ -1,17 +1,13 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type ApiActivityContextValue = {
   pendingCount: number;
-  begin: () => () => void;
-  track: <T>(work: () => Promise<T>) => Promise<T>;
 };
 
 const defaultApiActivityContextValue: ApiActivityContextValue = {
   pendingCount: 0,
-  begin: () => () => undefined,
-  track: async <T,>(work: () => Promise<T>) => work(),
 };
 
 const ApiActivityContext = createContext<ApiActivityContextValue>(defaultApiActivityContextValue);
@@ -19,33 +15,41 @@ const ApiActivityContext = createContext<ApiActivityContextValue>(defaultApiActi
 export function ApiActivityProvider({ children }: { children: React.ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
 
-  const begin = useCallback(() => {
-    setPendingCount((prev) => prev + 1);
-    let closed = false;
+  useEffect(() => {
+    const originalFetch = window.fetch.bind(window);
 
+    const wrappedFetch: typeof window.fetch = async (input, init) => {
+      const nextHeaders = new Headers(
+        init?.headers ??
+          (input instanceof Request ? input.headers : undefined),
+      );
+      const skipGlobalLoading = nextHeaders.get("x-no-global-loading") === "true";
+      const url =
+        typeof input === "string"
+          ? new URL(input, window.location.origin)
+          : new URL(input.url);
+      const isSameOriginApi =
+        url.origin === window.location.origin && url.pathname.startsWith("/api/");
+
+      if (!isSameOriginApi || skipGlobalLoading) {
+        return originalFetch(input, init);
+      }
+
+      setPendingCount((prev) => prev + 1);
+      try {
+        return await originalFetch(input, init);
+      } finally {
+        setPendingCount((prev) => Math.max(0, prev - 1));
+      }
+    };
+
+    window.fetch = wrappedFetch;
     return () => {
-      if (closed) return;
-      closed = true;
-      setPendingCount((prev) => Math.max(0, prev - 1));
+      window.fetch = originalFetch;
     };
   }, []);
 
-  const track = useCallback(
-    async <T,>(work: () => Promise<T>) => {
-      const done = begin();
-      try {
-        return await work();
-      } finally {
-        done();
-      }
-    },
-    [begin],
-  );
-
-  const value = useMemo(
-    () => ({ pendingCount, begin, track }),
-    [pendingCount, begin, track],
-  );
+  const value = useMemo(() => ({ pendingCount }), [pendingCount]);
 
   return (
     <ApiActivityContext.Provider value={value}>
