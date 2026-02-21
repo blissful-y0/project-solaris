@@ -1,6 +1,40 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { mapOperationMessage } from "@/lib/operations/dto";
+import { mapOperationMessage, type DbMessageRow } from "@/lib/operations/dto";
+
+type OperationDetailRow = {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  summary: string;
+  is_main_story: boolean;
+  max_participants: number;
+  created_at: string;
+};
+
+type OperationDetailParticipantRow = {
+  character_id: string;
+  team: "bureau" | "static" | "defector";
+  character: {
+    id: string;
+    name: string;
+    faction: string;
+    ability_class: string | null;
+    hp_current: number;
+    hp_max: number;
+    will_current: number;
+    will_max: number;
+    profile_image_url: string | null;
+    abilities: Array<{
+      id: string;
+      name: string;
+      tier: string;
+      cost_hp: number;
+      cost_will: number;
+    }> | null;
+  } | null;
+};
 
 /**
  * GET /api/operations/[id]
@@ -10,7 +44,7 @@ import { mapOperationMessage } from "@/lib/operations/dto";
  * - 프론트가 추가 조인 요청 없이 방을 바로 렌더링할 수 있게 구성한다.
  */
 export async function GET(
-  _request: NextRequest,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -25,7 +59,7 @@ export async function GET(
       return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
     }
 
-    const { data: operation, error: operationError } = await (supabase as any)
+    const { data: operation, error: operationError } = await supabase
       .from("operations")
       .select("id, title, type, status, summary, is_main_story, max_participants, created_at")
       .eq("id", id)
@@ -41,7 +75,7 @@ export async function GET(
       return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
     }
 
-    const { data: myCharacter } = await (supabase as any)
+    const { data: myCharacter } = await supabase
       .from("characters")
       .select("id")
       .eq("user_id", user.id)
@@ -51,7 +85,7 @@ export async function GET(
 
     const myCharacterId: string | null = myCharacter?.id ?? null;
 
-    const { data: participants, error: participantsError } = await (supabase as any)
+    const { data: participants, error: participantsError } = await supabase
       .from("operation_participants")
       .select(
         "character_id, team, character:characters(id, name, faction, ability_class, hp_current, hp_max, will_current, will_max, profile_image_url, abilities(id, name, tier, cost_hp, cost_will))",
@@ -67,7 +101,7 @@ export async function GET(
       );
     }
 
-    const { data: messages, error: messagesError } = await (supabase as any)
+    const { data: messages, error: messagesError } = await supabase
       .from("operation_messages")
       .select("id, type, content, created_at, sender_character_id, sender:characters(id, name, profile_image_url)")
       .eq("operation_id", id)
@@ -79,9 +113,10 @@ export async function GET(
       return NextResponse.json({ error: "FAILED_TO_FETCH_MESSAGES" }, { status: 500 });
     }
 
-    const normalizedParticipants = (participants ?? [])
-      .filter((item: any) => item.character)
-      .map((item: any) => ({
+    const participantRows = (participants ?? []) as OperationDetailParticipantRow[];
+    const normalizedParticipants = participantRows
+      .filter((item) => item.character)
+      .map((item) => ({
         id: item.character.id,
         name: item.character.name,
         faction: item.character.faction,
@@ -94,7 +129,7 @@ export async function GET(
           current: item.character.will_current,
           max: item.character.will_max,
         },
-        abilities: (item.character.abilities ?? []).map((a: any) => ({
+        abilities: (item.character.abilities ?? []).map((a) => ({
           id: a.id,
           name: a.name,
           tier: a.tier,
@@ -104,18 +139,22 @@ export async function GET(
         avatarUrl: item.character.profile_image_url,
       }));
 
-    const mappedMessages = (messages ?? []).map((row: any) => mapOperationMessage(row, myCharacterId));
+    const mappedMessages = ((messages ?? []) as DbMessageRow[]).map((row) =>
+      mapOperationMessage(row, myCharacterId),
+    );
+
+    const operationRow = operation as OperationDetailRow;
 
     return NextResponse.json({
       data: {
-        id: operation.id,
-        title: operation.title,
-        type: operation.type,
-        status: operation.status,
-        summary: operation.summary,
-        isMainStory: operation.is_main_story,
-        maxParticipants: operation.max_participants,
-        createdAt: operation.created_at,
+        id: operationRow.id,
+        title: operationRow.title,
+        type: operationRow.type,
+        status: operationRow.status,
+        summary: operationRow.summary,
+        isMainStory: operationRow.is_main_story,
+        maxParticipants: operationRow.max_participants,
+        createdAt: operationRow.created_at,
         myParticipantId: myCharacterId,
         participants: normalizedParticipants,
         messages: mappedMessages,

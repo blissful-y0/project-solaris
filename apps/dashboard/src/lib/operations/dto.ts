@@ -13,7 +13,7 @@ export type DbOperationRow = {
   is_main_story: boolean;
   max_participants: number;
   created_at: string;
-  created_by?: string;
+  created_by?: string | null;
 };
 
 export type DbParticipantRow = {

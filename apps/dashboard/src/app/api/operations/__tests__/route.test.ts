@@ -228,7 +228,7 @@ describe("POST /api/operations", () => {
           title: "새 작전",
           summary: "   ",
         }),
-      }) as any,
+      }),
     );
 
     expect(response.status).toBe(201);
@@ -250,7 +250,7 @@ describe("POST /api/operations", () => {
           title: "a".repeat(101),
           summary: "",
         }),
-      }) as any,
+      }),
     );
     const body = await response.json();
 

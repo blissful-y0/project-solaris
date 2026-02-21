@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { mapOperationMessage } from "@/lib/operations/dto";
 
@@ -10,7 +10,7 @@ import { mapOperationMessage } from "@/lib/operations/dto";
  * - 전달받는 content는 trim 후 빈 문자열을 차단한다.
  */
 export async function POST(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -33,7 +33,7 @@ export async function POST(
     }
 
     // 메시지 발신자는 "로그인 사용자의 승인 캐릭터" 하나로 고정한다.
-    const { data: myCharacter, error: characterError } = await (supabase as any)
+    const { data: myCharacter, error: characterError } = await supabase
       .from("characters")
       .select("id, name, profile_image_url")
       .eq("user_id", user.id)
@@ -50,7 +50,7 @@ export async function POST(
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
-    const { data: operation, error: operationError } = await (supabase as any)
+    const { data: operation, error: operationError } = await supabase
       .from("operations")
       .select("id, status")
       .eq("id", id)
@@ -69,7 +69,7 @@ export async function POST(
       return NextResponse.json({ error: "OPERATION_CLOSED" }, { status: 409 });
     }
 
-    const { data: participant, error: participantError } = await (supabase as any)
+    const { data: participant, error: participantError } = await supabase
       .from("operation_participants")
       .select("id")
       .eq("operation_id", id)
@@ -85,7 +85,7 @@ export async function POST(
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
-    const { data: inserted, error: insertError } = await (supabase as any)
+    const { data: inserted, error: insertError } = await supabase
       .from("operation_messages")
       .insert({
         id: `msg_${crypto.randomUUID()}`,

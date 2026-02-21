@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { mapOperationListItem } from "@/lib/operations/dto";
+import { mapOperationListItem, type DbOperationRow, type DbParticipantRow } from "@/lib/operations/dto";
 import { nanoid } from "nanoid";
 
 /**
@@ -11,7 +11,7 @@ import { nanoid } from "nanoid";
  * - type/status 쿼리 필터 지원
  * - 프론트 카드에서 바로 사용 가능한 camelCase 응답으로 변환
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type");
     const status = searchParams.get("status");
 
-    let query = (supabase as any)
+    let query = supabase
       .from("operations")
       .select(
         "id, title, type, status, summary, is_main_story, max_participants, created_at, created_by",
@@ -50,13 +50,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "FAILED_TO_FETCH_OPERATIONS" }, { status: 500 });
     }
 
-    const operationIds = (operations ?? []).map((item: { id: string }) => item.id);
+    const operationRows = (operations ?? []) as DbOperationRow[];
+    const operationIds = operationRows.map((item) => item.id);
 
     if (operationIds.length === 0) {
       return NextResponse.json({ data: [] });
     }
 
-    const { data: participants, error: participantsError } = await (supabase as any)
+    const { data: participants, error: participantsError } = await supabase
       .from("operation_participants")
       .select("operation_id, team, character:characters(id, name, faction)")
       .in("operation_id", operationIds)
@@ -70,14 +71,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const participantsByOperation = new Map<string, any[]>();
-    for (const row of participants ?? []) {
+    const participantRows = (participants ?? []) as DbParticipantRow[];
+    const participantsByOperation = new Map<string, DbParticipantRow[]>();
+    for (const row of participantRows) {
       const current = participantsByOperation.get(row.operation_id) ?? [];
       current.push(row);
       participantsByOperation.set(row.operation_id, current);
     }
 
-    const data = (operations ?? []).map((row: any) =>
+    const data = operationRows.map((row) =>
       mapOperationListItem(row, participantsByOperation.get(row.id) ?? []),
     );
 
@@ -95,7 +97,7 @@ export async function GET(request: NextRequest) {
  * - 승인된 캐릭터가 있어야 생성 가능
  * - created_by: 생성자 캐릭터 ID
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const supabase = await createClient();
     const {
@@ -106,7 +108,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
     }
 
-    const { data: myCharacter, error: characterError } = await (supabase as any)
+    const { data: myCharacter, error: characterError } = await supabase
       .from("characters")
       .select("id")
       .eq("user_id", user.id)
@@ -137,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     const id = `op_${nanoid(12)}`;
 
-    const { data: inserted, error: insertError } = await (supabase as any)
+    const { data: inserted, error: insertError } = await supabase
       .from("operations")
       .insert({
         id,
@@ -159,7 +161,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { data: mapOperationListItem(inserted, []) },
+      { data: mapOperationListItem(inserted as DbOperationRow, []) },
       { status: 201 },
     );
   } catch (error) {

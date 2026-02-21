@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 function isDuplicateKeyError(error: unknown) {
@@ -21,7 +21,7 @@ function mapFactionToTeam(faction: string | null | undefined): "bureau" | "stati
  * - 신규 참가면 201(alreadyJoined=false)
  */
 export async function POST(
-  _request: NextRequest,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -36,7 +36,7 @@ export async function POST(
       return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
     }
 
-    const { data: myCharacter, error: myCharacterError } = await (supabase as any)
+    const { data: myCharacter, error: myCharacterError } = await supabase
       .from("characters")
       .select("id, faction")
       .eq("user_id", user.id)
@@ -52,7 +52,7 @@ export async function POST(
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
-    const { data: operation, error: operationError } = await (supabase as any)
+    const { data: operation, error: operationError } = await supabase
       .from("operations")
       .select("id, type, created_by")
       .eq("id", operationId)
@@ -67,7 +67,7 @@ export async function POST(
       return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
     }
 
-    const { data: existing, error: existingError } = await (supabase as any)
+    const { data: existing, error: existingError } = await supabase
       .from("operation_participants")
       .select("id, team, role")
       .eq("operation_id", operationId)
@@ -101,7 +101,7 @@ export async function POST(
       return NextResponse.json({ error: "INVALID_FACTION" }, { status: 422 });
     }
 
-    const { data: inserted, error: insertError } = await (supabase as any)
+    const { data: inserted, error: insertError } = await supabase
       .from("operation_participants")
       .insert({
         id: `opp_${crypto.randomUUID()}`,
@@ -115,7 +115,7 @@ export async function POST(
 
     if (insertError) {
       if (isDuplicateKeyError(insertError)) {
-        const { data: concurrentExisting, error: concurrentExistingError } = await (supabase as any)
+        const { data: concurrentExisting, error: concurrentExistingError } = await supabase
           .from("operation_participants")
           .select("id, team, role")
           .eq("operation_id", operationId)

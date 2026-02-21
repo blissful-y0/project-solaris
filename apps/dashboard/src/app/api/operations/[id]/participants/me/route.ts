@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
  * 내 참가 행을 soft delete 처리한다.
  */
 export async function DELETE(
-  _request: NextRequest,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -22,7 +22,7 @@ export async function DELETE(
       return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
     }
 
-    const { data: myCharacter, error: myCharacterError } = await (supabase as any)
+    const { data: myCharacter, error: myCharacterError } = await supabase
       .from("characters")
       .select("id")
       .eq("user_id", user.id)
@@ -38,7 +38,7 @@ export async function DELETE(
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
-    const { data: existing, error: existingError } = await (supabase as any)
+    const { data: existing, error: existingError } = await supabase
       .from("operation_participants")
       .select("id")
       .eq("operation_id", operationId)
@@ -57,7 +57,7 @@ export async function DELETE(
       return NextResponse.json({ data: { left: false } }, { status: 200 });
     }
 
-    const { error: updateError } = await (supabase as any)
+    const { error: updateError } = await supabase
       .from("operation_participants")
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", existing.id)
