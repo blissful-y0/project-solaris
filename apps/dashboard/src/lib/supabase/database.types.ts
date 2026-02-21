@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.1"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -176,6 +196,193 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      lore_request_segments: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          end_offset: number | null
+          id: string
+          lore_request_id: string
+          message_id: string
+          operation_id: string
+          order_index: number
+          selected_text: string
+          start_offset: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          end_offset?: number | null
+          id: string
+          lore_request_id: string
+          message_id: string
+          operation_id: string
+          order_index: number
+          selected_text: string
+          start_offset?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          end_offset?: number | null
+          id?: string
+          lore_request_id?: string
+          message_id?: string
+          operation_id?: string
+          order_index?: number
+          selected_text?: string
+          start_offset?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lore_request_segments_lore_request_id_fkey"
+            columns: ["lore_request_id"]
+            isOneToOne: false
+            referencedRelation: "lore_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lore_request_segments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "operation_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lore_request_segments_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lore_request_votes: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          lore_request_id: string
+          operation_id: string
+          updated_at: string
+          vote: string
+          voter_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id: string
+          lore_request_id: string
+          operation_id: string
+          updated_at?: string
+          vote: string
+          voter_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          lore_request_id?: string
+          operation_id?: string
+          updated_at?: string
+          vote?: string
+          voter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lore_request_votes_lore_request_id_fkey"
+            columns: ["lore_request_id"]
+            isOneToOne: false
+            referencedRelation: "lore_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lore_request_votes_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lore_request_votes_voter_id_fkey"
+            columns: ["voter_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lore_requests: {
+        Row: {
+          ai_summary: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          operation_id: string
+          range_end_message_id: string
+          range_start_message_id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id: string
+          operation_id: string
+          range_end_message_id: string
+          range_start_message_id: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_summary?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          operation_id?: string
+          range_end_message_id?: string
+          range_start_message_id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lore_requests_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lore_requests_range_end_message_id_fkey"
+            columns: ["range_end_message_id"]
+            isOneToOne: false
+            referencedRelation: "operation_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lore_requests_range_start_message_id_fkey"
+            columns: ["range_start_message_id"]
+            isOneToOne: false
+            referencedRelation: "operation_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lore_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       news: {
         Row: {
@@ -422,6 +629,105 @@ export type Database = {
           },
         ]
       }
+      operation_messages: {
+        Row: {
+          content: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          operation_id: string
+          payload: Json | null
+          sender_character_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          id: string
+          operation_id: string
+          payload?: Json | null
+          sender_character_id?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          operation_id?: string
+          payload?: Json | null
+          sender_character_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_messages_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_messages_sender_character_id_fkey"
+            columns: ["sender_character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operation_participants: {
+        Row: {
+          character_id: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          operation_id: string
+          role: string
+          team: string
+          updated_at: string
+        }
+        Insert: {
+          character_id: string
+          created_at?: string
+          deleted_at?: string | null
+          id: string
+          operation_id: string
+          role?: string
+          team: string
+          updated_at?: string
+        }
+        Update: {
+          character_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          operation_id?: string
+          role?: string
+          team?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_participants_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_participants_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operation_turn_effects: {
         Row: {
           created_at: string
@@ -619,6 +925,59 @@ export type Database = {
           },
         ]
       }
+      operations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_turn: number | null
+          deleted_at: string | null
+          id: string
+          is_main_story: boolean
+          max_participants: number
+          status: string
+          summary: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_turn?: number | null
+          deleted_at?: string | null
+          id: string
+          is_main_story?: boolean
+          max_participants?: number
+          status?: string
+          summary?: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_turn?: number | null
+          deleted_at?: string | null
+          id?: string
+          is_main_story?: boolean
+          max_participants?: number
+          status?: string
+          summary?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           ai_model_routing: Json
@@ -696,6 +1055,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_operation_resolution: {
+        Args: {
+          p_action_results: Json
+          p_close_result?: string
+          p_closed_by?: string
+          p_effects: Json
+          p_execution_summary: Json
+          p_idempotency_key: string
+          p_turn_id: string
+        }
+        Returns: Json
+      }
       create_character_with_abilities:
         | {
             Args: {
@@ -758,18 +1129,7 @@ export type Database = {
             }
             Returns: string
           }
-      apply_operation_resolution: {
-        Args: {
-          p_action_results: Json
-          p_close_result?: string
-          p_closed_by?: string
-          p_effects: Json
-          p_execution_summary: Json
-          p_idempotency_key: string
-          p_turn_id: string
-        }
-        Returns: Json
-      }
+      is_admin: { Args: { p_user_id?: string }; Returns: boolean }
       submit_operation_action: {
         Args: {
           p_ability_id: string
@@ -911,7 +1271,11 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
 } as const
+

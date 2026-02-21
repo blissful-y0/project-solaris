@@ -14,8 +14,8 @@ export default function MyPage() {
   useEffect(() => {
     const supabase = createClient();
     void (async () => {
-      const result = await supabase.auth.getUser();
-      setUser((result as any).data?.user ?? null);
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user ?? null);
     })();
   }, []);
 
