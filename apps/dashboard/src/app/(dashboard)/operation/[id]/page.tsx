@@ -190,7 +190,7 @@ export default function OperationSessionPage() {
         id: m.id,
         type: (m.type ?? "narration") as RoomMessage["type"],
         sender: m.senderId
-          ? { id: m.senderId, name: m.senderName ?? "Unknown", avatarUrl: m.senderAvatarUrl ?? undefined }
+          ? { id: m.senderId, name: m.senderName ?? "알 수 없음", avatarUrl: m.senderAvatarUrl ?? undefined }
           : undefined,
         content: m.content,
         timestamp: m.timestamp,
@@ -267,18 +267,20 @@ export default function OperationSessionPage() {
     );
   }
 
-  if (!operation || error) {
+  if (!operation) {
     return (
       <div className="py-12 text-center space-y-4">
         <p className="text-sm text-text-secondary">
-          작전을 찾을 수 없습니다. (ID: {operationId})
+          {error === "FAILED_TO_FETCH_OPERATION"
+            ? "작전 정보를 불러오지 못했습니다. 네트워크 상태를 확인하거나 잠시 후 다시 시도해 주세요."
+            : "존재하지 않는 작전입니다."}
         </p>
         <button
           type="button"
-          onClick={() => router.push("/operation")}
+          onClick={error ? () => { loadOperation().catch(console.error); } : () => router.push("/operation")}
           className="text-primary text-sm hover:underline"
         >
-          ← 작전 목록으로
+          {error ? "다시 시도" : "← 작전 목록으로"}
         </button>
       </div>
     );
