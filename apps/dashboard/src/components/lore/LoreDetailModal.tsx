@@ -3,9 +3,10 @@
 import { useCallback, useMemo } from "react";
 
 import { Modal } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
-import { ClearanceBadge } from "./ClearanceBadge";
 import { LoreContent } from "./LoreContent";
+import { CLEARANCE_CONFIG } from "./types";
 import type { LoreDocumentHtml } from "./types";
 
 type LoreDetailModalProps = {
@@ -16,7 +17,7 @@ type LoreDetailModalProps = {
   onNavigate: (slug: string) => void;
 };
 
-/** HELIOS 아카이브 상세 모달 — 선택한 문서 콘텐츠 + 이전/다음 네비게이션 */
+/** HELIOS 기밀문서 뷰어 — 클리어런스 등급별 분류 배너 + 문서 전문 */
 export function LoreDetailModal({
   open,
   slug,
@@ -46,59 +47,99 @@ export function LoreDetailModal({
 
   if (!open || !doc) return null;
 
+  const cfg = CLEARANCE_CONFIG[doc.clearanceLevel];
   const codeDisplay = doc.slug.toUpperCase();
+
+  /* 클리어런스별 배너 스타일 */
+  const bannerClass: Record<1 | 2 | 3, string> = {
+    1: "bg-emerald-400/10 border-b border-emerald-400/30 text-emerald-400",
+    2: "bg-yellow-400/10 border-b border-yellow-400/30 text-yellow-400",
+    3: "bg-accent/10 border-b border-accent/30 text-accent",
+  };
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel={`${doc.title} 아카이브`}
-      className="max-w-2xl md:max-w-4xl"
+      ariaLabel={`${doc.title} 기밀문서`}
+      className="max-w-3xl"
     >
-      {/* 헤더 */}
-      <div className="border-b border-border px-4 pt-3 pb-3">
-        <div className="flex items-center gap-2 mb-2 pr-6">
-          <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="font-mono text-[0.625rem] text-text-secondary tracking-wider">
-            FILE_{String(currentIndex + 1).padStart(3, "0")} // ACCESSING
-          </span>
-          <ClearanceBadge level={doc.clearanceLevel} className="ml-auto" />
-        </div>
-        <p className="font-mono text-[0.6875rem] text-primary tracking-wider mb-0.5">
-          SECTION::{codeDisplay}
-        </p>
-        <h2 className="text-base font-bold text-text">{doc.title}</h2>
+      {/* ── 클리어런스 배너 (sticky) ── */}
+      <div
+        className={cn(
+          "sticky top-0 z-10 px-5 py-2.5 flex items-center gap-2",
+          bannerClass[doc.clearanceLevel],
+        )}
+      >
+        <span className="font-mono text-[0.625rem] tracking-widest select-none">
+          ██████
+        </span>
+        <span className="font-mono text-[0.6875rem] tracking-widest font-semibold flex-1 text-center">
+          CLEARANCE LEVEL {doc.clearanceLevel} — {cfg.label}
+        </span>
+        <span className="font-mono text-[0.625rem] tracking-widest select-none">
+          ██████
+        </span>
       </div>
 
-      {/* 콘텐츠 */}
-      <div className="px-4 pt-2 pb-4 max-h-[60dvh] overflow-y-auto">
+      {/* ── 문서 식별 행 ── */}
+      <div className="flex items-center gap-2 px-5 py-2 border-b border-border bg-bg-secondary/60">
+        <span className="size-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+        <span className="font-mono text-[0.625rem] text-text-secondary tracking-wider">
+          FILE_{String(currentIndex + 1).padStart(3, "0")}
+        </span>
+        <span className="text-border mx-0.5">·</span>
+        <span className={cn("font-mono text-[0.625rem] tracking-wider", cfg.textColor)}>
+          SECTION::{codeDisplay}
+        </span>
+        <span className="ml-auto font-mono text-[0.625rem] text-text-secondary tracking-wider">
+          ACCESSED
+        </span>
+      </div>
+
+      {/* ── 문서 본문 ── */}
+      <div className="px-6 pt-6 pb-8">
+        {/* 제목 */}
+        <h2 className="text-xl font-bold text-text mb-1">{doc.title}</h2>
+        <div className={cn("h-px mb-5", cfg.bgColor, "opacity-30")} />
+
+        {/* 콘텐츠 */}
         <LoreContent html={doc.html} className="first-heading-no-mt" />
       </div>
 
-      {/* 하단 네비게이션 */}
-      <div className="border-t border-border px-4 py-3 flex items-center justify-between">
-        {prevDoc ? (
-          <button
-            type="button"
-            onClick={handlePrev}
-            className="text-xs text-text-secondary hover:text-primary transition-colors"
-          >
-            ← {prevDoc.title}
-          </button>
-        ) : (
-          <span />
-        )}
-        {nextDoc ? (
-          <button
-            type="button"
-            onClick={handleNext}
-            className="text-xs text-text-secondary hover:text-primary transition-colors"
-          >
-            {nextDoc.title} →
-          </button>
-        ) : (
-          <span />
-        )}
+      {/* ── 하단 네비게이션 (sticky) ── */}
+      <div className="sticky bottom-0 z-10 border-t border-border px-5 py-3 flex items-center bg-bg-secondary">
+        <div className="flex-1 flex justify-start">
+          {prevDoc ? (
+            <button
+              type="button"
+              onClick={handlePrev}
+              className="text-xs text-text-secondary hover:text-primary transition-colors text-left"
+            >
+              ← {prevDoc.title}
+            </button>
+          ) : (
+            <span />
+          )}
+        </div>
+
+        <span className="font-mono text-[0.6rem] text-border shrink-0 px-3">
+          {currentIndex + 1} / {contents.length}
+        </span>
+
+        <div className="flex-1 flex justify-end">
+          {nextDoc ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="text-xs text-text-secondary hover:text-primary transition-colors text-right"
+            >
+              {nextDoc.title} →
+            </button>
+          ) : (
+            <span />
+          )}
+        </div>
       </div>
     </Modal>
   );
