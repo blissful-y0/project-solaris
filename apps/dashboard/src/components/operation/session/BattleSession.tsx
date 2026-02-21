@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -23,6 +23,11 @@ type BattleSessionProps = {
 export function BattleSession({ initialData, onAction, className }: BattleSessionProps) {
   /* 상태 관리 (목 데이터 기반, 향후 Realtime 연동) */
   const [session, setSession] = useState(initialData);
+
+  // operation 상세 재조회 등으로 initialData가 바뀌면 세션 상태를 동기화한다.
+  useEffect(() => {
+    setSession(initialData);
+  }, [initialData]);
 
   const myParticipant = useMemo(
     () => session.participants.find((p) => p.id === session.myParticipantId),

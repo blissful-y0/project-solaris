@@ -91,4 +91,27 @@ describe("BattleSession", () => {
 
     expect(screen.getByText("참가자 정보를 찾을 수 없습니다.")).toBeInTheDocument();
   });
+
+  it("초기 데이터가 갱신되면 참가자 목록도 갱신된다", () => {
+    const { rerender } = render(<BattleSession initialData={mockBattleSession} />);
+
+    const updated: BattleSessionData = {
+      ...mockBattleSession,
+      participants: [
+        ...mockBattleSession.participants,
+        {
+          id: "p-new",
+          name: "신규 참가자",
+          faction: "static",
+          team: "enemy",
+          hp: { current: 100, max: 100 },
+          will: { current: 100, max: 100 },
+          abilities: [],
+        },
+      ],
+    };
+
+    rerender(<BattleSession initialData={updated} />);
+    expect(screen.getAllByText("신규 참가자").length).toBeGreaterThanOrEqual(1);
+  });
 });
