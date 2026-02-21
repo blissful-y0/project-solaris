@@ -20,8 +20,7 @@ export function TopBar({ notificationCount, isCharacterApproved = false }: TopBa
       className={cn(
         "sticky top-0 z-40 h-14 w-full",
         "flex items-center justify-between px-4 md:px-6",
-        "bg-bg/90 backdrop-blur-md",
-        "border-b border-border",
+        "glass-panel border-b-0",
       )}
     >
       {/* 1. 글로벌 로고 */}

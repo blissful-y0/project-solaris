@@ -80,3 +80,21 @@ export const LORE_CATEGORIES: LoreCategory[] = [
     clearanceLevel: 3,
   },
 ];
+
+/** DB 기반 Lore 문서 */
+export type LoreDocument = {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  clearanceLevel: ClearanceLevel;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** 목록용 (content 제외) */
+export type LoreDocumentMeta = Omit<LoreDocument, "content">;
+
+/** HTML로 렌더링된 문서 (Lore 페이지 렌더링용) */
+export type LoreDocumentHtml = LoreDocumentMeta & { html: string };
