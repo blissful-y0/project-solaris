@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/admin-guard";
-
-/** 어드민 mutation용 service role 클라이언트 (RLS 우회, requireAdmin()으로 권한 확인 후 사용) */
-function getServiceClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+import { getServiceClient } from "@/lib/supabase/service";
 
 /** PUT /api/admin/lore/[id] — 문서 수정 */
 export async function PUT(

@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/admin-guard";
-
-/** 어드민 mutation용 service role 클라이언트 (RLS 우회, requireAdmin()으로 권한 확인 후 사용) */
-function getServiceClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+import { getServiceClient } from "@/lib/supabase/service";
 
 /** GET /api/admin/lore — 전체 문서 목록 */
 export async function GET() {
@@ -42,7 +34,6 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const db = getServiceClient();
 
     const body = await request.json().catch(() => null);
     const title = typeof body?.title === "string" ? body.title.trim() : "";
@@ -56,6 +47,8 @@ export async function POST(request: NextRequest) {
     if (!title || !slug) {
       return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
     }
+
+    const db = getServiceClient();
 
     const { data, error } = await db
       .from("lore_documents")

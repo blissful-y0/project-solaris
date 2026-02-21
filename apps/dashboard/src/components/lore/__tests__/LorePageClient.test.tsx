@@ -45,7 +45,8 @@ describe("LorePageClient", () => {
     const card = screen.getByText("세계 개요");
     await user.click(card);
 
-    expect(screen.getByText("SECTION::OVERVIEW")).toBeInTheDocument();
+    expect(screen.getByText("/helios/archive/overview.doc")).toBeInTheDocument();
+    expect(screen.getByText("FILE_001 / overview")).toBeInTheDocument();
     expect(screen.getByText("세계 개요 내용")).toBeInTheDocument();
   });
 
@@ -55,11 +56,11 @@ describe("LorePageClient", () => {
 
     // 세계 개요 카드 클릭
     await user.click(screen.getByText("세계 개요"));
-    expect(screen.getByText("SECTION::OVERVIEW")).toBeInTheDocument();
+    expect(screen.getByText("FILE_001 / overview")).toBeInTheDocument();
 
     // 다음 카테고리로 이동
     await user.click(screen.getByText("사회 구조 →"));
-    expect(screen.getByText("SECTION::SOCIETY")).toBeInTheDocument();
+    expect(screen.getByText("FILE_002 / society")).toBeInTheDocument();
     expect(screen.getByText("사회 구조 내용")).toBeInTheDocument();
   });
 
