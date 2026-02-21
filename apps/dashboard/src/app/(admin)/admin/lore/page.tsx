@@ -54,6 +54,7 @@ export default function AdminLorePage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /* ── 목록 불러오기 ── */
@@ -142,8 +143,8 @@ export default function AdminLorePage() {
         title: form.title.trim(),
         slug: form.slug.trim(),
         clearanceLevel: form.clearanceLevel,
-        content: form.content,
         orderIndex: isEdit ? editTarget.order_index : docs.length,
+        ...(form.content ? { content: form.content } : {}),
       };
 
       const res = await fetch(url, {
@@ -181,12 +182,15 @@ export default function AdminLorePage() {
     try {
       const res = await fetch(`/api/admin/lore/${id}`, { method: "DELETE" });
       if (!res.ok) {
-        setDeleteError("삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        setDeleteError("삭제에 실패했습니다. 다시 시도해주세요.");
+        setConfirmingDeleteId(null);
         return;
       }
+      setConfirmingDeleteId(null);
       await loadDocs();
     } catch {
       setDeleteError("네트워크 오류가 발생했습니다.");
+      setConfirmingDeleteId(null);
     } finally {
       setDeletingId(null);
     }
@@ -260,7 +264,7 @@ export default function AdminLorePage() {
                         </span>
                       </td>
                       <td className="px-2 py-3">
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-2 flex-wrap items-center">
                           <Button
                             size="sm"
                             variant="secondary"
@@ -268,14 +272,34 @@ export default function AdminLorePage() {
                           >
                             편집
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            loading={isDeleting}
-                            onClick={() => void handleDelete(doc.id)}
-                          >
-                            삭제
-                          </Button>
+                          {confirmingDeleteId === doc.id ? (
+                            <>
+                              <span className="text-xs text-accent">삭제하시겠습니까?</span>
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                loading={isDeleting}
+                                onClick={() => void handleDelete(doc.id)}
+                              >
+                                확인
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setConfirmingDeleteId(null)}
+                              >
+                                취소
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setConfirmingDeleteId(doc.id)}
+                            >
+                              삭제
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -406,6 +430,11 @@ export default function AdminLorePage() {
                   preview="edit"
                 />
               </div>
+            )}
+            {editTarget && !form.content && (
+              <p className="text-xs text-text-secondary mt-1">
+                내용을 변경하지 않으면 기존 내용이 유지됩니다.
+              </p>
             )}
           </div>
 
