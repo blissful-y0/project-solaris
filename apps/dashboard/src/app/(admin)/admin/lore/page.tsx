@@ -14,6 +14,7 @@ type DocMeta = {
   id: string;
   title: string;
   slug: string;
+  content: string;
   clearance_level: ClearanceLevel;
   order_index: number;
 };
@@ -88,7 +89,7 @@ export default function AdminLorePage() {
       title: doc.title,
       slug: doc.slug,
       clearanceLevel: doc.clearance_level,
-      content: "",
+      content: doc.content,
       contentTab: "edit",
     });
     setFormError(null);
@@ -118,7 +119,8 @@ export default function AdminLorePage() {
     reader.onload = (e) => {
       const text = e.target?.result;
       if (typeof text === "string") {
-        setForm((prev) => ({ ...prev, content: text }));
+        // 업로드 후 편집 탭으로 자동 전환 — MDEditor가 마운트된 후 값을 받아야 정상 표시됨
+        setForm((prev) => ({ ...prev, content: text, contentTab: "edit" }));
       }
     };
     reader.readAsText(file);
@@ -398,44 +400,42 @@ export default function AdminLorePage() {
               </button>
             </div>
 
-            {form.contentTab === "upload" ? (
-              <div className="space-y-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".md,.txt"
-                  className="hidden"
-                  onChange={(e) => handleFileUpload(e.target.files?.[0] ?? null)}
-                />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  .md 파일 선택
-                </Button>
-                {form.content && (
-                  <p className="text-xs text-text-secondary">
-                    {form.content.length.toLocaleString()}자 로드됨
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div data-color-mode="dark">
-                <MDEditor
-                  value={form.content}
-                  onChange={(v) => setForm((prev) => ({ ...prev, content: v ?? "" }))}
-                  height={300}
-                  preview="edit"
-                />
-              </div>
-            )}
-            {editTarget && !form.content && (
-              <p className="text-xs text-text-secondary mt-1">
-                내용을 변경하지 않으면 기존 내용이 유지됩니다.
-              </p>
-            )}
+            {/* 업로드 탭 */}
+            <div className={form.contentTab === "upload" ? "space-y-2" : "hidden"}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".md,.txt"
+                className="hidden"
+                onChange={(e) => handleFileUpload(e.target.files?.[0] ?? null)}
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                .md 파일 선택
+              </Button>
+              {form.content && (
+                <p className="text-xs text-text-secondary">
+                  {form.content.length.toLocaleString()}자 로드됨
+                </p>
+              )}
+            </div>
+
+            {/* 직접 편집 탭 — 항상 마운트 유지, 탭 전환 시 unmount/remount 방지 */}
+            <div
+              data-color-mode="dark"
+              className={form.contentTab === "edit" ? "" : "hidden"}
+            >
+              <MDEditor
+                value={form.content}
+                onChange={(v) => setForm((prev) => ({ ...prev, content: v ?? "" }))}
+                height={300}
+                preview="edit"
+              />
+            </div>
           </div>
 
           {/* 에러 */}

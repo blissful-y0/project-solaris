@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/admin-guard";
+
+/** 어드민 mutation용 service role 클라이언트 (RLS 우회, requireAdmin()으로 권한 확인 후 사용) */
+function getServiceClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 /** PUT /api/admin/lore/[id] — 문서 수정 */
 export async function PUT(
@@ -8,7 +17,8 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { supabase } = await requireAdmin();
+    await requireAdmin();
+    const db = getServiceClient();
 
     const body = await request.json().catch(() => null);
     const updates: Record<string, unknown> = {};
@@ -33,7 +43,7 @@ export async function PUT(
       return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("lore_documents")
       .update(updates)
       .eq("id", id)
@@ -70,16 +80,22 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const { supabase } = await requireAdmin();
+    await requireAdmin();
+    const db = getServiceClient();
 
-    const { error } = await supabase
+    const { data, error } = await db
       .from("lore_documents")
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", id)
-      .is("deleted_at", null);
+      .is("deleted_at", null)
+      .select("id");
 
     if (error) {
       return NextResponse.json({ error: "FAILED_TO_DELETE" }, { status: 500 });
+    }
+
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
     }
 
     return NextResponse.json({ ok: true });

@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/admin-guard";
+
+/** 어드민 mutation용 service role 클라이언트 (RLS 우회, requireAdmin()으로 권한 확인 후 사용) */
+function getServiceClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 /** GET /api/admin/lore — 전체 문서 목록 */
 export async function GET() {
@@ -8,7 +17,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("lore_documents")
-      .select("id, title, slug, clearance_level, order_index, created_at, updated_at")
+      .select("id, title, slug, content, clearance_level, order_index, created_at, updated_at")
       .is("deleted_at", null)
       .order("order_index", { ascending: true })
       .order("created_at", { ascending: true });
@@ -32,7 +41,8 @@ export async function GET() {
 /** POST /api/admin/lore — 신규 문서 생성 */
 export async function POST(request: NextRequest) {
   try {
-    const { supabase } = await requireAdmin();
+    await requireAdmin();
+    const db = getServiceClient();
 
     const body = await request.json().catch(() => null);
     const title = typeof body?.title === "string" ? body.title.trim() : "";
@@ -47,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("lore_documents")
       .insert({
         id: `lore_${crypto.randomUUID()}`,
