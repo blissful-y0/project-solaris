@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { LoadingSpinner } from "@/components/ui";
 import {
   CharacterCard,
   CharacterProfileModal,
@@ -34,7 +33,9 @@ export default function CharactersPage() {
 
     async function fetchCharacters() {
       try {
-        const res = await fetch("/api/characters", { signal: controller.signal });
+        const res = await fetch("/api/characters", {
+          signal: controller.signal,
+        });
         if (!res.ok) {
           throw new Error("캐릭터 데이터를 불러오는 데 실패했습니다.");
         }
@@ -58,35 +59,41 @@ export default function CharactersPage() {
   }, []);
 
   /* 상세 fetch — stale 요청 방어 */
-  const handleSelect = useCallback(async (character: RegistryCharacterSummary) => {
-    const requestId = ++latestRequestRef.current;
-    setSelectedId(character.id);
-    setDetail(null);
-    setDetailError(null);
-    setDetailLoading(true);
-
-    try {
-      const res = await fetch(`/api/characters/${character.id}`);
-      if (!res.ok) {
-        throw new Error("캐릭터 상세 정보를 불러올 수 없습니다.");
-      }
-      if (requestId !== latestRequestRef.current) return;
-      const json = await res.json();
-      setDetail({ ...toRegistryCharacter(json.data), isMine: character.isMine });
-    } catch (err) {
-      if (requestId !== latestRequestRef.current) return;
+  const handleSelect = useCallback(
+    async (character: RegistryCharacterSummary) => {
+      const requestId = ++latestRequestRef.current;
+      setSelectedId(character.id);
       setDetail(null);
-      setDetailError(
-        err instanceof Error
-          ? err.message
-          : "상세 정보를 불러올 수 없습니다.",
-      );
-    } finally {
-      if (requestId === latestRequestRef.current) {
-        setDetailLoading(false);
+      setDetailError(null);
+      setDetailLoading(true);
+
+      try {
+        const res = await fetch(`/api/characters/${character.id}`);
+        if (!res.ok) {
+          throw new Error("캐릭터 상세 정보를 불러올 수 없습니다.");
+        }
+        if (requestId !== latestRequestRef.current) return;
+        const json = await res.json();
+        setDetail({
+          ...toRegistryCharacter(json.data),
+          isMine: character.isMine,
+        });
+      } catch (err) {
+        if (requestId !== latestRequestRef.current) return;
+        setDetail(null);
+        setDetailError(
+          err instanceof Error
+            ? err.message
+            : "상세 정보를 불러올 수 없습니다.",
+        );
+      } finally {
+        if (requestId === latestRequestRef.current) {
+          setDetailLoading(false);
+        }
       }
-    }
-  }, []);
+    },
+    [],
+  );
 
   const handleCloseModal = useCallback(() => {
     latestRequestRef.current++; // 기존 요청 무효화
@@ -107,12 +114,8 @@ export default function CharactersPage() {
         )}
       </div>
 
-      {/* 로딩 */}
-      {loading && (
-        <div className="py-16">
-          <LoadingSpinner label="시민 데이터를 불러오는 중..." />
-        </div>
-      )}
+      {/* 로딩 — 전역 스피너(ApiActivityProvider)가 표시하므로 빈 영역만 확보 */}
+      {loading && <div className="py-16" />}
 
       {/* 에러 */}
       {error && (

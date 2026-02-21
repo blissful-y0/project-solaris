@@ -73,13 +73,13 @@ const noAbilities: RegistryCharacter = {
 };
 
 describe("CharacterProfileModal", () => {
-  it("loading=true → 로딩 스피너를 표시한다", () => {
+  it("loading=true → 모달은 열리지만 프로필 콘텐츠는 없다 (전역 스피너 위임)", () => {
     render(
       <CharacterProfileModal character={null} loading open onClose={() => {}} />,
     );
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(screen.getByText("캐릭터 프로필을 불러오는 중...")).toBeInTheDocument();
+    /* 로컬 스피너 제거 → role="status" 없음 */
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.queryByText("아마츠키 레이")).not.toBeInTheDocument();
   });
 

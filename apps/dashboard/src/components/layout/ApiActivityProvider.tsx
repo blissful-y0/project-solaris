@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { LoadingSpinner } from "@/components/ui";
 
 type ApiActivityContextValue = {
   pendingCount: number;
@@ -14,6 +15,7 @@ const ApiActivityContext = createContext<ApiActivityContextValue>(defaultApiActi
 
 export function ApiActivityProvider({ children }: { children: React.ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const originalFetch = window.fetch.bind(window);
@@ -27,7 +29,9 @@ export function ApiActivityProvider({ children }: { children: React.ReactNode })
       const url =
         typeof input === "string"
           ? new URL(input, window.location.origin)
-          : new URL(input.url);
+          : input instanceof URL
+            ? input
+            : new URL(input.url);
       const isSameOriginApi =
         url.origin === window.location.origin && url.pathname.startsWith("/api/");
 
@@ -49,20 +53,35 @@ export function ApiActivityProvider({ children }: { children: React.ReactNode })
     };
   }, []);
 
+  useEffect(() => {
+    if (pendingCount === 0) {
+      setVisible(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setVisible(true);
+    }, 120);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [pendingCount]);
+
   const value = useMemo(() => ({ pendingCount }), [pendingCount]);
 
   return (
     <ApiActivityContext.Provider value={value}>
       {children}
-      {pendingCount > 0 && (
+      {visible && (
         <div
           aria-live="polite"
           aria-label="API 요청 처리 중"
           data-testid="global-api-spinner"
           className="fixed inset-0 z-[120] pointer-events-none flex items-start justify-center pt-20"
         >
-          <div className="rounded-full border border-border bg-bg-secondary/95 px-3 py-1.5 text-xs text-text-secondary shadow-md">
-            동기화 중...
+          <div className="rounded-full border border-border bg-bg-secondary/95 px-3 py-1.5 shadow-md">
+            <LoadingSpinner className="text-xs" />
           </div>
         </div>
       )}

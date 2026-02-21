@@ -23,10 +23,15 @@ export function useRoomMessages(
 
   const initializedOperationIdRef = useRef<string | undefined>(operationId);
   const participantsRef = useRef(participants);
+  const participantsMapRef = useRef<Map<string, RoomParticipant>>(
+    new Map(participants.map((participant) => [participant.id, participant])),
+  );
 
   // participants가 바뀌면 ref 갱신 (구독 재생성 없이 최신 값 유지)
   useEffect(() => {
     participantsRef.current = participants;
+    const byId = new Map(participants.map((participant) => [participant.id, participant]));
+    participantsMapRef.current = byId;
 
     // 참가자 정보가 늦게 도착한 경우 기존 메시지 sender를 보정한다.
     setMessagesById((prev) => {
@@ -37,7 +42,7 @@ export function useRoomMessages(
         const senderId = message.sender?.id;
         if (!senderId) continue;
 
-        const participant = participants.find((p) => p.id === senderId);
+        const participant = byId.get(senderId);
         if (!participant) continue;
 
         const needsUpdate =
@@ -106,7 +111,7 @@ export function useRoomMessages(
           if (row.operation_id !== operationId) return;
 
           const sender = row.sender_character_id
-            ? participantsRef.current.find((p) => p.id === row.sender_character_id)
+            ? participantsMapRef.current.get(row.sender_character_id)
             : undefined;
 
           const message: RoomMessage = {
