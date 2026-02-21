@@ -132,6 +132,10 @@ export default function OperationSessionPage() {
     }
   }, [operationId]);
 
+  const handleRetry = useCallback(() => {
+    void Promise.all([loadOperation(), loadMessages()]);
+  }, [loadOperation, loadMessages]);
+
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -277,7 +281,7 @@ export default function OperationSessionPage() {
         </p>
         <button
           type="button"
-          onClick={error ? () => { loadOperation().catch(console.error); } : () => router.push("/operation")}
+          onClick={error ? handleRetry : () => router.push("/operation")}
           className="text-primary text-sm hover:underline"
         >
           {error ? "다시 시도" : "← 작전 목록으로"}
