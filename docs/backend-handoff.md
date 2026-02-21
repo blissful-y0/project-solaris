@@ -88,9 +88,9 @@ CREATE TABLE operations (
 | summary | summary | |
 | is_main_story | isMainStory | camelCase 변환 필수 |
 | created_at | createdAt | ISO 8601 |
-| (join) | teamA | **항상 포함**. operation: ALLY 팀 멤버 `[{id, name}]` / downtime: `[]` |
-| (join) | teamB | **항상 포함**. operation: ENEMY 팀 멤버 `[{id, name}]` / downtime: `[]` |
-| (join) | host | **항상 포함**. downtime: `operations.created_by` → `{id, name}` / operation: `{ id: "", name: "" }` |
+| (join) | teamA | **항상 포함**. operation: `team='bureau'` 멤버 `[{id, name}]` / downtime: `[]` |
+| (join) | teamB | **항상 포함**. operation: `team IN ('static','defector')` 멤버 `[{id, name}]` / downtime: `[]` |
+| (join) | host | **항상 포함**. downtime: `operations.created_by` → `{id, name}` / operation: `{ id: "", name: "" }` (표시용, 팀 산정에는 미사용) |
 | max_participants | maxParticipants | DB에 저장. operation 기본값 4, downtime은 생성 시 설정 |
 
 > **teamA/teamB/host 패딩 규칙:** 프론트 `OperationItem` 타입이 세 필드를 모두 required로 선언하므로,
@@ -106,8 +106,8 @@ CREATE TABLE operation_participants (
   id            text        PRIMARY KEY DEFAULT nanoid(),
   operation_id  text        NOT NULL REFERENCES operations(id),
   character_id  text        NOT NULL REFERENCES characters(id),
-  team          text        NULL CHECK (team IN ('ally', 'enemy')),
-                            -- operation만 사용, downtime은 NULL
+  team          text        NOT NULL CHECK (team IN ('bureau', 'static', 'defector')),
+                            -- 캐릭터 faction을 그대로 저장
   joined_at     timestamptz NOT NULL DEFAULT now(),
   -- created_at과 동일 목적. 둘 중 하나만 사용해도 무방 (하위 호환용으로 유지)
   created_at    timestamptz NOT NULL DEFAULT now(),
@@ -139,7 +139,7 @@ CREATE TABLE operation_turn_actions (
   participant_id  text        NOT NULL REFERENCES characters(id),
   -- 의도적 명명: 전투 턴 문맥의 "참가자"를 의미하며, 실제 FK 대상은 characters.id
   -- 즉 participant_id는 이 문서에서 character_id와 동일한 식별자를 가리킨다.
-  team            text        NOT NULL CHECK (team IN ('ally', 'enemy')),
+  team            text        NOT NULL CHECK (team IN ('bureau', 'static', 'defector')),
   action_type     text        NOT NULL CHECK (action_type IN ('attack', 'defend', 'support')),
   ability_id      text        NOT NULL REFERENCES abilities(id),
   target_id       text        NOT NULL REFERENCES characters(id),
@@ -544,7 +544,7 @@ CREATE TRIGGER trg_operation_turns_updated_at
         "id": "ch-001",
         "name": "아마츠키 레이",
         "faction": "bureau",
-        "team": "ally",
+        "team": "bureau",
         "hp": { "current": 49, "max": 80 },
         "will": { "current": 193, "max": 250 },
         "abilities": [
