@@ -83,6 +83,7 @@ export default function OperationPage() {
 
       setOperationsError("FAILED_TO_FETCH_OPERATIONS");
 
+      // empty 응답과 일시 실패를 구분하기 위해, 기존 목록이 있으면 보존한다.
       if (operationsRef.current.length === 0) {
         setOperations([]);
       }
@@ -102,6 +103,7 @@ export default function OperationPage() {
   useEffect(() => {
     if (!isApproved) return;
 
+    // 복귀 이벤트(BFCache/pageshow, focus, visibilitychange)에서 목록을 재검증한다.
     const reload = () => {
       void loadOperations({ silent: operationsRef.current.length > 0, retries: 1 });
     };
@@ -175,7 +177,8 @@ export default function OperationPage() {
           <>
             {operationsError && operations.length === 0 && (
               <div className="mb-4 rounded-md border border-accent/30 bg-accent/5 px-3 py-2 text-xs text-accent">
-                작전 목록 동기화가 지연되고 있습니다. 잠시 후 자동 재시도됩니다.
+                작전 목록이 비어 보이는 상태입니다. 실제로 생성된 작전이 없거나, 복귀 직후 동기화가 지연된
+                경우일 수 있습니다. 잠시 후 자동 재시도됩니다.
               </div>
             )}
             <OperationHub
