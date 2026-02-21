@@ -17,7 +17,7 @@ type LoreDetailModalProps = {
   onNavigate: (slug: string) => void;
 };
 
-/** HELIOS 기밀문서 뷰어 — 클리어런스 등급별 분류 배너 + 문서 전문 */
+/** HELIOS 터미널 stdout 스타일 문서 뷰어 */
 export function LoreDetailModal({
   open,
   slug,
@@ -48,14 +48,14 @@ export function LoreDetailModal({
   if (!open || !doc) return null;
 
   const cfg = CLEARANCE_CONFIG[doc.clearanceLevel];
-  const codeDisplay = doc.slug.toUpperCase();
 
-  /* 클리어런스별 배너 스타일 */
-  const bannerClass: Record<1 | 2 | 3, string> = {
-    1: "bg-emerald-400/10 border-b border-emerald-400/30 text-emerald-400",
-    2: "bg-yellow-400/10 border-b border-yellow-400/30 text-yellow-400",
-    3: "bg-accent/10 border-b border-accent/30 text-accent",
+  /* 클리어런스별 터미널 accent */
+  const accent: Record<1 | 2 | 3, { text: string; bg: string }> = {
+    1: { text: "text-emerald-400", bg: "bg-emerald-400" },
+    2: { text: "text-yellow-400",  bg: "bg-yellow-400"  },
+    3: { text: "text-accent",      bg: "bg-accent"      },
   };
+  const { text: accentText, bg: accentBg } = accent[doc.clearanceLevel];
 
   return (
     <Modal
@@ -64,80 +64,87 @@ export function LoreDetailModal({
       ariaLabel={`${doc.title} 기밀문서`}
       className="max-w-3xl"
     >
-      {/* ── 클리어런스 배너 (sticky) ── */}
-      <div
-        className={cn(
-          "sticky top-0 z-10 px-5 py-2.5 flex items-center gap-2",
-          bannerClass[doc.clearanceLevel],
-        )}
-      >
-        <span className="font-mono text-[0.625rem] tracking-widest select-none">
-          ██████
+      {/* ── 상단 컬러 밴드 ── */}
+      <div className={cn("-mx-4 -mt-4 h-1.5", accentBg)} />
+
+      {/* ── cat 커맨드 라인 ── */}
+      <div className="font-mono flex items-center gap-1.5 py-2.5 px-1 border-b border-border/40">
+        <span className="text-primary text-xs">$</span>
+        <span className="text-text-secondary text-xs">cat</span>
+        <span className={cn("text-xs", accentText)}>
+          /helios/archive/{doc.slug}.doc
         </span>
-        <span className="font-mono text-[0.6875rem] tracking-widest font-semibold flex-1 text-center">
-          CLEARANCE LEVEL {doc.clearanceLevel} — {cfg.label}
-        </span>
-        <span className="font-mono text-[0.625rem] tracking-widest select-none">
-          ██████
+        <span className={cn("ml-auto text-xs animate-pulse leading-none", accentText)}>
+          ▋
         </span>
       </div>
 
-      {/* ── 문서 식별 행 ── */}
-      <div className="flex items-center gap-2 px-5 py-2 border-b border-border bg-bg-secondary/60">
-        <span className="size-1.5 rounded-full bg-primary animate-pulse shrink-0" />
-        <span className="font-mono text-[0.625rem] text-text-secondary tracking-wider">
-          FILE_{String(currentIndex + 1).padStart(3, "0")}
-        </span>
-        <span className="text-border mx-0.5">·</span>
-        <span className={cn("font-mono text-[0.625rem] tracking-wider", cfg.textColor)}>
-          SECTION::{codeDisplay}
-        </span>
-        <span className="ml-auto font-mono text-[0.625rem] text-text-secondary tracking-wider">
-          ACCESSED
-        </span>
+      {/* ── 파일 메타데이터 ── */}
+      <div className="font-mono mt-4 space-y-0.5">
+        <div className="flex gap-3 text-[0.6875rem]">
+          <span className="text-text-secondary w-16 shrink-0">[FILE]</span>
+          <span className={accentText}>
+            FILE_{String(currentIndex + 1).padStart(3, "0")} / {doc.slug}
+          </span>
+        </div>
+        <div className="flex gap-3 text-[0.6875rem]">
+          <span className="text-text-secondary w-16 shrink-0">[CLASS]</span>
+          <span className={accentText}>
+            CLEARANCE LEVEL {doc.clearanceLevel} — {cfg.label}
+          </span>
+        </div>
+        <div className="flex gap-3 text-[0.6875rem]">
+          <span className="text-text-secondary w-16 shrink-0">[STATUS]</span>
+          <span className="text-text-secondary">ACCESSED</span>
+        </div>
       </div>
+
+      {/* ── 구분선 ── */}
+      <div className="font-mono text-[0.625rem] text-border mt-4 mb-5 select-none overflow-hidden whitespace-nowrap">
+        {"─".repeat(80)}
+      </div>
+
+      {/* ── 문서 제목 ── */}
+      <h2 className={cn("font-mono font-bold text-sm mb-4", accentText)}>
+        # {doc.title}
+      </h2>
 
       {/* ── 문서 본문 ── */}
-      <div className="px-6 pt-6 pb-8">
-        {/* 제목 */}
-        <h2 className="text-xl font-bold text-text mb-1">{doc.title}</h2>
-        <div className={cn("h-px mb-5", cfg.bgColor, "opacity-30")} />
+      <LoreContent html={doc.html} />
 
-        {/* 콘텐츠 */}
-        <LoreContent html={doc.html} className="first-heading-no-mt" />
+      {/* ── 하단 구분선 + 네비게이션 ── */}
+      <div className="font-mono text-[0.625rem] text-border mt-6 mb-3 select-none overflow-hidden whitespace-nowrap">
+        {"─".repeat(80)}
       </div>
 
-      {/* ── 하단 네비게이션 (sticky) ── */}
-      <div className="sticky bottom-0 z-10 border-t border-border px-5 py-3 flex items-center bg-bg-secondary">
+      <div className="font-mono flex items-center text-[0.6875rem]">
+        <span className={cn("shrink-0 mr-3", accentText)}>
+          [{currentIndex + 1}/{contents.length}]
+        </span>
         <div className="flex-1 flex justify-start">
           {prevDoc ? (
             <button
               type="button"
               onClick={handlePrev}
-              className="text-xs text-text-secondary hover:text-primary transition-colors text-left"
+              className="text-text-secondary hover:text-primary transition-colors"
             >
               ← {prevDoc.title}
             </button>
           ) : (
-            <span />
+            <span className="text-border">← —</span>
           )}
         </div>
-
-        <span className="font-mono text-[0.6rem] text-border shrink-0 px-3">
-          {currentIndex + 1} / {contents.length}
-        </span>
-
         <div className="flex-1 flex justify-end">
           {nextDoc ? (
             <button
               type="button"
               onClick={handleNext}
-              className="text-xs text-text-secondary hover:text-primary transition-colors text-right"
+              className="text-text-secondary hover:text-primary transition-colors text-right"
             >
               {nextDoc.title} →
             </button>
           ) : (
-            <span />
+            <span className="text-border text-right">— →</span>
           )}
         </div>
       </div>
