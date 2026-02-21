@@ -1,4 +1,4 @@
--- 013_create_lore_documents.sql
+-- 020_create_lore_documents.sql
 -- 목적: Lore CMS DB 기반 전환 — 기존 파일시스템 카테고리를 lore_documents 테이블로 대체
 
 CREATE TABLE IF NOT EXISTS lore_documents (
