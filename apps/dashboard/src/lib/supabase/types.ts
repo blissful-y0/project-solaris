@@ -22,8 +22,8 @@ export type CharacterWithAbilities = CharacterRow & {
 };
 
 export type CharacterStatus = CharacterRow["status"];
-export type Faction = CharacterRow["faction"];
-export type AbilityClass = NonNullable<CharacterRow["ability_class"]>;
+export type Faction = "bureau" | "static" | "defector";
+export type AbilityClass = "field" | "empathy" | "shift" | "compute";
 
 export const FACTION_STATS: Record<Faction, { hp: number; will: number }> = {
   bureau: { hp: 80, will: 250 },

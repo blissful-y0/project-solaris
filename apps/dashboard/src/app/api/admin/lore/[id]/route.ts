@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getServiceClient } from "@/lib/supabase/service";
+import { isValidId } from "@/lib/api/validate-id";
 
 /** PUT /api/admin/lore/[id] — 문서 수정 */
 export async function PUT(
@@ -9,6 +10,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     await requireAdmin();
     const db = getServiceClient();
 

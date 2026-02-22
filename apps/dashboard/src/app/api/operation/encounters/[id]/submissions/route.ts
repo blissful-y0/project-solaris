@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { operationActionSchema } from "@/lib/operation/schemas";
+import { operationActionSchema } from "@/lib/operations/battle/schemas";
+import { isValidId } from "@/lib/api/validate-id";
 
 function mapSubmitError(message: string): { code: string; status: number } {
   if (message.includes("UNAUTHENTICATED")) return { code: "UNAUTHENTICATED", status: 401 };
@@ -19,6 +20,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     const body = await request.json();
     const parsed = operationActionSchema.safeParse(body);
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
+import { isValidId } from "@/lib/api/validate-id";
 
 export async function POST(
   _request: Request,
@@ -8,6 +9,9 @@ export async function POST(
   try {
     const { supabase } = await requireAdmin();
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
 
     const { data: current, error: currentError } = await supabase
       .from("characters")

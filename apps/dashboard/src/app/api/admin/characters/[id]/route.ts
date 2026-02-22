@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
+import { isValidId } from "@/lib/api/validate-id";
 
 /** 캐릭터 단건 조회 (status 무관) */
 export async function GET(
@@ -9,6 +10,9 @@ export async function GET(
   try {
     const { supabase } = await requireAdmin();
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
 
     const { data, error } = await supabase
       .from("characters")

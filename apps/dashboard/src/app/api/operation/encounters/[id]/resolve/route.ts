@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { requireAdmin } from "@/lib/admin-guard";
-import { resolveTurnSchema } from "@/lib/operation/schemas";
-import { computeResolution } from "@/lib/operation/resolve";
+import { resolveTurnSchema } from "@/lib/operations/battle/schemas";
+import { computeResolution } from "@/lib/operations/battle/resolve";
+import { isValidId } from "@/lib/api/validate-id";
 
 function mapResolveError(message: string): { code: string; status: number } {
   if (message.includes("UNAUTHENTICATED")) return { code: "UNAUTHENTICATED", status: 401 };
@@ -18,6 +19,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     const body = await request.json();
     const parsed = resolveTurnSchema.safeParse(body);
 

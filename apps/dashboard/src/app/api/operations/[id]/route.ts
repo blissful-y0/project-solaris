@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isValidId } from "@/lib/api/validate-id";
 
 type OperationDetailRow = {
   id: string;
@@ -48,6 +49,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     const supabase = await createClient();
 
     const {
@@ -102,7 +106,7 @@ export async function GET(
 
     const participantRows = (participants ?? []) as OperationDetailParticipantRow[];
     const normalizedParticipants = participantRows
-      .filter((item) => item.character)
+      .filter((item): item is typeof item & { character: NonNullable<typeof item.character> } => !!item.character)
       .map((item) => ({
         id: item.character.id,
         name: item.character.name,
