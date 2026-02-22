@@ -2,9 +2,18 @@
   "extends": "@solaris/config/tsconfig/nextjs.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "jsx": "preserve"
   },
-  "include": ["src", "next-env.d.ts", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

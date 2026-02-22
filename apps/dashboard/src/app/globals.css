@@ -1,0 +1,323 @@
+@import "tailwindcss";
+
+/* ─── 디자인 토큰 (랜딩과 동일 팔레트 + 대시보드 전용 확장) ─── */
+@theme {
+  --color-bg: #0a0a0f;
+  --color-bg-secondary: #131318;
+  --color-bg-tertiary: #1a1a22;
+  --color-primary: #00d4ff;
+  --color-primary-dim: #0099bb;
+  --color-secondary: #93c5fd;
+  --color-accent: #dc2626;
+  --color-text: #e5e7eb;
+  --color-text-secondary: #9ca3af;
+  --color-subtle: #1f2937;
+  --color-border: #27272a;
+  --color-discord: #5865f2;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system,
+    BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI",
+    "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+/* ─── 기본 스타일 ─── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+  }
+
+  /* 스크롤바 스타일 */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-subtle);
+  }
+
+  /* input/textarea 내부 스크롤바 숨김 */
+  input,
+  textarea {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  input::-webkit-scrollbar,
+  textarea::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ─── 노이즈 오버레이 (랜딩 대비 opacity 절반 — 대시보드는 가독성 우선) ─── */
+@layer base {
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+}
+
+/* ─── 네온 글로우 유틸리티 (시안, 레드, 디스코드 3색) ─── */
+@layer utilities {
+  .glow-cyan {
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  }
+  .glow-cyan-strong {
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.5),
+      0 0 24px rgba(0, 212, 255, 0.15);
+  }
+  .glow-cyan-intense {
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.6),
+      0 0 32px rgba(0, 212, 255, 0.25);
+  }
+  .text-glow-cyan {
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+  }
+  .glow-red {
+    box-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+  }
+  .glow-red-strong {
+    box-shadow: 0 0 12px rgba(220, 38, 38, 0.5),
+      0 0 24px rgba(220, 38, 38, 0.15);
+  }
+  .text-glow-red {
+    text-shadow: 0 0 8px rgba(220, 38, 38, 0.5);
+  }
+  .glow-discord {
+    box-shadow: 0 0 12px rgba(88, 101, 242, 0.4),
+      0 0 24px rgba(88, 101, 242, 0.15);
+  }
+}
+
+/* ─── HUD 코너 브래킷 (좌상단/우하단 L자 장식) ─── */
+@layer utilities {
+  .hud-corners {
+    position: relative;
+  }
+  .hud-corners::before,
+  .hud-corners::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+  }
+  .hud-corners::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid var(--color-primary);
+    border-left: 1px solid var(--color-primary);
+  }
+  .hud-corners::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1px solid var(--color-primary);
+    border-right: 1px solid var(--color-primary);
+  }
+}
+
+/* ─── HUD 라벨 (모노스페이스, 대문자, 넓은 자간) ─── */
+@layer utilities {
+  .hud-label {
+    font-family: monospace;
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: color-mix(in oklab, var(--color-primary) 60%, transparent);
+  }
+}
+
+/* ─── 키프레임 애니메이션 ─── */
+@layer base {
+  /* 숨쉬기 효과 — 글로우 펄스 */
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+  /* 깜빡임 — 터미널 느낌 */
+  @keyframes flicker {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.95;
+    }
+  }
+  /* 스캔라인 수직 이동 */
+  @keyframes scan-line {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+  /* 스켈레톤 로딩 펄스 */
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.15;
+    }
+  }
+
+  @keyframes ticker-marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* 전역 API 동기화 인디케이터 — 상단 바 슬라이드 */
+  @keyframes sync-slide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* 글리치 이펙트 — Citizen ID 아바타 */
+  @keyframes glitch-shift {
+    0% {
+      filter: hue-rotate(0deg);
+      transform: translateX(0);
+    }
+    50% {
+      filter: hue-rotate(90deg);
+      transform: translateX(2px);
+    }
+    100% {
+      filter: hue-rotate(0deg);
+      transform: translateX(0);
+    }
+  }
+}
+
+@layer utilities {
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    gap: 2.5rem;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    animation: ticker-marquee 28s linear infinite;
+  }
+}
+
+/* ─── Lore 콘텐츠 타이포그래피 (마크다운 렌더링) ─── */
+@layer components {
+  .lore-content {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.75;
+  }
+  .lore-content h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  .lore-content h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .lore-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .lore-content h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: color-mix(in oklab, var(--color-primary) 70%, var(--color-text));
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+  }
+  .lore-content p {
+    margin-bottom: 0.75rem;
+  }
+  .lore-content ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .lore-content li {
+    margin-bottom: 0.25rem;
+  }
+  .lore-content strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  .lore-content blockquote {
+    border-left: 2px solid var(--color-primary);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--color-text-secondary);
+    font-style: italic;
+  }
+  .lore-content hr {
+    border-color: var(--color-border);
+    margin: 1.5rem 0;
+  }
+  /* 모달 내부 등 첫 번째 헤딩 상단 마진 제거 */
+  .first-heading-no-mt > :first-child {
+    margin-top: 0;
+  }
+}
+
+/* ─── 접근성: 모션 축소 대응 (@layer 안에서 선언하여 Tailwind 유틸리티 보존) ─── */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms;
+      animation-iteration-count: 1;
+      scroll-behavior: auto;
+    }
+  }
+}

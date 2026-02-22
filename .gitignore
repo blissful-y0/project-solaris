@@ -8,11 +8,15 @@ dist/
 .next/
 .astro/
 .turbo/
+coverage/
+*.tsbuildinfo
 
 # Environment
 .env
 .env.local
+.env.prd
 .env.*.local
+.env.local.*
 
 # IDE
 .vscode/
@@ -26,5 +30,25 @@ dist/
 npm-debug.log*
 pnpm-debug.log*
 
+# Local tooling artifacts
+.playwright-mcp/
+playwright-report/
+test-results/
+
+# Playwright E2E
+playwright-report/
+playwright-results.xml
+test-results/
+**/e2e/.auth/
+**/e2e/screenshots/
+
 # Worktrees
 .worktrees/
+
+# Vercel 통합 빌드 (랜딩 정적 출력 → 대시보드 public/)
+apps/dashboard/public/_landing.html
+apps/dashboard/public/_astro/
+
+# Serena
+.serena/
+.vercel

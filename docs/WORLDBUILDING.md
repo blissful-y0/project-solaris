@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> 이 문서는 초기 요약본이다. 상세 세계관 기준서는 [`docs/lore/`](./lore/README.md)를 참조하라.
+
 # PROJECT SOLARIS — 세계관 요약
 
 ## 배경
