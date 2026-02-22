@@ -1,5 +1,10 @@
--- 020_join_operation_participant_atomic.sql
--- operation 참가를 원자적으로 처리해 max_participants 초과를 방지한다.
+-- 025_fix_join_rpc_security_definer.sql
+-- SECURITY INVOKER → SECURITY DEFINER 변경
+--
+-- 문제: SECURITY INVOKER + FOR UPDATE 조합이 operations 테이블의
+--       UPDATE RLS 정책(생성자/admin만 허용)을 요구해서 일반 유저의 join이 실패함.
+-- 해결: API 라우트에서 인증/인가/존재 확인을 모두 수행하므로,
+--       RPC는 원자적 동시성 제어만 담당. SECURITY DEFINER로 RLS 우회 안전.
 
 CREATE OR REPLACE FUNCTION join_operation_participant(
   p_operation_id text,
@@ -9,7 +14,7 @@ CREATE OR REPLACE FUNCTION join_operation_participant(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
