@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { envServer } from "@/lib/env.server";
 import { getServiceClient } from "@/lib/supabase/service";
 import { createNotification } from "@/app/actions/notification";
+import { escapeDiscordMentions } from "@/lib/discord/mentions";
 
 function isSafeInternalPath(path: string) {
   return path.startsWith("/") && !path.startsWith("//");
@@ -98,7 +99,7 @@ export async function GET(request: Request) {
               type: "character_new_member",
               channel: "discord_webhook",
               title: "[신규 가입] 새 회원 등록",
-              body: `Discord: @${discordUsername}`,
+              body: `Discord: ${escapeDiscordMentions(`@${discordUsername}`)}`,
             },
             getServiceClient(),
           );

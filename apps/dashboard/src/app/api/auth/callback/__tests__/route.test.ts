@@ -212,6 +212,7 @@ describe("GET /api/auth/callback", () => {
         type: "character_new_member",
         channel: "discord_webhook",
         scope: "broadcast",
+        body: "Discord: ＠solaris-user",
       }),
       expect.anything(),
     );

@@ -6,6 +6,7 @@ import { FACTION_STATS, type AbilityClass, type CharacterWithAbilities, type Fac
 import { getUserFriendlyError } from "@/lib/supabase/helpers";
 import { getServiceClient } from "@/lib/supabase/service";
 import { createNotification } from "@/app/actions/notification";
+import { escapeDiscordMentions } from "@/lib/discord/mentions";
 
 interface CharacterDraft {
   name: string;
@@ -141,8 +142,8 @@ export async function submitCharacter(draft: CharacterDraft) {
       type: "character_pending",
       title: "[캐릭터 신청] 새 신청서 접수",
       body: [
-        `이름: **${draft.name}** | 진영: ${factionLabel[draft.faction] ?? draft.faction}`,
-        `신청자: @${userRow?.discord_username ?? "unknown"}`,
+        `이름: **${escapeDiscordMentions(draft.name)}** | 진영: ${factionLabel[draft.faction] ?? draft.faction}`,
+        `신청자: @${escapeDiscordMentions(userRow?.discord_username ?? "unknown")}`,
         adminUrl ? `심사: ${adminUrl}` : "",
       ]
         .filter(Boolean)
