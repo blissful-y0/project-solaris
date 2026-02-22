@@ -67,9 +67,9 @@ type TierKey = keyof typeof TIER_LABELS;
 
 /** 티어별 권장 코스트 범위 */
 const COST_GUIDE = {
-  basic: { will: "3~5", hp: "15~20", computeWill: "+2" },
-  mid: { will: "8~15", hp: "30~40", computeWill: "+5" },
-  advanced: { will: "20~30", hp: "50~60", computeWill: "+10" },
+  basic: { will: "3~5", hp: "15~20" },
+  mid: { will: "8~15", hp: "30~40" },
+  advanced: { will: "20~30", hp: "50~60" },
 } as const;
 
 /** 개별 스킬 티어 입력 블록 */
@@ -79,17 +79,14 @@ function SkillTierBlock({
   systemName,
   isBureau,
   showDualCost,
-  isStaticCompute,
   onChange,
 }: {
   tier: TierKey;
   skill: SkillTier;
   systemName: string;
   isBureau: boolean;
-  /** 크로스오버 또는 Static+Compute로 HP+WILL 둘 다 표시 */
+  /** 크로스오버 선택 시 HP+WILL 둘 다 표시 */
   showDualCost: boolean;
-  /** Static+Compute 특수 규칙 (HP + 추가 WILL) */
-  isStaticCompute: boolean;
   onChange: (patch: Partial<SkillTier>) => void;
 }) {
   const tierLabel =
@@ -180,20 +177,13 @@ function SkillTierBlock({
               type="number"
               min="0"
               value={skill.costWill}
-              onChange={(e) => onChange({ costWill: e.target.value })}
-              placeholder={`권장 ${isBureau && !showDualCost ? guide.will : isStaticCompute ? guide.computeWill : guide.will}`}
-              className={costInputClass}
-            />
-          </div>
+                onChange={(e) => onChange({ costWill: e.target.value })}
+                placeholder={`권장 ${guide.will}`}
+                className={costInputClass}
+              />
+            </div>
         )}
       </div>
-
-      {/* 가이드라인 안내 */}
-      {isStaticCompute && !showDualCost && (
-        <p className="text-[0.625rem] text-warning/70">
-          연산(Compute) 계열 — 비동조형 사용 시 HP + 추가 WILL 이중 소모
-        </p>
-      )}
     </div>
   );
 }
@@ -201,11 +191,11 @@ function SkillTierBlock({
 export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
   const isBureau = draft.faction === "bureau";
   const systemName = isBureau ? "하모닉스 프로토콜" : "오버드라이브";
-  const hasCrossover = draft.crossoverStyle !== null;
-  /** 비동조형(Static) + 연산(Compute) = HP + 추가 WILL 이중 코스트 */
-  const isStaticCompute = !isBureau && draft.abilityClass === "compute";
-  /** 이중 코스트 표시 조건: 크로스오버 OR Static+Compute */
-  const showDualCost = hasCrossover || isStaticCompute;
+  const hasCrossover =
+    draft.crossoverStyle === "limiter-override" ||
+    draft.crossoverStyle === "dead-reckoning";
+  /** 이중 코스트 표시 조건: 크로스오버 선택 시 */
+  const showDualCost = hasCrossover;
 
   /** 특정 티어의 스킬 데이터를 업데이트 */
   function updateSkill(tier: TierKey, patch: Partial<SkillTier>) {
@@ -233,11 +223,6 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
         {hasCrossover && (
           <span className="text-warning ml-2">
             크로스오버: HP + WILL 이중 소모
-          </span>
-        )}
-        {isStaticCompute && !hasCrossover && (
-          <span className="text-warning ml-2">
-            연산 계열: HP + WILL 이중 소모
           </span>
         )}
       </p>
@@ -309,6 +294,107 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
           각 스킬의 이름, 설명, 소모 비용을 입력하세요.
         </p>
 
+        {/* 크로스오버 전투 스타일 (선택사항) */}
+        <div className="border-t border-border pt-5 mt-5">
+          <div className="mb-4">
+            <p className="hud-label mb-1">
+              // 크로스오버 전투 스타일 (선택사항)
+            </p>
+            <p className="text-xs text-text-secondary">
+              반대 진영의 전투 방식을 선택할 수 있습니다. 선택 시 모든 스킬에 HP
+              + WILL 이중 소모가 적용됩니다.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {/* 선택 안 함 옵션 */}
+            <button
+              type="button"
+              onClick={() => onChange({ crossoverStyle: null })}
+              className={cn(
+                "w-full text-left p-3 rounded-md border transition-all",
+                draft.crossoverStyle === null
+                  ? "border-primary/40 bg-primary/5"
+                  : "border-border hover:border-text-secondary/30",
+              )}
+            >
+              <span className="text-sm text-text">선택 안 함</span>
+              <span className="text-xs text-text-secondary ml-2">
+                — 기본 전투 스타일 유지
+              </span>
+            </button>
+
+            {/* Bureau: 리미터 해제 */}
+            {isBureau && (
+              <button
+                type="button"
+                data-testid="crossover-limiter-override"
+                onClick={() =>
+                  onChange({ crossoverStyle: BUREAU_CROSSOVER.id })
+                }
+                className={cn(
+                  "w-full text-left p-3 rounded-md border transition-all",
+                  draft.crossoverStyle === BUREAU_CROSSOVER.id
+                    ? "border-accent/40 bg-accent/5 glow-red"
+                    : "border-border hover:border-text-secondary/30",
+                )}
+              >
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-sm font-semibold text-text">
+                    {BUREAU_CROSSOVER.label}
+                  </span>
+                  <span className="text-[0.625rem] text-text-secondary tracking-wide">
+                    {BUREAU_CROSSOVER.sublabel}
+                  </span>
+                </div>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  {BUREAU_CROSSOVER.desc}
+                </p>
+              </button>
+            )}
+
+            {/* Static: 3가지 루트 */}
+            {!isBureau &&
+              STATIC_CROSSOVERS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  data-testid={`crossover-${opt.id}`}
+                  disabled={opt.disabled}
+                  onClick={() => {
+                    if (!opt.disabled) onChange({ crossoverStyle: opt.id });
+                  }}
+                  className={cn(
+                    "w-full text-left p-3 rounded-md border transition-all",
+                    opt.disabled && "opacity-40 cursor-not-allowed",
+                    !opt.disabled && draft.crossoverStyle === opt.id
+                      ? "border-primary/40 bg-primary/5 glow-cyan"
+                      : !opt.disabled &&
+                          "border-border hover:border-text-secondary/30",
+                    opt.disabled && "border-border",
+                  )}
+                >
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-sm font-semibold text-text">
+                      {opt.label}
+                    </span>
+                    <span className="text-[0.625rem] text-text-secondary tracking-wide">
+                      {opt.sublabel}
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed">
+                    {opt.desc}
+                  </p>
+                  {opt.disabled && (
+                    <p className="mt-1 text-xs text-warning/70">
+                      현재 선택 불가
+                    </p>
+                  )}
+                </button>
+              ))}
+          </div>
+        </div>
+
         {(["basic", "mid", "advanced"] as const).map((tier) => (
           <SkillTierBlock
             key={tier}
@@ -317,105 +403,9 @@ export function StepAbilityDesign({ draft, onChange }: StepAbilityDesignProps) {
             systemName={systemName}
             isBureau={isBureau}
             showDualCost={showDualCost}
-            isStaticCompute={isStaticCompute}
             onChange={(patch) => updateSkill(tier, patch)}
           />
         ))}
-      </div>
-
-      {/* 크로스오버 전투 스타일 (선택사항) */}
-      <div className="border-t border-border pt-5 mt-5">
-        <div className="mb-4">
-          <p className="hud-label mb-1">// 크로스오버 전투 스타일 (선택사항)</p>
-          <p className="text-xs text-text-secondary">
-            반대 진영의 전투 방식을 선택할 수 있습니다. 선택 시 모든 스킬에 HP +
-            WILL 이중 소모가 적용됩니다.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {/* 선택 안 함 옵션 */}
-          <button
-            type="button"
-            onClick={() => onChange({ crossoverStyle: null })}
-            className={cn(
-              "w-full text-left p-3 rounded-md border transition-all",
-              draft.crossoverStyle === null
-                ? "border-primary/40 bg-primary/5"
-                : "border-border hover:border-text-secondary/30",
-            )}
-          >
-            <span className="text-sm text-text">선택 안 함</span>
-            <span className="text-xs text-text-secondary ml-2">
-              — 기본 전투 스타일 유지
-            </span>
-          </button>
-
-          {/* Bureau: 리미터 해제 */}
-          {isBureau && (
-            <button
-              type="button"
-              data-testid="crossover-limiter-override"
-              onClick={() => onChange({ crossoverStyle: BUREAU_CROSSOVER.id })}
-              className={cn(
-                "w-full text-left p-3 rounded-md border transition-all",
-                draft.crossoverStyle === BUREAU_CROSSOVER.id
-                  ? "border-accent/40 bg-accent/5 glow-red"
-                  : "border-border hover:border-text-secondary/30",
-              )}
-            >
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-sm font-semibold text-text">
-                  {BUREAU_CROSSOVER.label}
-                </span>
-                <span className="text-[0.625rem] text-text-secondary tracking-wide">
-                  {BUREAU_CROSSOVER.sublabel}
-                </span>
-              </div>
-              <p className="text-xs text-text-secondary leading-relaxed">
-                {BUREAU_CROSSOVER.desc}
-              </p>
-            </button>
-          )}
-
-          {/* Static: 3가지 루트 */}
-          {!isBureau &&
-            STATIC_CROSSOVERS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                data-testid={`crossover-${opt.id}`}
-                disabled={opt.disabled}
-                onClick={() => {
-                  if (!opt.disabled) onChange({ crossoverStyle: opt.id });
-                }}
-                className={cn(
-                  "w-full text-left p-3 rounded-md border transition-all",
-                  opt.disabled && "opacity-40 cursor-not-allowed",
-                  !opt.disabled && draft.crossoverStyle === opt.id
-                    ? "border-primary/40 bg-primary/5 glow-cyan"
-                    : !opt.disabled &&
-                        "border-border hover:border-text-secondary/30",
-                  opt.disabled && "border-border",
-                )}
-              >
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-sm font-semibold text-text">
-                    {opt.label}
-                  </span>
-                  <span className="text-[0.625rem] text-text-secondary tracking-wide">
-                    {opt.sublabel}
-                  </span>
-                </div>
-                <p className="text-xs text-text-secondary leading-relaxed">
-                  {opt.desc}
-                </p>
-                {opt.disabled && (
-                  <p className="mt-1 text-xs text-warning/70">현재 선택 불가</p>
-                )}
-              </button>
-            ))}
-        </div>
       </div>
     </div>
   );

@@ -38,7 +38,10 @@ export async function GET() {
       return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
     }
 
-    const [{ data: userRow }, { data: character, error }] = await Promise.all([
+    const [
+      { data: userRow, error: userError },
+      { data: character, error: characterError },
+    ] = await Promise.all([
       supabase
         .from("users")
         .select("discord_username, role")
@@ -54,7 +57,11 @@ export async function GET() {
         .maybeSingle(),
     ]);
 
-    if (error) {
+    if (userError) {
+      console.error("[api/me] users 조회 실패:", userError.message);
+    }
+
+    if (characterError) {
       return NextResponse.json({ error: "FAILED_TO_FETCH_ME" }, { status: 500 });
     }
 

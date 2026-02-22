@@ -83,6 +83,29 @@ describe("characterDraftSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("능력 코스트가 99를 초과하면 거부한다", () => {
+    const result = characterDraftSchema.safeParse({
+      ...validDraft,
+      abilities: [
+        { ...validDraft.abilities[0], costHp: 100 },
+        validDraft.abilities[1],
+        validDraft.abilities[2],
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("외형/성격/배경/기타 길이 제한을 적용한다", () => {
+    const result = characterDraftSchema.safeParse({
+      ...validDraft,
+      profileData: { ...validDraft.profileData, personality: "성".repeat(501) },
+      appearance: "외".repeat(501),
+      backstory: "배".repeat(1001),
+      notes: "기".repeat(1001),
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("잘못된 faction을 거부한다", () => {
     const result = characterDraftSchema.safeParse({ ...validDraft, faction: "defector" });
     expect(result.success).toBe(false);

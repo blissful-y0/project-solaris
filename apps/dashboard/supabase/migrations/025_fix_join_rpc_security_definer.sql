@@ -89,3 +89,7 @@ BEGIN
   );
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.join_operation_participant(
+  text, text, text, text
+) TO authenticated;
