@@ -10,6 +10,23 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
+vi.mock("../DashboardSessionProvider", () => ({
+  useDashboardSession: () => ({
+    me: {
+      user: { id: "u1", email: "a@b.com", displayName: "Test", discordUsername: null },
+      character: null,
+    },
+    loading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+}));
+
 describe("DashboardLayout", () => {
   it("renders children in main content area", () => {
     render(
@@ -26,7 +43,7 @@ describe("DashboardLayout", () => {
         <div>Content</div>
       </DashboardLayout>,
     );
-    expect(screen.getByText("SOLARIS")).toBeInTheDocument();
+    expect(screen.getByRole("banner")).toBeInTheDocument();
   });
 
   it("renders SolarisTicker", () => {
@@ -72,7 +89,6 @@ describe("DashboardLayout", () => {
         <div>Content</div>
       </DashboardLayout>,
     );
-    // Operation은 requireApproval 없이 항상 일반 링크로 표시됨
     const operationLinks = screen.getAllByRole("link", { name: /operation/i });
     expect(operationLinks.length).toBeGreaterThanOrEqual(1);
     operationLinks.forEach((link) => {
@@ -89,5 +105,16 @@ describe("DashboardLayout", () => {
     );
     const lockIcons = screen.queryAllByTestId("lock-icon-/operation");
     expect(lockIcons.length).toBe(0);
+  });
+
+  it("renders DashboardFooter", () => {
+    render(
+      <DashboardLayout>
+        <div>Content</div>
+      </DashboardLayout>,
+    );
+    const footer = screen.getByRole("contentinfo");
+    expect(footer).toBeInTheDocument();
+    expect(footer).toHaveTextContent(/RUNNING ON HELIOS CORE/);
   });
 });

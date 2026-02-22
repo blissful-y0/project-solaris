@@ -11,8 +11,7 @@ const BASE_DRAFT: CharacterDraft = {
   abilityClass: "field",
   abilityName: "시공간 왜곡",
   abilityDescription: "공간을 접어 물체를 이동시킨다",
-  abilityConstraint: "시야 내 대상만 가능",
-  abilityWeakness: "",
+  abilityWeakness: "시야 내 대상만 가능",
   skills: {
     basic: { name: "공간 압축", description: "소형 물체 이동", costHp: "0", costWill: "5" },
     mid: { name: "단거리 도약", description: "중형 물체 이동", costHp: "0", costWill: "15" },

@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
 
-import type { Faction } from "./types";
+/** 캐릭터 생성 시 선택 가능한 팩션 (defector 제외) */
+type SelectableFaction = "bureau" | "static";
 
-const FACTIONS: { id: Faction; label: string; sublabel: string; description: string; theme: string; glow: string }[] = [
+const FACTIONS: { id: SelectableFaction; label: string; sublabel: string; description: string; theme: string; glow: string }[] = [
   {
     id: "bureau",
     label: "Solaris Bureau of Civic Security",
@@ -22,8 +23,8 @@ const FACTIONS: { id: Faction; label: string; sublabel: string; description: str
 ];
 
 type StepFactionProps = {
-  value: Faction | null;
-  onChange: (faction: Faction) => void;
+  value: SelectableFaction | null;
+  onChange: (faction: SelectableFaction) => void;
 };
 
 export function StepFaction({ value, onChange }: StepFactionProps) {

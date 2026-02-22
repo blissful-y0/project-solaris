@@ -1,5 +1,9 @@
 /* ─── 전투 세션 타입 정의 ─── */
 
+import type { Faction } from "@/lib/supabase/types";
+
+export type { Faction };
+
 /** 행동 유형 (3종) */
 export type ActionType = "attack" | "defend" | "support";
 
@@ -12,9 +16,6 @@ export type TurnPhase =
   | "waiting"        // 상대 서술 대기
   | "both_submitted" // 양측 제출 완료 — 판정 진행 버튼
   | "judging";       // AI GM 판정 처리 중 → 완료 시 바로 다음 턴(my_turn/waiting)으로 전환
-
-/** 진영 */
-export type Faction = "bureau" | "static" | "defector";
 
 /** 전투 참가자 */
 export interface BattleParticipant {

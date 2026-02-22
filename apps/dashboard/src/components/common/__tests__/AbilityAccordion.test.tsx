@@ -10,7 +10,6 @@ const mockAbilities: Ability[] = [
     tier: "basic",
     name: "역장 전개",
     description: "주변에 방어 역장을 전개한다.",
-    weakness: "지속시간이 짧다.",
     costAmount: 5,
     costType: "will",
   },
@@ -18,7 +17,6 @@ const mockAbilities: Ability[] = [
     tier: "mid",
     name: "역장 폭발",
     description: "역장을 폭발시켜 주변에 피해를 준다.",
-    weakness: "자신도 피해를 입는다.",
     costAmount: 15,
     costType: "hp",
   },
@@ -26,7 +24,6 @@ const mockAbilities: Ability[] = [
     tier: "advanced",
     name: "절대 역장",
     description: "무적의 역장을 전개한다.",
-    weakness: "WILL 소모가 극심하다.",
     costAmount: 30,
     costType: "will",
   },
@@ -37,7 +34,6 @@ const dualCostAbility: Ability[] = [
     tier: "advanced",
     name: "하모닉스 프로토콜",
     description: "이중 자원 소모 스킬",
-    weakness: "회복 부담",
     costHp: 10,
     costWill: 30,
   },
@@ -92,14 +88,6 @@ describe("AbilityAccordion", () => {
     expect(
       screen.getByText("주변에 방어 역장을 전개한다."),
     ).toBeInTheDocument();
-  });
-
-  it("클릭 시 weakness를 표시한다", async () => {
-    const user = userEvent.setup();
-    render(<AbilityAccordion abilities={mockAbilities} />);
-
-    await user.click(screen.getByText("역장 전개"));
-    expect(screen.getByText("지속시간이 짧다.")).toBeInTheDocument();
   });
 
   it("클릭 시 cost를 표시한다 (WILL 5)", async () => {

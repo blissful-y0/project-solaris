@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isValidId } from "@/lib/api/validate-id";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-/** nanoid(12): 영숫자만 허용 */
-const VALID_ID = /^[a-zA-Z0-9_-]{1,24}$/;
 
 async function requireOwnerCharacter(id: string) {
   const supabase = await createClient();
@@ -37,7 +35,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    if (!VALID_ID.test(id)) {
+    if (!isValidId(id)) {
       return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
     }
     const owned = await requireOwnerCharacter(id);
@@ -88,7 +86,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    if (!VALID_ID.test(id)) {
+    if (!isValidId(id)) {
       return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
     }
     const owned = await requireOwnerCharacter(id);

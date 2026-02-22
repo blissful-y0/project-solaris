@@ -41,7 +41,6 @@ describe("registry-data mappers", () => {
           tier: "advanced",
           name: "하모닉스",
           description: "설명",
-          weakness: "약점",
           cost_hp: 10,
           cost_will: 20,
         },

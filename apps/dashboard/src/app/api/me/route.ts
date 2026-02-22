@@ -38,16 +38,30 @@ export async function GET() {
       return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
     }
 
-    const { data: character, error } = await supabase
-      .from("characters")
-      .select(
-        "id, name, status, profile_image_url, faction, ability_class, hp_max, hp_current, will_max, will_current, resonance_rate, created_at",
-      )
-      .eq("user_id", user.id)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const [
+      { data: userRow, error: userError },
+      { data: character, error: characterError },
+    ] = await Promise.all([
+      supabase
+        .from("users")
+        .select("discord_username, role")
+        .eq("id", user.id)
+        .single(),
+      supabase
+        .from("characters")
+        .select(
+          "id, name, status, profile_image_url, faction, ability_class, hp_max, hp_current, will_max, will_current, resonance_rate, created_at",
+        )
+        .eq("user_id", user.id)
+        .is("deleted_at", null)
+        .maybeSingle(),
+    ]);
 
-    if (error) {
+    if (userError) {
+      console.error("[api/me] users 조회 실패:", userError.message);
+    }
+
+    if (characterError) {
       return NextResponse.json({ error: "FAILED_TO_FETCH_ME" }, { status: 500 });
     }
 
@@ -56,6 +70,8 @@ export async function GET() {
         id: user.id,
         email: user.email ?? null,
         displayName: resolveDisplayName(user),
+        discordUsername: userRow?.discord_username ?? null,
+        isAdmin: userRow?.role === "admin",
       },
       character: character ?? null,
     });

@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
-import "react-image-crop/dist/ReactCrop.css";
+import { useCallback, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/Button";
+const ImageCropModal = dynamic(
+  () => import("./ImageCropModal").then((mod) => mod.ImageCropModal),
+  { ssr: false },
+);
 
 interface ImageCropperProps {
   previewUrl: string | null;
@@ -16,106 +17,6 @@ interface ImageCropperProps {
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE_MB = 5;
-
-/** 크롭 영역을 캔버스에 그려서 Blob으로 추출 */
-function getCroppedBlob(
-  image: HTMLImageElement,
-  crop: PixelCrop,
-): Promise<Blob | null> {
-  const canvas = document.createElement("canvas");
-  const size = 512;
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return Promise.resolve(null);
-
-  ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, size, size);
-
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/webp", 0.85);
-  });
-}
-
-/** 크롭 모달 — Portal로 body에 렌더링 */
-function CropModal({
-  rawSrc,
-  onConfirm,
-  onCancel,
-}: {
-  rawSrc: string;
-  onConfirm: (file: File, previewUrl: string) => void;
-  onCancel: () => void;
-}) {
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [crop, setCrop] = useState<Crop>();
-
-  const handleConfirm = useCallback(async () => {
-    if (!imgRef.current || !crop) return;
-
-    const pixelCrop: PixelCrop = {
-      x: Math.round((crop.x ?? 0) / 100 * imgRef.current.naturalWidth),
-      y: Math.round((crop.y ?? 0) / 100 * imgRef.current.naturalHeight),
-      width: Math.round((crop.width ?? 100) / 100 * imgRef.current.naturalWidth),
-      height: Math.round((crop.height ?? 100) / 100 * imgRef.current.naturalHeight),
-      unit: "px",
-    };
-
-    const blob = await getCroppedBlob(imgRef.current, pixelCrop);
-    if (!blob) return;
-
-    const croppedFile = new File([blob], "avatar.webp", { type: "image/webp" });
-    const croppedUrl = URL.createObjectURL(blob);
-    onConfirm(croppedFile, croppedUrl);
-  }, [crop, onConfirm]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCancel]);
-
-  return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
-    >
-      <div className="w-full max-w-lg rounded-lg border border-border bg-bg-secondary p-5 space-y-4">
-        <p className="hud-label">// 이미지 영역을 선택하세요</p>
-
-        <div className="flex justify-center">
-          <ReactCrop
-            crop={crop}
-            onChange={(_, percentCrop) => setCrop(percentCrop)}
-            aspect={1}
-            circularCrop={false}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              ref={imgRef}
-              src={rawSrc}
-              alt="크롭 원본"
-              className="max-h-[60vh] max-w-full object-contain"
-            />
-          </ReactCrop>
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost" onClick={onCancel}>
-            취소
-          </Button>
-          <Button size="sm" onClick={handleConfirm} disabled={!crop}>
-            확정
-          </Button>
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-}
 
 export function ImageCropper({ previewUrl, onImageChange, className }: ImageCropperProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -146,12 +47,14 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
     if (rawSrc) URL.revokeObjectURL(rawSrc);
     onImageChange(file, url);
     setRawSrc(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }, [onImageChange, rawSrc]);
 
   /** 크롭 취소 */
   const handleCropCancel = useCallback(() => {
     if (rawSrc) URL.revokeObjectURL(rawSrc);
     setRawSrc(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }, [rawSrc]);
 
   /** 이미지 제거 */
@@ -164,7 +67,7 @@ export function ImageCropper({ previewUrl, onImageChange, className }: ImageCrop
     <div className={cn("shrink-0 flex flex-col", className)}>
       {/* 크롭 모달 */}
       {rawSrc && (
-        <CropModal
+        <ImageCropModal
           rawSrc={rawSrc}
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}

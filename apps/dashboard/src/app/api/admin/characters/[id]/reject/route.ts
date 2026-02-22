@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { createNotification } from "@/app/actions/notification";
+import { isValidId } from "@/lib/api/validate-id";
 
 interface RejectBody {
   reason?: string;
@@ -13,6 +14,9 @@ export async function POST(
   try {
     const { supabase } = await requireAdmin();
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     const body = (await request.json()) as RejectBody;
     const reason = body.reason?.trim() ?? "";
 

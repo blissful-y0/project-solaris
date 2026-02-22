@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
-import { closeEncounterSchema } from "@/lib/operation/schemas";
+import { closeEncounterSchema } from "@/lib/operations/battle/schemas";
+import { isValidId } from "@/lib/api/validate-id";
 
 export async function POST(
   request: NextRequest,
@@ -8,6 +9,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     const body = await request.json();
     const parsed = closeEncounterSchema.safeParse(body);
 

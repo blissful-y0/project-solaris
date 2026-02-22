@@ -1,8 +1,26 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { SWRConfig } from "swr";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdminCharactersPage from "../page";
+
+function renderWithSWR(ui: React.ReactElement) {
+  return render(
+    <SWRConfig
+      value={{
+        provider: () => new Map(),
+        dedupingInterval: 0,
+        errorRetryCount: 0,
+        shouldRetryOnError: false,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+      }}
+    >
+      {ui}
+    </SWRConfig>,
+  );
+}
 
 describe("AdminCharactersPage", () => {
   const MOCK_ROW = {
@@ -41,7 +59,7 @@ describe("AdminCharactersPage", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const user = userEvent.setup();
-    render(<AdminCharactersPage />);
+    renderWithSWR(<AdminCharactersPage />);
 
     /* 큐 렌더 확인 */
     await waitFor(() => {
@@ -88,7 +106,7 @@ describe("AdminCharactersPage", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const user = userEvent.setup();
-    render(<AdminCharactersPage />);
+    renderWithSWR(<AdminCharactersPage />);
 
     await waitFor(() => {
       expect(screen.getByText("테스터")).toBeInTheDocument();
@@ -123,10 +141,14 @@ describe("AdminCharactersPage", () => {
   it("권한 없을 때 Access Denied를 표시한다", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValueOnce({ ok: false, status: 403 }),
+      vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: async () => ({ error: "FORBIDDEN" }),
+      }),
     );
 
-    render(<AdminCharactersPage />);
+    renderWithSWR(<AdminCharactersPage />);
 
     await waitFor(() => {
       expect(screen.getByText("ACCESS DENIED")).toBeInTheDocument();

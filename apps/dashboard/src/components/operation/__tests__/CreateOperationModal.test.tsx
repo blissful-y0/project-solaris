@@ -22,29 +22,29 @@ describe("CreateOperationModal", () => {
   });
 
   it("open=true일 때 모달을 렌더링한다", () => {
-    render(<CreateOperationModal open={true} onClose={vi.fn()} />);
+    render(<CreateOperationModal open={true} onClose={vi.fn()} isAdmin />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("타입 선택 버튼 2개를 표시한다", () => {
-    render(<CreateOperationModal open={true} onClose={vi.fn()} />);
+    render(<CreateOperationModal open={true} onClose={vi.fn()} isAdmin />);
     expect(screen.getByText("작전 개시")).toBeInTheDocument();
     expect(screen.getByText("다운타임 개설")).toBeInTheDocument();
   });
 
   it("제목 입력 필드를 표시한다", () => {
-    render(<CreateOperationModal open={true} onClose={vi.fn()} />);
+    render(<CreateOperationModal open={true} onClose={vi.fn()} isAdmin />);
     expect(screen.getByLabelText(/제목/)).toBeInTheDocument();
   });
 
   it("상황 설명 필드를 표시한다", () => {
-    render(<CreateOperationModal open={true} onClose={vi.fn()} />);
+    render(<CreateOperationModal open={true} onClose={vi.fn()} isAdmin />);
     expect(screen.getByLabelText(/상황 설명/)).toBeInTheDocument();
   });
 
   it("'작전 개시' 선택 시 아군/적군 필드를 표시한다", async () => {
     const user = userEvent.setup();
-    render(<CreateOperationModal open={true} onClose={vi.fn()} />);
+    render(<CreateOperationModal open={true} onClose={vi.fn()} isAdmin />);
 
     await user.click(screen.getByText("작전 개시"));
 
@@ -64,7 +64,7 @@ describe("CreateOperationModal", () => {
   it("취소 버튼 클릭 시 onClose를 호출한다", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    render(<CreateOperationModal open={true} onClose={onClose} />);
+    render(<CreateOperationModal open={true} onClose={onClose} isAdmin />);
 
     await user.click(screen.getByText("취소"));
 
@@ -72,7 +72,7 @@ describe("CreateOperationModal", () => {
   });
 
   it("작전 생성 버튼을 표시한다", () => {
-    render(<CreateOperationModal open={true} onClose={vi.fn()} />);
+    render(<CreateOperationModal open={true} onClose={vi.fn()} isAdmin />);
     expect(screen.getByText("작전 생성")).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe("CreateOperationModal", () => {
     });
 
     render(
-      <CreateOperationModal open={true} onClose={onClose} onCreated={onCreated} />,
+      <CreateOperationModal open={true} onClose={onClose} onCreated={onCreated} isAdmin />,
     );
 
     await user.click(screen.getByText("작전 개시"));
@@ -106,7 +106,7 @@ describe("CreateOperationModal", () => {
       json: () => Promise.resolve({ error: "FAILED_TO_CREATE_OPERATION" }),
     });
 
-    render(<CreateOperationModal open={true} onClose={vi.fn()} />);
+    render(<CreateOperationModal open={true} onClose={vi.fn()} isAdmin />);
 
     await user.click(screen.getByText("작전 개시"));
     await user.type(screen.getByLabelText(/제목/), "테스트 작전");

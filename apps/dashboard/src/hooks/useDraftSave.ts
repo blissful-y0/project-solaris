@@ -5,7 +5,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { EMPTY_DRAFT, type CharacterDraft } from "@/components/character-create/types";
 
 export const STORAGE_KEY = "solaris:character-draft";
-const DEBOUNCE_MS = 500;
+const DEBOUNCE_MS = 1500;
+
+export type SaveStatus = "idle" | "saving" | "saved";
 
 function getStorage(): Storage | null {
   if (typeof window === "undefined") return null;
@@ -40,32 +42,41 @@ function loadDraft(): CharacterDraft | null {
 }
 
 export function useDraftSave(draft: CharacterDraft) {
-  const [isSaved, setIsSaved] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [restored] = useState<CharacterDraft | null>(() => loadDraft());
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 디바운스 저장
   useEffect(() => {
     if (isDraftEmpty(draft)) return;
     const storage = getStorage();
     if (!storage) return;
-    setIsSaved(false);
 
-    timerRef.current = setTimeout(() => {
+    // 저장 대기 중 → saving 표시
+    setSaveStatus("saving");
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+
+    saveTimerRef.current = setTimeout(() => {
       storage.setItem(STORAGE_KEY, JSON.stringify(draft));
-      setIsSaved(true);
+      setSaveStatus("saved");
+
+      // 2초 후 idle로 복귀
+      fadeTimerRef.current = setTimeout(() => {
+        setSaveStatus("idle");
+      }, 2000);
     }, DEBOUNCE_MS);
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
   }, [draft]);
 
   const clear = useCallback(() => {
     const storage = getStorage();
     storage?.removeItem(STORAGE_KEY);
-    setIsSaved(false);
+    setSaveStatus("idle");
   }, []);
 
-  return { isSaved, restored, clear };
+  return { saveStatus, restored, clear };
 }

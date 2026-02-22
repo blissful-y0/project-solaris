@@ -27,8 +27,8 @@ describe("WizardShell", () => {
   it("진영별 공명율 유효성 검사를 수행한다", () => {
     expect(isResonanceRateValidForFaction("bureau", 79)).toBe(false);
     expect(isResonanceRateValidForFaction("bureau", 80)).toBe(true);
-    expect(isResonanceRateValidForFaction("static", 16)).toBe(false);
-    expect(isResonanceRateValidForFaction("static", 15)).toBe(true);
+    expect(isResonanceRateValidForFaction("static", 15)).toBe(false);
+    expect(isResonanceRateValidForFaction("static", 14)).toBe(true);
   });
 
   it("스텝 인디케이터를 표시한다", () => {

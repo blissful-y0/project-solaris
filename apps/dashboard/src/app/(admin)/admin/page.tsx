@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 
 import { AdminAccessDenied } from "@/components/common";
 import { Button, Card } from "@/components/ui";
-
-type LoadState = "loading" | "ready" | "forbidden" | "error";
+import { isApiFetchError, swrFetcher } from "@/lib/swr/fetcher";
 
 interface Stats {
   characters: { pending: number; approved: number; rejected: number; total: number };
@@ -15,29 +14,15 @@ interface Stats {
 }
 
 export default function AdminPage() {
-  const [state, setState] = useState<LoadState>("loading");
-  const [stats, setStats] = useState<Stats | null>(null);
+  const { data, error, isLoading } = useSWR<{ data?: Stats }>(
+    "/api/admin/stats",
+    swrFetcher,
+    { revalidateOnFocus: false },
+  );
+  const isForbidden = isApiFetchError(error) && (error.status === 401 || error.status === 403);
 
-  useEffect(() => {
-    const run = async () => {
-      const response = await fetch("/api/admin/stats");
-      if (response.status === 401 || response.status === 403) {
-        setState("forbidden");
-        return;
-      }
-      if (!response.ok) {
-        setState("error");
-        return;
-      }
-      const body = (await response.json()) as { data?: Stats };
-      setStats(body.data ?? null);
-      setState("ready");
-    };
-    void run();
-  }, []);
-
-  if (state === "forbidden") return <AdminAccessDenied />;
-  if (state === "error") {
+  if (isForbidden) return <AdminAccessDenied />;
+  if (error) {
     return (
       <section>
         <Card hud>
@@ -48,7 +33,8 @@ export default function AdminPage() {
     );
   }
 
-  const loading = state === "loading";
+  const loading = isLoading;
+  const stats = data?.data ?? null;
   const c = stats?.characters;
 
   return (

@@ -69,14 +69,14 @@ test.describe("미인증 — 리다이렉트", () => {
  *
  * 실행 조건:
  * 1. dev 서버가 localhost:3001 에서 구동 중
- * 2. e2e/.auth/session.json 파일에 Supabase 세션 쿠키가 저장되어 있어야 함
+ * 2. tests/e2e/.auth/session.json 파일에 Supabase 세션 쿠키가 저장되어 있어야 함
  *
  * 세션 파일 생성 방법:
  *   1) 브라우저에서 localhost:3001/login 으로 로그인
  *   2) Playwright Inspector 또는 다음 스크립트로 storageState 저장:
- *      npx playwright codegen --save-storage=e2e/.auth/session.json http://localhost:3001
+ *      npx playwright codegen --save-storage=tests/e2e/.auth/session.json http://localhost:3001
  */
-const authSessionPath = "e2e/.auth/session.json";
+const authSessionPath = "tests/e2e/.auth/session.json";
 
 test.describe("인증 필요 — Operation 목록", () => {
   // storageState 파일이 없으면 전체 스킵
@@ -88,7 +88,7 @@ test.describe("인증 필요 — Operation 목록", () => {
       const response = await page.goto("/operation");
       // 로그인 페이지로 리다이렉트되면 세션이 유효하지 않음
       if (page.url().includes("/login")) {
-        testInfo.skip(true, "유효한 인증 세션 없음 — e2e/.auth/session.json 필요");
+        testInfo.skip(true, "유효한 인증 세션 없음 — tests/e2e/.auth/session.json 필요");
       }
       // 서버 미응답 처리
       if (!response || response.status() >= 500) {

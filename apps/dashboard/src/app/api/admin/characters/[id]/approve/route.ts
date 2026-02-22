@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { createNotification } from "@/app/actions/notification";
+import { isValidId } from "@/lib/api/validate-id";
 
 export async function POST(
   _request: Request,
@@ -9,6 +10,9 @@ export async function POST(
   try {
     const { supabase } = await requireAdmin();
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
 
     // 정책 의도: 관리자 재판정 허용.
     // 이미 approved/rejected 상태인 캐릭터도 필요 시 다시 approve 할 수 있다.

@@ -78,8 +78,8 @@ describe("StepAbilityDesign", () => {
     const user = userEvent.setup();
 
     render(<StepAbilityDesign draft={staticDraft} onChange={onChangeFn} />);
-    await user.click(screen.getByTestId("crossover-defector"));
+    await user.click(screen.getByTestId("crossover-dead-reckoning"));
 
-    expect(onChangeFn).toHaveBeenCalledWith({ crossoverStyle: "defector" });
+    expect(onChangeFn).toHaveBeenCalledWith({ crossoverStyle: "dead-reckoning" });
   });
 });

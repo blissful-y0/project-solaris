@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { SWRConfig } from "swr";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 global.fetch = vi.fn();
@@ -29,6 +30,21 @@ vi.mock("next/dynamic", () => ({
 }));
 
 describe("AdminLorePage", () => {
+  const renderWithSWR = (ui: React.ReactElement) => render(
+    <SWRConfig
+      value={{
+        provider: () => new Map(),
+        dedupingInterval: 0,
+        errorRetryCount: 0,
+        shouldRetryOnError: false,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+      }}
+    >
+      {ui}
+    </SWRConfig>,
+  );
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -40,7 +56,7 @@ describe("AdminLorePage", () => {
     });
 
     const { default: AdminLorePage } = await import("../page");
-    render(<AdminLorePage />);
+    renderWithSWR(<AdminLorePage />);
     expect(screen.getByText(/불러오는 중/i)).toBeTruthy();
   });
 
@@ -55,7 +71,7 @@ describe("AdminLorePage", () => {
     });
 
     const { default: AdminLorePage } = await import("../page");
-    render(<AdminLorePage />);
+    renderWithSWR(<AdminLorePage />);
 
     await waitFor(() => {
       expect(screen.getByText("세계 개요")).toBeTruthy();
@@ -69,7 +85,7 @@ describe("AdminLorePage", () => {
     });
 
     const { default: AdminLorePage } = await import("../page");
-    render(<AdminLorePage />);
+    renderWithSWR(<AdminLorePage />);
 
     await waitFor(() => {
       expect(screen.getByText("새 문서")).toBeTruthy();
@@ -83,7 +99,7 @@ describe("AdminLorePage", () => {
     });
 
     const { default: AdminLorePage } = await import("../page");
-    render(<AdminLorePage />);
+    renderWithSWR(<AdminLorePage />);
 
     await waitFor(() => {
       expect(screen.getByText(/불러오지 못했습니다/i)).toBeTruthy();

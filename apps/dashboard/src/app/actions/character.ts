@@ -2,54 +2,14 @@
 
 import { nanoid } from "nanoid";
 import { createClient } from "@/lib/supabase/server";
-import { FACTION_STATS, type AbilityClass, type CharacterWithAbilities, type Faction } from "@/lib/supabase/types";
+import { FACTION_STATS, type CharacterWithAbilities } from "@/lib/supabase/types";
 import { getUserFriendlyError } from "@/lib/supabase/helpers";
 import { getServiceClient } from "@/lib/supabase/service";
 import { createNotification } from "@/app/actions/notification";
 import { escapeDiscordMentions } from "@/lib/discord/mentions";
+import { characterDraftSchema, type ValidatedCharacterDraft } from "@/app/actions/character-schema";
 
-interface CharacterDraft {
-  name: string;
-  faction: Faction;
-  abilityClass: AbilityClass | null;
-  resonanceRate: number;
-  profileData: {
-    age?: string;
-    gender?: string;
-    personality?: string;
-  };
-  profileImageUrl?: string;
-  appearance?: string;
-  backstory?: string;
-  leaderApplication: boolean;
-  crossoverStyle?: "limiter-override" | "hardware-bypass" | "dead-reckoning" | "defector" | null;
-  abilities: {
-    tier: "basic" | "mid" | "advanced";
-    name: string;
-    description: string;
-    weakness: string;
-    costHp: number;
-    costWill: number;
-  }[];
-}
-
-function validateDraft(draft: CharacterDraft) {
-  const normalizedName = draft.name.trim();
-  if (normalizedName.length < 2 || normalizedName.length > 30) {
-    throw new Error("INVALID_CHARACTER_NAME");
-  }
-
-  for (const ability of draft.abilities) {
-    if (ability.name.trim().length < 1 || ability.name.trim().length > 40) {
-      throw new Error("INVALID_ABILITY_NAME");
-    }
-    if (ability.description.trim().length < 1 || ability.description.trim().length > 500) {
-      throw new Error("INVALID_ABILITY_DESCRIPTION");
-    }
-  }
-}
-
-export async function submitCharacter(draft: CharacterDraft) {
+export async function submitCharacter(rawDraft: unknown) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -59,32 +19,13 @@ export async function submitCharacter(draft: CharacterDraft) {
     throw new Error("UNAUTHENTICATED");
   }
 
-  validateDraft(draft);
-
-  if (!draft.abilityClass) {
-    throw new Error("INVALID_ABILITY_CLASS");
+  const parsed = characterDraftSchema.safeParse(rawDraft);
+  if (!parsed.success) {
+    const firstMessage = parsed.error.issues[0]?.message ?? "INVALID_REQUEST";
+    throw new Error(firstMessage);
   }
 
-  if (draft.abilities.length !== 3) {
-    throw new Error("INVALID_ABILITIES");
-  }
-
-  if (draft.faction === "bureau" && draft.resonanceRate < 80) {
-    throw new Error("INVALID_RESONANCE_RATE");
-  }
-
-  if (draft.faction === "static" && draft.resonanceRate > 15) {
-    throw new Error("INVALID_RESONANCE_RATE");
-  }
-
-  if (draft.crossoverStyle) {
-    const hasInvalidDualCost = draft.abilities.some(
-      (ability) => ability.costHp <= 0 || ability.costWill <= 0,
-    );
-    if (hasInvalidDualCost) {
-      throw new Error("INVALID_DUAL_COST");
-    }
-  }
+  const draft: ValidatedCharacterDraft = parsed.data;
 
   const characterId = nanoid(12);
   const stats = FACTION_STATS[draft.faction];
@@ -94,7 +35,6 @@ export async function submitCharacter(draft: CharacterDraft) {
     tier: ability.tier,
     name: ability.name,
     description: ability.description,
-    weakness: ability.weakness,
     cost_hp: ability.costHp,
     cost_will: ability.costWill,
   }));
@@ -104,7 +44,7 @@ export async function submitCharacter(draft: CharacterDraft) {
     p_user_id: user.id,
     p_name: draft.name,
     p_faction: draft.faction,
-    p_ability_class: draft.abilityClass!,
+    p_ability_class: draft.abilityClass,
     p_hp_max: stats.hp,
     p_hp_current: stats.hp,
     p_will_max: stats.will,
@@ -114,8 +54,12 @@ export async function submitCharacter(draft: CharacterDraft) {
     p_profile_data: draft.profileData,
     p_appearance: (draft.appearance ?? null) as string,
     p_backstory: (draft.backstory ?? null) as string,
+    p_notes: (draft.notes ?? null) as string,
     p_leader_application: draft.leaderApplication,
     p_crossover_style: (draft.crossoverStyle ?? null) as string,
+    p_ability_name: (draft.abilityName ?? null) as string,
+    p_ability_description: (draft.abilityDescription ?? null) as string,
+    p_ability_weakness: (draft.abilityWeakness ?? null) as string,
     p_abilities: abilityPayload,
   });
 

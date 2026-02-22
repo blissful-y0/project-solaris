@@ -5,7 +5,7 @@ import {
   type AbilityTier,
   type EncounterParticipantState,
   type TurnActionInput,
-} from "@/lib/operation/engine";
+} from "@/lib/operations/battle/engine";
 
 type ParticipantRow = Pick<
   Database["public"]["Tables"]["operation_encounter_participants"]["Row"],

@@ -46,7 +46,6 @@ export type Database = {
           name: string
           tier: string
           updated_at: string
-          weakness: string | null
         }
         Insert: {
           character_id: string
@@ -59,7 +58,6 @@ export type Database = {
           name: string
           tier: string
           updated_at?: string
-          weakness?: string | null
         }
         Update: {
           character_id?: string
@@ -72,7 +70,6 @@ export type Database = {
           name?: string
           tier?: string
           updated_at?: string
-          weakness?: string | null
         }
         Relationships: [
           {
@@ -87,6 +84,9 @@ export type Database = {
       characters: {
         Row: {
           ability_class: string | null
+          ability_description: string | null
+          ability_name: string | null
+          ability_weakness: string | null
           appearance: string | null
           backstory: string | null
           created_at: string
@@ -111,6 +111,9 @@ export type Database = {
         }
         Insert: {
           ability_class?: string | null
+          ability_description?: string | null
+          ability_name?: string | null
+          ability_weakness?: string | null
           appearance?: string | null
           backstory?: string | null
           created_at?: string
@@ -135,6 +138,9 @@ export type Database = {
         }
         Update: {
           ability_class?: string | null
+          ability_description?: string | null
+          ability_name?: string | null
+          ability_weakness?: string | null
           appearance?: string | null
           backstory?: string | null
           created_at?: string
@@ -1067,68 +1073,32 @@ export type Database = {
         }
         Returns: Json
       }
-      create_character_with_abilities:
-        | {
-            Args: {
-              p_abilities: Json
-              p_ability_class: string
-              p_appearance: string
-              p_backstory: string
-              p_faction: string
-              p_hp_current: number
-              p_hp_max: number
-              p_id: string
-              p_leader_application: boolean
-              p_name: string
-              p_profile_data: Json
-              p_user_id: string
-              p_will_current: number
-              p_will_max: number
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_abilities: Json
-              p_ability_class: string
-              p_appearance: string
-              p_backstory: string
-              p_crossover_style: string
-              p_faction: string
-              p_hp_current: number
-              p_hp_max: number
-              p_id: string
-              p_leader_application: boolean
-              p_name: string
-              p_profile_data: Json
-              p_user_id: string
-              p_will_current: number
-              p_will_max: number
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_abilities: Json
-              p_ability_class: string
-              p_appearance: string
-              p_backstory: string
-              p_crossover_style: string
-              p_faction: string
-              p_hp_current: number
-              p_hp_max: number
-              p_id: string
-              p_leader_application: boolean
-              p_name: string
-              p_profile_data: Json
-              p_profile_image_url: string
-              p_resonance_rate: number
-              p_user_id: string
-              p_will_current: number
-              p_will_max: number
-            }
-            Returns: string
-          }
+      create_character_with_abilities: {
+        Args: {
+          p_abilities: Json
+          p_ability_class: string
+          p_ability_description: string
+          p_ability_name: string
+          p_ability_weakness: string
+          p_appearance: string
+          p_backstory: string
+          p_crossover_style: string
+          p_faction: string
+          p_hp_current: number
+          p_hp_max: number
+          p_id: string
+          p_leader_application: boolean
+          p_name: string
+          p_notes: string
+          p_profile_data: Json
+          p_profile_image_url: string
+          p_resonance_rate: number
+          p_user_id: string
+          p_will_current: number
+          p_will_max: number
+        }
+        Returns: string
+      }
       is_admin: { Args: { p_user_id?: string }; Returns: boolean }
       submit_operation_action: {
         Args: {

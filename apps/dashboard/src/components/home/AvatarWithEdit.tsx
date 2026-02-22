@@ -2,13 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
-import ReactCrop, { type Crop } from "react-image-crop";
-import "react-image-crop/dist/ReactCrop.css";
+import type { Crop } from "react-image-crop";
 
 import { createClient } from "@/lib/supabase/client";
 import { readImageDimensions, getCroppedFile, MIN_IMAGE_WIDTH, MIN_IMAGE_HEIGHT } from "./image-crop-utils";
+
+const AvatarCropModal = dynamic(
+  () => import("./AvatarCropModal").then((mod) => mod.AvatarCropModal),
+  { ssr: false },
+);
 
 /* ─── 아바타 + 편집 버튼 ─── */
 export function AvatarWithEdit({
@@ -203,42 +208,14 @@ export function AvatarWithEdit({
       )}
 
       {cropSource && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-        >
-          <div className="w-full max-w-lg rounded-lg border border-border bg-bg-secondary p-4 space-y-3">
-            <p className="hud-label">이미지 영역을 선택하세요</p>
-            <div className="flex justify-center">
-              <ReactCrop crop={crop} onChange={(_, pc) => setCrop(pc)} aspect={4 / 5}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  ref={cropImageRef}
-                  src={cropSource}
-                  alt="크롭 원본"
-                  className="max-h-[60vh] max-w-full object-contain"
-                />
-              </ReactCrop>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={handleCancelCrop}
-                className="rounded-md border border-border px-3 py-1.5 text-sm text-text-secondary hover:text-text"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmCrop}
-                className="rounded-md border border-primary px-3 py-1.5 text-sm text-primary hover:bg-primary/10"
-              >
-                확정
-              </button>
-            </div>
-          </div>
-        </div>
+        <AvatarCropModal
+          cropSource={cropSource}
+          crop={crop}
+          cropImageRef={cropImageRef}
+          onChange={setCrop}
+          onCancel={handleCancelCrop}
+          onConfirm={() => { void handleConfirmCrop(); }}
+        />
       )}
     </div>
   );

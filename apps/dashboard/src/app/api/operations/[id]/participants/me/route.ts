@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isValidId } from "@/lib/api/validate-id";
 
 /**
  * DELETE /api/operations/[id]/participants/me
@@ -12,6 +13,9 @@ export async function DELETE(
 ) {
   try {
     const { id: operationId } = await params;
+    if (!isValidId(operationId)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     const supabase = await createClient();
 
     const {

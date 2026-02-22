@@ -13,7 +13,7 @@ type StepConfirmProps = {
   imagePreviewUrl?: string | null;
 };
 
-const FACTION_LABELS = { bureau: "Solaris Bureau of Civic Security", static: "The Static" } as const;
+const FACTION_LABELS = { bureau: "Solaris Bureau of Civic Security", static: "The Static", defector: "전향자" } as const;
 const CLASS_LABELS = { field: "역장 (Field)", empathy: "감응 (Empathy)", shift: "변환 (Shift)", compute: "연산 (Compute)" } as const;
 const CROSSOVER_LABELS: Record<CrossoverStyle, string> = {
   "limiter-override": "리미터 해제",
@@ -122,6 +122,7 @@ export function StepConfirm({ draft, onSubmit, onEditStep, onLeaderChange, submi
           {draft.appearance && <SummaryRow label="외형" value={draft.appearance} multiline />}
           {draft.personality && <SummaryRow label="성격" value={draft.personality} multiline />}
           {draft.backstory && <SummaryRow label="배경" value={draft.backstory} multiline />}
+          {draft.notes && <SummaryRow label="기타" value={draft.notes} multiline />}
         </div>
       </div>
 
@@ -132,8 +133,7 @@ export function StepConfirm({ draft, onSubmit, onEditStep, onLeaderChange, submi
           <EditButton onClick={() => onEditStep(3)} />
         </div>
         <SummaryRow label="설명" value={draft.abilityDescription} multiline />
-        <SummaryRow label="제약" value={draft.abilityConstraint} multiline />
-        <SummaryRow label="약점" value={draft.abilityWeakness} multiline />
+        <SummaryRow label="제약/약점" value={draft.abilityWeakness} multiline />
       </div>
 
       {/* ─── 스킬 상세 ─── */}

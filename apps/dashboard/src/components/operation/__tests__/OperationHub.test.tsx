@@ -9,6 +9,11 @@ const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
+vi.mock("@/components/layout/DashboardSessionProvider", () => ({
+  useDashboardSession: () => ({
+    me: { user: { isAdmin: true } },
+  }),
+}));
 
 /** MAIN STORY를 제외한 일반 목록 */
 const regularOps = mockOperations.filter((op) => !op.isMainStory);

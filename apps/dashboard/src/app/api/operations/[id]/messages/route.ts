@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { mapOperationMessage, type DbMessageRow } from "@/lib/operations/dto";
 import { MAX_OPERATION_MESSAGE_LENGTH } from "@/lib/operations/constants";
+import { isValidId } from "@/lib/api/validate-id";
 
 const DEFAULT_MESSAGE_PAGE_SIZE = 50;
 const MAX_MESSAGE_PAGE_SIZE = 100;
@@ -18,6 +19,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     const supabase = await createClient();
 
     const {
@@ -111,6 +115,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
+    }
     const supabase = await createClient();
 
     const {
@@ -200,7 +207,7 @@ export async function POST(
 
     return NextResponse.json(
       {
-        data: mapOperationMessage(inserted, myCharacter.id),
+        data: mapOperationMessage(inserted as DbMessageRow, myCharacter.id),
       },
       { status: 201 },
     );

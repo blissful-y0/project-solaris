@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import useSWR from "swr";
 import { toast } from "sonner";
 
 import { AdminAccessDenied } from "@/components/common";
 import type { AdminCharacter } from "@/components/admin/types";
 import { Badge, Button, Card, FilterChips } from "@/components/ui";
 import type { FilterChipOption } from "@/components/ui/FilterChips";
-
-type LoadState = "loading" | "ready" | "forbidden" | "error";
+import { isApiFetchError, swrFetcher } from "@/lib/swr/fetcher";
 
 type StatusFilter = "all" | "approved" | "rejected" | "pending";
 
@@ -45,35 +45,20 @@ function statusBadge(status: string) {
 }
 
 export default function AdminCharactersAllPage() {
-  const [state, setState] = useState<LoadState>("loading");
-  const [rows, setRows] = useState<AdminCharacter[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const loadAll = useCallback(async (status: StatusFilter) => {
-    setState("loading");
-    const url =
-      status === "all"
-        ? "/api/admin/characters/all"
-        : `/api/admin/characters/all?status=${status}`;
-    const response = await fetch(url);
-    if (response.status === 401 || response.status === 403) {
-      setState("forbidden");
-      return;
-    }
-    if (!response.ok) {
-      setState("error");
-      return;
-    }
-    const body = (await response.json()) as { data?: AdminCharacter[] };
-    setRows(body.data ?? []);
-    setState("ready");
-  }, []);
-
-  useEffect(() => {
-    void loadAll(statusFilter);
-  }, [statusFilter, loadAll]);
+  const listUrl = statusFilter === "all"
+    ? "/api/admin/characters/all?limit=100&offset=0"
+    : `/api/admin/characters/all?status=${statusFilter}&limit=100&offset=0`;
+  const { data, error, isLoading, mutate } = useSWR<{ data?: AdminCharacter[] }>(
+    listUrl,
+    swrFetcher,
+    { revalidateOnFocus: false },
+  );
+  const rows = data?.data ?? [];
+  const isForbidden = isApiFetchError(error) && (error.status === 401 || error.status === 403);
 
   const handleFilterChange = (value: StatusFilter) => {
     setStatusFilter(value);
@@ -91,7 +76,7 @@ export default function AdminCharactersAllPage() {
             ? `${row.name}의 리더 권한을 해제했습니다.`
             : `${row.name}을(를) 리더로 지정했습니다.`,
         );
-        await loadAll(statusFilter);
+        await mutate();
       } else {
         const body = await res.json().catch(() => ({}));
         if (body.error === "FACTION_LEADER_ALREADY_EXISTS") {
@@ -109,15 +94,17 @@ export default function AdminCharactersAllPage() {
     }
   };
 
-  const filtered = search.trim()
-    ? rows.filter(
-        (r) =>
-          r.name.toLowerCase().includes(search.toLowerCase()) ||
-          r.faction.toLowerCase().includes(search.toLowerCase()),
-      )
-    : rows;
+  const filtered = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return rows;
+    return rows.filter(
+      (r) =>
+        r.name.toLowerCase().includes(keyword) ||
+        r.faction.toLowerCase().includes(keyword),
+    );
+  }, [rows, search]);
 
-  if (state === "forbidden") return <AdminAccessDenied />;
+  if (isForbidden) return <AdminAccessDenied />;
 
   return (
     <section className="space-y-4">
@@ -125,7 +112,7 @@ export default function AdminCharactersAllPage() {
         <p className="hud-label mb-1">ADMIN / CHARACTERS</p>
         <h1 className="text-xl font-bold text-text">캐릭터 관리</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          {state === "ready" ? `${rows.length}건` : "..."}
+          {!isLoading && !error ? `${rows.length}건` : "..."}
         </p>
       </div>
 
@@ -146,20 +133,20 @@ export default function AdminCharactersAllPage() {
       </div>
 
       <Card hud className="overflow-x-auto">
-        {state === "loading" && (
+        {isLoading && (
           <p className="text-sm text-text-secondary">불러오는 중...</p>
         )}
-        {state === "error" && (
+        {error && !isForbidden && (
           <p className="text-sm text-accent">목록을 불러오지 못했습니다.</p>
         )}
 
-        {state === "ready" && filtered.length === 0 && (
+        {!isLoading && !error && filtered.length === 0 && (
           <p className="text-sm text-text-secondary">
             {search ? "검색 결과가 없습니다." : "해당 상태의 캐릭터가 없습니다."}
           </p>
         )}
 
-        {state === "ready" && filtered.length > 0 && (
+        {!isLoading && !error && filtered.length > 0 && (
           <table className="w-full min-w-[960px] text-sm">
             <thead>
               <tr className="border-b border-border text-left text-text-secondary">

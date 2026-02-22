@@ -1,5 +1,6 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { SWRConfig } from "swr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/image", () => ({
@@ -61,7 +62,6 @@ const mockDetailData = {
       tier: "basic",
       name: "압축 역장",
       description: "방어 역장.",
-      weakness: "8초 이내.",
       cost_hp: 0,
       cost_will: 15,
     },
@@ -70,10 +70,13 @@ const mockDetailData = {
 
 function mockFetchSuccess() {
   global.fetch = vi.fn().mockImplementation((url: string) => {
-    if (url === "/api/characters") {
+    if (url === "/api/characters?limit=20&offset=0") {
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ data: mockListData }),
+        json: () => Promise.resolve({
+          data: mockListData,
+          page: { hasMore: false, nextOffset: null },
+        }),
       });
     }
     return Promise.resolve({
@@ -94,7 +97,7 @@ function mockFetchError() {
 function mockFetchEmpty() {
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
-    json: () => Promise.resolve({ data: [] }),
+    json: () => Promise.resolve({ data: [], page: { hasMore: false, nextOffset: null } }),
   });
 }
 
@@ -108,7 +111,7 @@ afterEach(() => {
 
 describe("CharactersPage", () => {
   it("페이지 헤더를 렌더링한다", async () => {
-    render(<CharactersPage />);
+    renderWithSWR(<CharactersPage />);
     expect(screen.getByText("REGISTRY // CITIZEN DATABASE")).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
   });
@@ -119,7 +122,7 @@ describe("CharactersPage", () => {
       () => new Promise(() => {}),
     ) as unknown as typeof fetch;
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    render(<CharactersPage />);
+    renderWithSWR(<CharactersPage />);
     /* 로컬 스피너 제거 → role="status" 없음, 빈 영역(py-16)만 존재 */
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     await Promise.resolve();
@@ -129,7 +132,7 @@ describe("CharactersPage", () => {
   });
 
   it("데이터 로드 후 캐릭터를 표시한다", async () => {
-    render(<CharactersPage />);
+    renderWithSWR(<CharactersPage />);
     await waitFor(() => {
       expect(screen.getByText("아마츠키 레이")).toBeInTheDocument();
       expect(screen.getByText("크로우 제로")).toBeInTheDocument();
@@ -138,7 +141,7 @@ describe("CharactersPage", () => {
   });
 
   it("TOTAL OPERATIVES 카운트를 표시한다", async () => {
-    render(<CharactersPage />);
+    renderWithSWR(<CharactersPage />);
     await waitFor(() => {
       expect(screen.getByText(/TOTAL OPERATIVES: 3/)).toBeInTheDocument();
     });
@@ -146,7 +149,7 @@ describe("CharactersPage", () => {
 
   it("캐릭터 카드 클릭 → 상세 fetch 후 프로필 모달 표시", async () => {
     const user = userEvent.setup();
-    render(<CharactersPage />);
+    renderWithSWR(<CharactersPage />);
 
     await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
 
@@ -155,7 +158,7 @@ describe("CharactersPage", () => {
     );
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(global.fetch).toHaveBeenCalledWith("/api/characters/1");
+    expect(global.fetch).toHaveBeenCalledWith("/api/characters/1", expect.objectContaining({ headers: expect.any(Headers) }));
 
     await waitFor(() => {
       expect(screen.getByText("87%")).toBeInTheDocument();
@@ -164,7 +167,7 @@ describe("CharactersPage", () => {
 
   it("API 에러 시 에러 메시지를 표시한다", async () => {
     mockFetchError();
-    render(<CharactersPage />);
+    renderWithSWR(<CharactersPage />);
 
     await waitFor(() => {
       expect(
@@ -175,7 +178,7 @@ describe("CharactersPage", () => {
 
   it("승인된 캐릭터가 없으면 빈 상태 메시지를 표시한다", async () => {
     mockFetchEmpty();
-    render(<CharactersPage />);
+    renderWithSWR(<CharactersPage />);
 
     await waitFor(() => {
       expect(screen.getByText("등록된 시민이 없습니다")).toBeInTheDocument();
@@ -183,10 +186,26 @@ describe("CharactersPage", () => {
   });
 
   it("/api/characters 목록 엔드포인트를 호출한다", async () => {
-    render(<CharactersPage />);
+    renderWithSWR(<CharactersPage />);
 
     await waitFor(() => expect(screen.getByText("아마츠키 레이")).toBeInTheDocument());
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/characters", expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/characters?limit=20&offset=0",
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
   });
 });
+function renderWithSWR(ui: React.ReactElement) {
+  return render(
+    <SWRConfig
+      value={{
+        provider: () => new Map(),
+        dedupingInterval: 0,
+        errorRetryCount: 0,
+      }}
+    >
+      {ui}
+    </SWRConfig>,
+  );
+}

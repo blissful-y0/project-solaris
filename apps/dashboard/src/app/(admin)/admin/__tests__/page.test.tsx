@@ -1,7 +1,25 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { SWRConfig } from "swr";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdminPage from "../page";
+
+function renderWithSWR(ui: React.ReactElement) {
+  return render(
+    <SWRConfig
+      value={{
+        provider: () => new Map(),
+        dedupingInterval: 0,
+        errorRetryCount: 0,
+        shouldRetryOnError: false,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+      }}
+    >
+      {ui}
+    </SWRConfig>,
+  );
+}
 
 describe("AdminPage", () => {
   beforeEach(() => {
@@ -23,7 +41,7 @@ describe("AdminPage", () => {
       }),
     );
 
-    render(<AdminPage />);
+    renderWithSWR(<AdminPage />);
 
     expect(screen.getByText("ADMIN CONSOLE")).toBeInTheDocument();
     await waitFor(() => {
@@ -45,7 +63,7 @@ describe("AdminPage", () => {
       }),
     );
 
-    render(<AdminPage />);
+    renderWithSWR(<AdminPage />);
 
     await waitFor(() => {
       expect(screen.getByText("ACCESS DENIED")).toBeInTheDocument();
