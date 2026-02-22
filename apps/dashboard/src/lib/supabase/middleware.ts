@@ -39,6 +39,13 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/_next");
 
+  // 미인증 + 루트 → 랜딩 페이지 rewrite
+  if (!user && pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/_landing.html";
+    return NextResponse.rewrite(url);
+  }
+
   // 미인증 API 요청은 리다이렉트 대신 401 JSON
   if (!user && isApiPath && !pathname.startsWith("/api/auth")) {
     return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });

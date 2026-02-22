@@ -104,7 +104,7 @@ export async function POST(
 
     const turnJudgementActions =
       Array.isArray((turn as { judgement?: { actions?: unknown[] } } | null)?.judgement?.actions)
-        ? ((turn as { judgement: { actions: Array<{ actor_id: string; multiplier?: number }> } }).judgement.actions)
+        ? ((turn as unknown as { judgement: { actions: Array<{ actor_id: string; multiplier?: number }> } }).judgement.actions)
         : [];
 
     const judgementActions = payload.judgement?.actions ?? turnJudgementActions;
@@ -128,8 +128,8 @@ export async function POST(
         turn_number: turn.turn_number,
         post_state: resolved.participants,
       },
-      p_close_result: hasDefeated ? "defeated" : null,
-      p_closed_by: hasDefeated ? user.id : null,
+      p_close_result: hasDefeated ? "defeated" : undefined,
+      p_closed_by: hasDefeated ? user.id : undefined,
     });
 
     if (rpcError) {
