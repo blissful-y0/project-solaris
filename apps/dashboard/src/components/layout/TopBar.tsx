@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Bell, UserCircle, Lock } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, UserCircle, Lock, LogOut, User } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { useDashboardSession } from "./DashboardSessionProvider";
 import { NAV_ITEMS } from "./nav-items";
 
 interface TopBarProps {
@@ -14,6 +17,46 @@ interface TopBarProps {
 export function TopBar({ notificationCount, isCharacterApproved = false }: TopBarProps) {
   const hasNotifications = notificationCount != null && notificationCount > 0;
   const currentPath = usePathname();
+  const router = useRouter();
+  const { me } = useDashboardSession();
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const toggleDropdown = useCallback(() => {
+    setDropdownOpen((prev) => !prev);
+  }, []);
+
+  // click outside 닫기
+  useEffect(() => {
+    if (!dropdownOpen) return;
+
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [dropdownOpen]);
+
+  const handleSignOut = useCallback(async () => {
+    setDropdownOpen(false);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  }, [router]);
 
   return (
     <header
@@ -108,6 +151,7 @@ export function TopBar({ notificationCount, isCharacterApproved = false }: TopBa
 
       {/* 3. 우측 컨트롤 (알림/프로필) */}
       <div className="flex items-center gap-1">
+        {/* 알림 */}
         <button
           type="button"
           className="relative p-2 text-text-secondary transition-colors hover:text-primary"
@@ -127,13 +171,61 @@ export function TopBar({ notificationCount, isCharacterApproved = false }: TopBa
           )}
         </button>
 
-        <Link
-          href="/my"
-          className="p-2 text-text-secondary transition-colors hover:text-primary"
-          aria-label="마이페이지"
-        >
-          <UserCircle className="h-5 w-5" />
-        </Link>
+        {/* 유저 드롭다운 */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            type="button"
+            className="p-2 text-text-secondary transition-colors hover:text-primary"
+            aria-label="유저 메뉴"
+            aria-expanded={dropdownOpen}
+            aria-haspopup="true"
+            onClick={toggleDropdown}
+          >
+            <UserCircle className="h-5 w-5" />
+          </button>
+
+          {dropdownOpen && (
+            <div
+              className={cn(
+                "absolute right-0 top-full mt-1 w-56",
+                "rounded-md border border-border bg-bg-secondary shadow-lg",
+                "py-1 z-50",
+              )}
+              role="menu"
+            >
+              {/* Discord 아이디 */}
+              {me?.user.discordUsername && (
+                <div className="px-3 py-2 text-xs text-text-secondary font-mono truncate">
+                  @{me.user.discordUsername}
+                </div>
+              )}
+
+              <div className="h-px bg-border mx-2" role="separator" />
+
+              {/* 마이페이지 */}
+              <Link
+                href="/my"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-text hover:bg-bg-tertiary/50 transition-colors"
+                role="menuitem"
+                onClick={() => setDropdownOpen(false)}
+              >
+                <User className="h-4 w-4" />
+                마이페이지
+              </Link>
+
+              {/* 로그아웃 */}
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-accent hover:bg-bg-tertiary/50 transition-colors"
+                role="menuitem"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4" />
+                로그아웃
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+import { AppSWRProvider } from "@/components/layout";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,7 +24,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-dvh bg-bg text-text antialiased">
-        {children}
+        <AppSWRProvider>
+          {children}
+        </AppSWRProvider>
         <Toaster theme="dark" position="bottom-right" richColors />
       </body>
     </html>

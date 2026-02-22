@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button, FilterChips } from "@/components/ui";
 import type { FilterChipOption } from "@/components/ui/FilterChips";
+import { useDashboardSession } from "@/components/layout/DashboardSessionProvider";
 
 import { CreateOperationModal } from "./CreateOperationModal";
 import { MainStoryBanner } from "./MainStoryBanner";
@@ -40,9 +41,12 @@ export function OperationHub({
   onLoadMore,
   onOperationCreated,
 }: OperationHubProps) {
+  const { me } = useDashboardSession();
+  const isAdmin = me?.user?.isAdmin ?? false;
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   /* MAIN STORY 이벤트 추출 (LIVE만) */
   const mainStory = useMemo(
@@ -60,6 +64,25 @@ export function OperationHub({
         return true;
       });
   }, [operations, typeFilter, statusFilter]);
+
+  useEffect(() => {
+    if (!hasMore || loadingMore || !onLoadMore) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const node = loadMoreRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: "300px 0px" },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, onLoadMore]);
 
   return (
     <section className="space-y-6 pb-6">
@@ -130,16 +153,11 @@ export function OperationHub({
             ))}
           </div>
           {hasMore && (
-            <div className="flex justify-center pt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onLoadMore}
-                disabled={loadingMore}
-              >
-                {loadingMore ? "불러오는 중..." : "더 보기"}
-              </Button>
-            </div>
+            <div
+              ref={loadMoreRef}
+              aria-hidden="true"
+              className="h-1 w-full"
+            />
           )}
         </>
       )}
@@ -149,6 +167,7 @@ export function OperationHub({
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onCreated={onOperationCreated}
+        isAdmin={isAdmin}
       />
     </section>
   );

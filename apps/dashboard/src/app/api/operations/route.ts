@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/service";
 import { mapOperationListItem, type DbOperationRow, type DbParticipantRow } from "@/lib/operations/dto";
 import { nanoid } from "nanoid";
 
@@ -115,8 +116,8 @@ export async function GET(request: Request) {
  * POST /api/operations
  *
  * 새 작전/다운타임 방을 생성한다.
- * - 승인된 캐릭터가 있어야 생성 가능
- * - created_by: 생성자 캐릭터 ID
+ * - operation: admin만 생성 가능 (admin은 캐릭터 없음, created_by: null)
+ * - downtime: 승인된 캐릭터가 있는 유저면 누구나 생성 가능
  */
 export async function POST(request: Request) {
   try {
@@ -127,22 +128,6 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
-    }
-
-    const { data: myCharacter, error: characterError } = await supabase
-      .from("characters")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("status", "approved")
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (characterError) {
-      return NextResponse.json({ error: "FAILED_TO_FETCH_CHARACTER" }, { status: 500 });
-    }
-
-    if (!myCharacter) {
-      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
     const body = await request.json().catch(() => null);
@@ -160,6 +145,68 @@ export async function POST(request: Request) {
 
     const id = `op_${nanoid(12)}`;
 
+    if (type === "operation") {
+      // operation: admin만 생성 가능
+      const { data: userRow, error: userError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (userError) {
+        console.error("[api/operations] users 조회 실패:", userError.message);
+        return NextResponse.json({ error: "ADMIN_CHECK_FAILED" }, { status: 500 });
+      }
+
+      if (userRow?.role !== "admin") {
+        return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+      }
+
+      // admin은 캐릭터 없음 → service client로 RLS 우회 (created_by: null)
+      const serviceClient = getServiceClient();
+      const { data: inserted, error: insertError } = await serviceClient
+        .from("operations")
+        .insert({
+          id,
+          title,
+          type,
+          summary,
+          status: "waiting",
+          is_main_story: false,
+          max_participants: 4,
+          created_by: null,
+        })
+        .select("id, title, type, status, summary, is_main_story, max_participants, created_at, created_by")
+        .single();
+
+      if (insertError) {
+        console.error("[api/operations] 작전 생성 실패:", insertError.message);
+        return NextResponse.json({ error: "FAILED_TO_CREATE_OPERATION" }, { status: 500 });
+      }
+
+      return NextResponse.json(
+        { data: mapOperationListItem(inserted as DbOperationRow, []) },
+        { status: 201 },
+      );
+    }
+
+    // downtime: 승인 캐릭터 필요
+    const { data: myCharacter, error: characterError } = await supabase
+      .from("characters")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "approved")
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (characterError) {
+      return NextResponse.json({ error: "FAILED_TO_FETCH_CHARACTER" }, { status: 500 });
+    }
+
+    if (!myCharacter) {
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    }
+
     const { data: inserted, error: insertError } = await supabase
       .from("operations")
       .insert({
@@ -169,15 +216,14 @@ export async function POST(request: Request) {
         summary,
         status: "waiting",
         is_main_story: false,
-        // DB CHECK 제약(2~12)을 준수해야 insert가 실패하지 않는다.
-        max_participants: type === "operation" ? 4 : 8,
+        max_participants: 8,
         created_by: myCharacter.id,
       })
       .select("id, title, type, status, summary, is_main_story, max_participants, created_at, created_by")
       .single();
 
     if (insertError) {
-      console.error("[api/operations] 작전 생성 실패:", insertError.message);
+      console.error("[api/operations] 다운타임 생성 실패:", insertError.message);
       return NextResponse.json({ error: "FAILED_TO_CREATE_OPERATION" }, { status: 500 });
     }
 

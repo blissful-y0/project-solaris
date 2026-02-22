@@ -1,7 +1,11 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { SWRConfig } from "swr";
 
 import OperationPage from "@/app/(dashboard)/operation/page";
+import { DashboardSessionProvider } from "@/components/layout/DashboardSessionProvider";
+
+const ME_USER = { id: "u-1", email: null, displayName: "test", discordUsername: null, isAdmin: false };
 
 const {
   mockCreateClient,
@@ -25,8 +29,17 @@ const mockFetch = vi.fn();
 function makeFetchResponse(body: unknown, ok = true) {
   return Promise.resolve({
     ok,
+    status: ok ? 200 : 500,
     json: () => Promise.resolve(body),
   } as Response);
+}
+
+function renderWithSWR(ui: React.ReactElement) {
+  return render(
+    <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+      {ui}
+    </SWRConfig>,
+  );
 }
 
 describe("OperationPage", () => {
@@ -54,7 +67,7 @@ describe("OperationPage", () => {
   it("로딩 중에는 빈 영역을 표시한다 (전역 스피너 위임)", () => {
     // fetch가 완료되지 않은 상태 유지
     mockFetch.mockReturnValue(new Promise(() => {}));
-    const { container } = render(<OperationPage />);
+    const { container } = renderWithSWR(<DashboardSessionProvider><OperationPage /></DashboardSessionProvider>);
     /* 로컬 텍스트 제거 → 빈 div만 존재 */
     expect(screen.queryByText("확인 중...")).not.toBeInTheDocument();
     expect(container.querySelector(".pb-6")).toBeInTheDocument();
@@ -63,7 +76,7 @@ describe("OperationPage", () => {
   it("승인된 캐릭터가 있으면 OperationHub를 표시한다", async () => {
     mockFetch.mockImplementation((url: string) => {
       if (url === "/api/me") {
-        return makeFetchResponse({ character: { status: "approved" } });
+        return makeFetchResponse({ user: ME_USER, character: { status: "approved" } });
       }
       if (url.startsWith("/api/operations")) {
         return makeFetchResponse({ data: [], page: { hasMore: false, nextOffset: null } });
@@ -71,7 +84,7 @@ describe("OperationPage", () => {
       return makeFetchResponse({});
     });
 
-    render(<OperationPage />);
+    renderWithSWR(<DashboardSessionProvider><OperationPage /></DashboardSessionProvider>);
 
     await waitFor(() => {
       expect(screen.getByText("OPERATION // TACTICAL HUB")).toBeInTheDocument();
@@ -82,12 +95,12 @@ describe("OperationPage", () => {
   it("미승인 캐릭터일 때 AccessDenied를 표시한다", async () => {
     mockFetch.mockImplementation((url: string) => {
       if (url === "/api/me") {
-        return makeFetchResponse({ character: { status: "pending" } });
+        return makeFetchResponse({ user: ME_USER, character: { status: "pending" } });
       }
       return makeFetchResponse({});
     });
 
-    render(<OperationPage />);
+    renderWithSWR(<DashboardSessionProvider><OperationPage /></DashboardSessionProvider>);
 
     await waitFor(() => {
       expect(screen.getByText("HELIOS SYSTEM // ACCESS RESTRICTED")).toBeInTheDocument();
@@ -98,12 +111,12 @@ describe("OperationPage", () => {
   it("캐릭터가 없을 때 AccessDenied를 표시한다", async () => {
     mockFetch.mockImplementation((url: string) => {
       if (url === "/api/me") {
-        return makeFetchResponse({ character: null });
+        return makeFetchResponse({ user: ME_USER, character: null });
       }
       return makeFetchResponse({});
     });
 
-    render(<OperationPage />);
+    renderWithSWR(<DashboardSessionProvider><OperationPage /></DashboardSessionProvider>);
 
     await waitFor(() => {
       expect(screen.getByText("HELIOS SYSTEM // ACCESS RESTRICTED")).toBeInTheDocument();
@@ -113,7 +126,7 @@ describe("OperationPage", () => {
   it("/api/me 요청 실패 시 AccessDenied를 표시한다", async () => {
     mockFetch.mockRejectedValue(new Error("network error"));
 
-    render(<OperationPage />);
+    renderWithSWR(<DashboardSessionProvider><OperationPage /></DashboardSessionProvider>);
 
     await waitFor(() => {
       expect(screen.getByText("HELIOS SYSTEM // ACCESS RESTRICTED")).toBeInTheDocument();
@@ -137,7 +150,7 @@ describe("OperationPage", () => {
 
     mockFetch.mockImplementation((url: string) => {
       if (url === "/api/me") {
-        return makeFetchResponse({ character: { status: "approved" } });
+        return makeFetchResponse({ user: ME_USER, character: { status: "approved" } });
       }
       if (url.startsWith("/api/operations")) {
         return makeFetchResponse({ data: [], page: { hasMore: false, nextOffset: null } });
@@ -145,13 +158,16 @@ describe("OperationPage", () => {
       return makeFetchResponse({});
     });
 
-    render(<OperationPage />);
+    renderWithSWR(<DashboardSessionProvider><OperationPage /></DashboardSessionProvider>);
 
     await waitFor(() => {
       expect(screen.getByText("OPERATION // TACTICAL HUB")).toBeInTheDocument();
     });
 
-    expect(mockFetch).toHaveBeenCalledWith("/api/operations?limit=20&offset=0", { cache: "no-store" });
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/operations?limit=10&offset=0",
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
     const initialCalls = mockFetch.mock.calls.filter((args) => String(args[0]).startsWith("/api/operations")).length;
 
     realtimeHandler?.();

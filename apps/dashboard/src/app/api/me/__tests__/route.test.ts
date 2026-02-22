@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockCreateClient, mockGetUser, mockFrom, mockMaybeSingle } = vi.hoisted(() => ({
-  mockCreateClient: vi.fn(),
-  mockGetUser: vi.fn(),
-  mockFrom: vi.fn(),
-  mockMaybeSingle: vi.fn(),
-}));
+const { mockCreateClient, mockGetUser, mockFrom, mockMaybeSingle, mockSingle } = vi.hoisted(
+  () => ({
+    mockCreateClient: vi.fn(),
+    mockGetUser: vi.fn(),
+    mockFrom: vi.fn(),
+    mockMaybeSingle: vi.fn(),
+    mockSingle: vi.fn(),
+  }),
+);
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: mockCreateClient,
@@ -19,15 +22,32 @@ describe("GET /api/me", () => {
       from: mockFrom,
     });
 
-    mockFrom.mockReturnValue({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          is: vi.fn(() => ({
-            maybeSingle: mockMaybeSingle,
+    // users 테이블: select → eq → single
+    // characters 테이블: select → eq → is → maybeSingle
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "users") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: mockSingle,
+            })),
+          })),
+        };
+      }
+      // characters
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            is: vi.fn(() => ({
+              maybeSingle: mockMaybeSingle,
+            })),
           })),
         })),
-      })),
+      };
     });
+
+    // 기본값: users 테이블 discord_username, role
+    mockSingle.mockResolvedValue({ data: { discord_username: null, role: "user" }, error: null });
   });
 
   it("미인증 사용자는 401을 반환한다", async () => {
@@ -63,6 +83,8 @@ describe("GET /api/me", () => {
         id: "user-1",
         email: "user@solaris.test",
         displayName: "테스트 유저",
+        discordUsername: null,
+        isAdmin: false,
       },
       character: null,
     });
@@ -78,6 +100,7 @@ describe("GET /api/me", () => {
         },
       },
     });
+    mockSingle.mockResolvedValue({ data: { discord_username: "testuser#1234", role: "user" }, error: null });
     mockMaybeSingle.mockResolvedValue({
       data: {
         id: "char-1",
@@ -101,6 +124,7 @@ describe("GET /api/me", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(body.user.discordUsername).toBe("testuser#1234");
     expect(body.character).toEqual(
       expect.objectContaining({
         id: "char-1",

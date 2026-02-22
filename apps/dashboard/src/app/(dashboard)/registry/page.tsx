@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useSWR from "swr";
 
 import {
   CharacterCard,
@@ -8,98 +9,79 @@ import {
   toCharacterSummary,
   toRegistryCharacter,
 } from "@/components/registry";
+import { swrFetcher } from "@/lib/swr/fetcher";
+import { useOffsetInfinite } from "@/lib/swr/use-offset-infinite";
 import type {
   RegistryCharacterSummary,
   RegistryCharacter,
 } from "@/components/registry";
 
+type SummaryRow = Parameters<typeof toCharacterSummary>[0];
+type DetailRow = Parameters<typeof toRegistryCharacter>[0];
+
+const PAGE_LIMIT = 20;
+
 export default function CharactersPage() {
-  const [characters, setCharacters] = useState<RegistryCharacterSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  /* 상세 모달 상태 */
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<RegistryCharacter | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
-
-  /* 상세 fetch race condition 방어 */
-  const latestRequestRef = useRef(0);
-
-  /* 목록 fetch — AbortController로 언마운트 시 취소 */
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function fetchCharacters() {
-      try {
-        const res = await fetch("/api/characters", {
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          throw new Error("캐릭터 데이터를 불러오는 데 실패했습니다.");
-        }
-        const json = await res.json();
-        const mapped = (json.data ?? []).map(toCharacterSummary);
-        setCharacters(mapped);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        setError(
-          err instanceof Error
-            ? err.message
-            : "알 수 없는 오류가 발생했습니다.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchCharacters();
-    return () => controller.abort();
-  }, []);
-
-  /* 상세 fetch — stale 요청 방어 */
-  const handleSelect = useCallback(
-    async (character: RegistryCharacterSummary) => {
-      const requestId = ++latestRequestRef.current;
-      setSelectedId(character.id);
-      setDetail(null);
-      setDetailError(null);
-      setDetailLoading(true);
-
-      try {
-        const res = await fetch(`/api/characters/${character.id}`);
-        if (!res.ok) {
-          throw new Error("캐릭터 상세 정보를 불러올 수 없습니다.");
-        }
-        if (requestId !== latestRequestRef.current) return;
-        const json = await res.json();
-        setDetail({
-          ...toRegistryCharacter(json.data),
-          isMine: character.isMine,
-        });
-      } catch (err) {
-        if (requestId !== latestRequestRef.current) return;
-        setDetail(null);
-        setDetailError(
-          err instanceof Error
-            ? err.message
-            : "상세 정보를 불러올 수 없습니다.",
-        );
-      } finally {
-        if (requestId === latestRequestRef.current) {
-          setDetailLoading(false);
-        }
-      }
-    },
-    [],
+  const {
+    items: characters,
+    loading,
+    loadingMore,
+    error,
+    hasMore,
+    loadMore,
+  } = useOffsetInfinite<SummaryRow>({
+    baseUrl: "/api/characters",
+    limit: PAGE_LIMIT,
+    getItemId: (item) => item.id,
+  });
+  const mappedCharacters = useMemo(
+    () => characters.map(toCharacterSummary),
+    [characters],
   );
 
+  /* 상세 모달 상태 */
+  const [selected, setSelected] = useState<RegistryCharacterSummary | null>(null);
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const { data: detailResult, error: detailError, isLoading: detailLoading } = useSWR<{ data: DetailRow }>(
+    selected ? `/api/characters/${selected.id}` : null,
+    swrFetcher,
+    { revalidateOnFocus: false, dedupingInterval: 1500 },
+  );
+
+  const detail = useMemo<RegistryCharacter | null>(() => {
+    if (!selected || !detailResult?.data) return null;
+    return {
+      ...toRegistryCharacter(detailResult.data),
+      isMine: selected.isMine,
+    };
+  }, [selected, detailResult]);
+
+  useEffect(() => {
+    if (!hasMore || loadingMore) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const node = loadMoreRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          void loadMore();
+        }
+      },
+      { rootMargin: "300px 0px" },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loadMore]);
+
+  const handleSelect = useCallback((character: RegistryCharacterSummary) => {
+    setSelected(character);
+  }, []);
+
   const handleCloseModal = useCallback(() => {
-    latestRequestRef.current++; // 기존 요청 무효화
-    setSelectedId(null);
-    setDetail(null);
-    setDetailError(null);
+    setSelected(null);
   }, []);
 
   return (
@@ -109,7 +91,7 @@ export default function CharactersPage() {
         <h1 className="hud-label text-lg">REGISTRY // CITIZEN DATABASE</h1>
         {!loading && !error && (
           <p className="mt-1 hud-label text-text-secondary">
-            TOTAL OPERATIVES: {characters.length}
+            TOTAL OPERATIVES: {mappedCharacters.length}
           </p>
         )}
       </div>
@@ -119,35 +101,46 @@ export default function CharactersPage() {
 
       {/* 에러 */}
       {error && (
-        <p className="text-center text-sm text-accent py-12">{error}</p>
+        <p className="text-center text-sm text-accent py-12">
+          캐릭터 데이터를 불러오는 데 실패했습니다.
+        </p>
       )}
 
       {/* 카드 그리드 */}
       {!loading && !error && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {characters.map((character) => (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              onSelect={handleSelect}
+        <>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {mappedCharacters.map((character) => (
+              <CharacterCard
+                key={character.id}
+                character={character}
+                onSelect={handleSelect}
+              />
+            ))}
+          </div>
+          {hasMore && (
+            <div
+              ref={loadMoreRef}
+              aria-hidden="true"
+              className="mt-6 h-1 w-full"
             />
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* 빈 결과 */}
-      {!loading && !error && characters.length === 0 && (
+      {!loading && !error && mappedCharacters.length === 0 && (
         <p className="text-center text-sm text-text-secondary py-12">
           등록된 시민이 없습니다
         </p>
       )}
 
       {/* 상세 모달 */}
-      {selectedId && (
+      {selected && (
         <CharacterProfileModal
           character={detail}
           loading={detailLoading}
-          error={detailError}
+          error={detailError instanceof Error ? detailError.message : null}
           open
           onClose={handleCloseModal}
         />

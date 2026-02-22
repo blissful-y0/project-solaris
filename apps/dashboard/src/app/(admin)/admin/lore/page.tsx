@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import useSWR from "swr";
 
 import { Button, Card, Input, Modal } from "@/components/ui";
 import { CLEARANCE_CONFIG, type ClearanceLevel } from "@/components/lore/types";
+import { swrFetcher } from "@/lib/swr/fetcher";
 import { cn } from "@/lib/utils";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
@@ -43,11 +45,7 @@ function slugify(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
-type LoadState = "loading" | "ready" | "error";
-
 export default function AdminLorePage() {
-  const [loadState, setLoadState] = useState<LoadState>("loading");
-  const [docs, setDocs] = useState<DocMeta[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<DocMeta | null>(null);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
@@ -57,23 +55,12 @@ export default function AdminLorePage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  /* ── 목록 불러오기 ── */
-  const loadDocs = useCallback(async () => {
-    setLoadState("loading");
-    const res = await fetch("/api/admin/lore");
-    if (!res.ok) {
-      setLoadState("error");
-      return;
-    }
-    const body = (await res.json()) as { data?: DocMeta[] };
-    setDocs(body.data ?? []);
-    setLoadState("ready");
-  }, []);
-
-  useEffect(() => {
-    void loadDocs();
-  }, [loadDocs]);
+  const { data, error, isLoading, mutate } = useSWR<{ data?: DocMeta[] }>(
+    "/api/admin/lore",
+    swrFetcher,
+    { revalidateOnFocus: false },
+  );
+  const docs = data?.data ?? [];
 
   /* ── 폼 열기 ── */
   const openCreate = () => {
@@ -169,7 +156,7 @@ export default function AdminLorePage() {
       }
 
       closeForm();
-      await loadDocs();
+      await mutate();
     } catch {
       setFormError("네트워크 오류가 발생했습니다.");
     } finally {
@@ -189,7 +176,7 @@ export default function AdminLorePage() {
         return;
       }
       setConfirmingDeleteId(null);
-      await loadDocs();
+      await mutate();
     } catch {
       setDeleteError("네트워크 오류가 발생했습니다.");
       setConfirmingDeleteId(null);
@@ -220,19 +207,19 @@ export default function AdminLorePage() {
 
         {/* 목록 카드 */}
         <Card hud className="overflow-x-auto">
-          {loadState === "loading" && (
+          {isLoading && (
             <p className="text-sm text-text-secondary">불러오는 중...</p>
           )}
-          {loadState === "error" && (
+          {error && (
             <p className="text-sm text-accent">문서 목록을 불러오지 못했습니다.</p>
           )}
-          {loadState === "ready" && docs.length === 0 && (
+          {!isLoading && !error && docs.length === 0 && (
             <p className="text-sm text-text-secondary">
               {/* 의도적 빈 목록 — 아직 등록된 Lore 문서가 없습니다 */}
               아직 등록된 Lore 문서가 없습니다.
             </p>
           )}
-          {loadState === "ready" && docs.length > 0 && (
+          {!isLoading && !error && docs.length > 0 && (
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-text-secondary">

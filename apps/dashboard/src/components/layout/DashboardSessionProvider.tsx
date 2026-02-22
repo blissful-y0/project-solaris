@@ -1,11 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
+import useSWRImmutable from "swr/immutable";
+import { swrFetcher } from "@/lib/swr/fetcher";
 
 export type DashboardMeUser = {
   id: string;
   email: string | null;
   displayName: string;
+  discordUsername: string | null;
+  isAdmin: boolean;
 };
 
 export type DashboardMeCharacter = {
@@ -37,44 +41,24 @@ type DashboardSessionContextValue = {
 
 const DashboardSessionContext = createContext<DashboardSessionContextValue | null>(null);
 
-async function fetchMe(): Promise<DashboardMe> {
-  const response = await fetch("/api/me");
-
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(body?.error ?? "FAILED_TO_FETCH_ME");
-  }
-
-  return (await response.json()) as DashboardMe;
-}
-
 export function DashboardSessionProvider({ children }: { children: React.ReactNode }) {
-  const [me, setMe] = useState<DashboardMe | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error, isLoading, mutate } = useSWRImmutable<DashboardMe>(
+    "/api/me",
+    swrFetcher,
+  );
 
   const refetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const next = await fetchMe();
-      setMe(next);
-    } catch (err) {
-      setMe(null);
-      setError(err instanceof Error ? err.message : "FAILED_TO_FETCH_ME");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refetch();
-  }, [refetch]);
+    await mutate();
+  }, [mutate]);
 
   const value = useMemo(
-    () => ({ me, loading, error, refetch }),
-    [me, loading, error, refetch],
+    () => ({
+      me: data ?? null,
+      loading: isLoading && !data,
+      error: error instanceof Error ? error.message : null,
+      refetch,
+    }),
+    [data, error, isLoading, refetch],
   );
 
   return (

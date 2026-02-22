@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 
 import { AdminAccessDenied } from "@/components/common";
 import { Badge, Card } from "@/components/ui";
-
-type LoadState = "loading" | "ready" | "forbidden" | "error";
+import { isApiFetchError, swrFetcher } from "@/lib/swr/fetcher";
 
 interface Notification {
   id: string;
@@ -47,28 +46,15 @@ function formatTime(iso: string) {
 }
 
 export default function AdminNotificationsPage() {
-  const [state, setState] = useState<LoadState>("loading");
-  const [rows, setRows] = useState<Notification[]>([]);
+  const { data, error, isLoading } = useSWR<{ data?: Notification[] }>(
+    "/api/admin/notifications?limit=100&offset=0",
+    swrFetcher,
+    { revalidateOnFocus: false },
+  );
+  const rows = data?.data ?? [];
+  const isForbidden = isApiFetchError(error) && (error.status === 401 || error.status === 403);
 
-  useEffect(() => {
-    const run = async () => {
-      const response = await fetch("/api/admin/notifications");
-      if (response.status === 401 || response.status === 403) {
-        setState("forbidden");
-        return;
-      }
-      if (!response.ok) {
-        setState("error");
-        return;
-      }
-      const body = (await response.json()) as { data?: Notification[] };
-      setRows(body.data ?? []);
-      setState("ready");
-    };
-    void run();
-  }, []);
-
-  if (state === "forbidden") return <AdminAccessDenied />;
+  if (isForbidden) return <AdminAccessDenied />;
 
   return (
     <section className="space-y-4">
@@ -76,23 +62,23 @@ export default function AdminNotificationsPage() {
         <p className="hud-label mb-1">ADMIN / NOTIFICATIONS</p>
         <h1 className="text-xl font-bold text-text">알림 이력</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          {state === "ready" ? `최근 ${rows.length}건` : "..."}
+          {!isLoading && !error ? `최근 ${rows.length}건` : "..."}
         </p>
       </div>
 
       <Card hud className="overflow-x-auto">
-        {state === "loading" && (
+        {isLoading && (
           <p className="text-sm text-text-secondary">불러오는 중...</p>
         )}
-        {state === "error" && (
+        {error && !isForbidden && (
           <p className="text-sm text-accent">알림 이력을 불러오지 못했습니다.</p>
         )}
 
-        {state === "ready" && rows.length === 0 && (
+        {!isLoading && !error && rows.length === 0 && (
           <p className="text-sm text-text-secondary">발송된 알림이 없습니다.</p>
         )}
 
-        {state === "ready" && rows.length > 0 && (
+        {!isLoading && !error && rows.length > 0 && (
           <table className="w-full min-w-[700px] text-sm">
             <thead>
               <tr className="border-b border-border text-left text-text-secondary">

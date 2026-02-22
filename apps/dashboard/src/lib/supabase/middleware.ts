@@ -27,9 +27,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase 미실행 시 fetch 실패 — 미인증 상태로 진행
+  }
 
   const pathname = request.nextUrl.pathname;
   const isApiPath = pathname.startsWith("/api/");

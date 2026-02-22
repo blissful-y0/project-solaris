@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TopBar } from "../TopBar";
 
@@ -10,10 +10,28 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-/* usePathname 모킹 */
+/* supabase client 모킹 */
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: { signOut: vi.fn().mockResolvedValue({}) },
+  }),
+}));
+
+/* usePathname / useRouter 모킹 */
 const mockPathname = vi.fn(() => "/");
+const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname(),
+  useRouter: () => ({ push: mockPush }),
+}));
+
+/* useDashboardSession 모킹 */
+const mockMe = {
+  user: { id: "u1", email: "a@b.com", displayName: "Test", discordUsername: "testuser" },
+  character: null,
+};
+vi.mock("../DashboardSessionProvider", () => ({
+  useDashboardSession: () => ({ me: mockMe, loading: false, error: null, refetch: vi.fn() }),
 }));
 
 describe("TopBar", () => {
@@ -96,10 +114,33 @@ describe("TopBar", () => {
     expect(screen.queryByTestId("lock-icon-/operation")).not.toBeInTheDocument();
   });
 
-  // --- 마이페이지 ---
+  // --- 유저 드롭다운 ---
 
-  it("마이페이지 링크를 표시한다", () => {
+  it("유저 메뉴 버튼을 표시한다", () => {
     render(<TopBar />);
-    expect(screen.getByRole("link", { name: "마이페이지" })).toHaveAttribute("href", "/my");
+    expect(screen.getByRole("button", { name: "유저 메뉴" })).toBeInTheDocument();
   });
+
+  it("유저 메뉴 클릭 시 드롭다운을 표시한다", () => {
+    render(<TopBar />);
+    fireEvent.click(screen.getByRole("button", { name: "유저 메뉴" }));
+    expect(screen.getByText("@testuser")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "마이페이지" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "로그아웃" })).toBeInTheDocument();
+  });
+
+  it("드롭다운에서 마이페이지 링크가 /my로 연결된다", () => {
+    render(<TopBar />);
+    fireEvent.click(screen.getByRole("button", { name: "유저 메뉴" }));
+    expect(screen.getByRole("menuitem", { name: "마이페이지" })).toHaveAttribute("href", "/my");
+  });
+
+  it("ESC 키로 드롭다운을 닫는다", () => {
+    render(<TopBar />);
+    fireEvent.click(screen.getByRole("button", { name: "유저 메뉴" }));
+    expect(screen.getByText("@testuser")).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByText("@testuser")).not.toBeInTheDocument();
+  });
+
 });

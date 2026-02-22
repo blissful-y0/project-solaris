@@ -29,25 +29,25 @@ describe("useDraftSave", () => {
 
     // 디바운스 대기
     act(() => {
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(1500);
     });
 
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
     expect(stored.faction).toBe("bureau");
     expect(stored.abilityName).toBe("테스트 능력");
-    expect(result.current.isSaved).toBe(true);
+    expect(result.current.saveStatus).toBe("saved");
   });
 
-  it("500ms 디바운스로 저장한다", () => {
+  it("1500ms 디바운스로 저장한다", () => {
     renderHook(() => useDraftSave(SAMPLE_DRAFT));
 
-    // 499ms에는 아직 저장 안 됨
+    // 1499ms에는 아직 저장 안 됨
     act(() => {
-      vi.advanceTimersByTime(499);
+      vi.advanceTimersByTime(1499);
     });
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
 
-    // 500ms에 저장됨
+    // 1500ms에 저장됨
     act(() => {
       vi.advanceTimersByTime(1);
     });
@@ -110,22 +110,22 @@ describe("useDraftSave", () => {
       { initialProps: { draft: SAMPLE_DRAFT } },
     );
 
-    // 400ms 진행
+    // 1400ms 진행
     act(() => {
-      vi.advanceTimersByTime(400);
+      vi.advanceTimersByTime(1400);
     });
 
     // draft 변경 → 디바운스 리셋
     const updatedDraft = { ...SAMPLE_DRAFT, abilityName: "변경된 능력" };
     rerender({ draft: updatedDraft });
 
-    // 400ms 더 지남 (총 800ms) — 아직 저장 안 됨 (리셋 후 400ms)
+    // 1400ms 더 지남 — 아직 저장 안 됨 (리셋 후 1400ms)
     act(() => {
-      vi.advanceTimersByTime(400);
+      vi.advanceTimersByTime(1400);
     });
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
 
-    // 100ms 더 지남 (리셋 후 500ms) — 저장됨
+    // 100ms 더 지남 (리셋 후 1500ms) — 저장됨
     act(() => {
       vi.advanceTimersByTime(100);
     });
@@ -133,19 +133,19 @@ describe("useDraftSave", () => {
     expect(stored.abilityName).toBe("변경된 능력");
   });
 
-  it("draft가 변경되면 다음 저장 전까지 isSaved는 false다", () => {
+  it("draft가 변경되면 다음 저장 전까지 saveStatus는 saving이다", () => {
     const { result, rerender } = renderHook(
       ({ draft }) => useDraftSave(draft),
       { initialProps: { draft: SAMPLE_DRAFT } },
     );
 
     act(() => {
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(1500);
     });
-    expect(result.current.isSaved).toBe(true);
+    expect(result.current.saveStatus).toBe("saved");
 
     const updatedDraft = { ...SAMPLE_DRAFT, name: "새 이름" };
     rerender({ draft: updatedDraft });
-    expect(result.current.isSaved).toBe(false);
+    expect(result.current.saveStatus).toBe("saving");
   });
 });

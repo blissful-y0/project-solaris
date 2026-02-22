@@ -12,6 +12,8 @@ type CreateOperationModalProps = {
   onClose: () => void;
   /** 생성 성공 후 호출 — 목록 새로고침 등 */
   onCreated?: () => void;
+  /** admin만 작전(operation) 생성 가능 */
+  isAdmin?: boolean;
 };
 
 /** 작전 생성 모달 — OPERATION/DOWNTIME 타입 선택 + 기본 필드 */
@@ -19,6 +21,7 @@ export function CreateOperationModal({
   open,
   onClose,
   onCreated,
+  isAdmin = false,
 }: CreateOperationModalProps) {
   const [selectedType, setSelectedType] = useState<OperationType | null>(null);
   const [title, setTitle] = useState("");
@@ -83,12 +86,12 @@ export function CreateOperationModal({
           <p className="mb-2 text-xs uppercase tracking-widest text-text-secondary">
             타입 선택
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className={cn("grid gap-2", isAdmin ? "grid-cols-2" : "grid-cols-1")}>
             {(
               [
-                { type: "operation", label: "작전 개시" },
-                { type: "downtime", label: "다운타임 개설" },
-              ] as const
+                ...(isAdmin ? [{ type: "operation" as const, label: "작전 개시" }] : []),
+                { type: "downtime" as const, label: "다운타임 개설" },
+              ]
             ).map(({ type, label }) => (
               <button
                 key={type}

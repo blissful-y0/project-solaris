@@ -8,6 +8,9 @@ const {
   mockOpInsertSingle,
   mockParticipantsIs,
   mockCharacterMaybeSingle,
+  mockUserSingle,
+  mockServiceFrom,
+  mockServiceInsertSingle,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockGetUser: vi.fn(),
@@ -16,11 +19,79 @@ const {
   mockOpInsertSingle: vi.fn(),
   mockParticipantsIs: vi.fn(),
   mockCharacterMaybeSingle: vi.fn(),
+  mockUserSingle: vi.fn(),
+  mockServiceFrom: vi.fn(),
+  mockServiceInsertSingle: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: mockCreateClient,
 }));
+
+vi.mock("@/lib/supabase/service", () => ({
+  getServiceClient: () => ({
+    from: mockServiceFrom,
+  }),
+}));
+
+function buildFromMock(table: string) {
+  if (table === "operations") {
+    const chain: Record<string, any> = {};
+    chain.eq = vi.fn(() => chain);
+    chain.order = vi.fn(() => chain);
+    chain.range = mockOpSelect;
+    return {
+      select: () => ({
+        is: () => ({
+          eq: chain.eq,
+          order: chain.order,
+          range: chain.range,
+        }),
+      }),
+      insert: () => ({
+        select: () => ({
+          single: mockOpInsertSingle,
+        }),
+      }),
+    };
+  }
+
+  if (table === "operation_participants") {
+    return {
+      select: () => ({
+        in: () => ({
+          is: mockParticipantsIs,
+        }),
+      }),
+    };
+  }
+
+  if (table === "characters") {
+    return {
+      select: () => ({
+        eq: () => ({
+          eq: () => ({
+            is: () => ({
+              maybeSingle: mockCharacterMaybeSingle,
+            }),
+          }),
+        }),
+      }),
+    };
+  }
+
+  if (table === "users") {
+    return {
+      select: () => ({
+        eq: () => ({
+          single: mockUserSingle,
+        }),
+      }),
+    };
+  }
+
+  throw new Error(`unexpected table: ${table}`);
+}
 
 describe("GET /api/operations", () => {
   beforeEach(() => {
@@ -31,54 +102,7 @@ describe("GET /api/operations", () => {
       from: mockFrom,
     });
 
-    mockFrom.mockImplementation((table: string) => {
-      if (table === "operations") {
-        const chain: Record<string, any> = {};
-        chain.eq = vi.fn(() => chain);
-        chain.order = vi.fn(() => chain);
-        chain.range = mockOpSelect;
-        return {
-          select: () => ({
-            is: () => ({
-              eq: chain.eq,
-              order: chain.order,
-              range: chain.range,
-            }),
-          }),
-          insert: () => ({
-            select: () => ({
-              single: mockOpInsertSingle,
-            }),
-          }),
-        };
-      }
-
-      if (table === "operation_participants") {
-        return {
-          select: () => ({
-            in: () => ({
-              is: mockParticipantsIs,
-            }),
-          }),
-        };
-      }
-
-      if (table === "characters") {
-        return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({
-                is: () => ({
-                  maybeSingle: mockCharacterMaybeSingle,
-                }),
-              }),
-            }),
-          }),
-        };
-      }
-
-      throw new Error(`unexpected table: ${table}`);
-    });
+    mockFrom.mockImplementation(buildFromMock);
   });
 
   it("미인증 사용자는 401을 반환한다", async () => {
@@ -198,15 +222,23 @@ describe("POST /api/operations", () => {
       auth: { getUser: mockGetUser },
       from: mockFrom,
     });
+    mockFrom.mockImplementation(buildFromMock);
   });
 
-  it("summary를 비워도 201로 생성된다", async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
-    mockCharacterMaybeSingle.mockResolvedValue({
-      data: { id: "ch-1" },
+  it("admin이 operation을 생성하면 201을 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } } });
+    mockUserSingle.mockResolvedValue({
+      data: { role: "admin" },
       error: null,
     });
-    mockOpInsertSingle.mockResolvedValue({
+    mockServiceFrom.mockImplementation(() => ({
+      insert: () => ({
+        select: () => ({
+          single: mockServiceInsertSingle,
+        }),
+      }),
+    }));
+    mockServiceInsertSingle.mockResolvedValue({
       data: {
         id: "op-new",
         title: "새 작전",
@@ -215,8 +247,8 @@ describe("POST /api/operations", () => {
         summary: "",
         is_main_story: false,
         max_participants: 4,
-        created_at: "2026-02-21T12:00:00Z",
-        created_by: "ch-1",
+        created_at: "2026-02-22T12:00:00Z",
+        created_by: null,
       },
       error: null,
     });
@@ -228,7 +260,66 @@ describe("POST /api/operations", () => {
         body: JSON.stringify({
           type: "operation",
           title: "새 작전",
-          summary: "   ",
+          summary: "",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+  });
+
+  it("일반 유저가 operation을 생성하면 403을 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockUserSingle.mockResolvedValue({
+      data: { role: "user" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost/api/operations", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "operation",
+          title: "불법 작전",
+          summary: "",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: "FORBIDDEN" });
+  });
+
+  it("일반 유저가 downtime을 생성하면 201을 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({
+      data: { id: "ch-1" },
+      error: null,
+    });
+    mockOpInsertSingle.mockResolvedValue({
+      data: {
+        id: "op-dt",
+        title: "다운타임",
+        type: "downtime",
+        status: "waiting",
+        summary: "",
+        is_main_story: false,
+        max_participants: 8,
+        created_at: "2026-02-22T12:00:00Z",
+        created_by: "ch-1",
+      },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost/api/operations", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "downtime",
+          title: "다운타임",
+          summary: "",
         }),
       }),
     );
@@ -238,10 +329,6 @@ describe("POST /api/operations", () => {
 
   it("title이 101자 이상이면 400을 반환한다", async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
-    mockCharacterMaybeSingle.mockResolvedValue({
-      data: { id: "ch-1" },
-      error: null,
-    });
 
     const { POST } = await import("../route");
     const response = await POST(
@@ -258,5 +345,28 @@ describe("POST /api/operations", () => {
 
     expect(response.status).toBe(400);
     expect(body).toEqual({ error: "INVALID_TITLE" });
+  });
+
+  it("승인 캐릭터 없는 유저가 downtime 생성 시 403을 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mockCharacterMaybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost/api/operations", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "downtime",
+          title: "다운타임 시도",
+          summary: "",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: "FORBIDDEN" });
   });
 });

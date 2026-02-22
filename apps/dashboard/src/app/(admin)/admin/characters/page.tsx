@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import useSWR from "swr";
 import { toast } from "sonner";
 
 import { AdminAccessDenied } from "@/components/common";
@@ -9,8 +10,7 @@ import { ConfirmModal } from "@/components/admin/ConfirmModal";
 import { RejectReasonModal } from "@/components/admin/RejectReasonModal";
 import type { AdminCharacter } from "@/components/admin/types";
 import { Badge, Button, Card } from "@/components/ui";
-
-type LoadState = "loading" | "ready" | "forbidden" | "error";
+import { isApiFetchError, swrFetcher } from "@/lib/swr/fetcher";
 
 /** 승인 확인 모달 상태 */
 type ApproveTarget = { id: string; name: string } | null;
@@ -24,32 +24,19 @@ function factionLabel(faction: AdminCharacter["faction"]) {
 }
 
 export default function AdminCharactersPage() {
-  const [state, setState] = useState<LoadState>("loading");
-  const [rows, setRows] = useState<AdminCharacter[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   /* 모달 상태 */
   const [approveTarget, setApproveTarget] = useState<ApproveTarget>(null);
   const [rejectTarget, setRejectTarget] = useState<RejectTarget>(null);
 
-  const loadQueue = async () => {
-    const response = await fetch("/api/admin/characters/queue");
-    if (response.status === 401 || response.status === 403) {
-      setState("forbidden");
-      return;
-    }
-    if (!response.ok) {
-      setState("error");
-      return;
-    }
-    const body = (await response.json()) as { data?: AdminCharacter[] };
-    setRows(body.data ?? []);
-    setState("ready");
-  };
-
-  useEffect(() => {
-    void loadQueue();
-  }, []);
+  const { data, error, isLoading, mutate } = useSWR<{ data?: AdminCharacter[] }>(
+    "/api/admin/characters/queue?limit=100&offset=0",
+    swrFetcher,
+    { revalidateOnFocus: false },
+  );
+  const rows = data?.data ?? [];
+  const isForbidden = isApiFetchError(error) && (error.status === 401 || error.status === 403);
 
   const hasRows = useMemo(() => rows.length > 0, [rows]);
 
@@ -64,7 +51,7 @@ export default function AdminCharactersPage() {
       if (res.ok) {
         toast.success(`${approveTarget.name}이(가) 승인되었습니다.`);
         setApproveTarget(null);
-        await loadQueue();
+        await mutate();
       } else {
         toast.error("승인에 실패했습니다.");
       }
@@ -88,7 +75,7 @@ export default function AdminCharactersPage() {
       if (res.ok) {
         toast.success("반려 처리 완료. 수정 요청이 전달되었습니다.");
         setRejectTarget(null);
-        await loadQueue();
+        await mutate();
       } else {
         toast.error("반려에 실패했습니다.");
       }
@@ -108,7 +95,7 @@ export default function AdminCharactersPage() {
       });
       if (res.ok) {
         toast.success("리더 상태가 변경되었습니다.");
-        await loadQueue();
+        await mutate();
       } else {
         toast.error("리더 토글에 실패했습니다.");
       }
@@ -119,7 +106,7 @@ export default function AdminCharactersPage() {
     }
   };
 
-  if (state === "forbidden") return <AdminAccessDenied />;
+  if (isForbidden) return <AdminAccessDenied />;
 
   return (
     <>
@@ -130,14 +117,14 @@ export default function AdminCharactersPage() {
         </div>
 
         <Card hud className="overflow-x-auto">
-          {state === "loading" && <p className="text-sm text-text-secondary">불러오는 중...</p>}
-          {state === "error" && <p className="text-sm text-accent">큐를 불러오지 못했습니다.</p>}
+          {isLoading && <p className="text-sm text-text-secondary">불러오는 중...</p>}
+          {error && !isForbidden && <p className="text-sm text-accent">큐를 불러오지 못했습니다.</p>}
 
-          {state === "ready" && !hasRows && (
+          {!isLoading && !error && !hasRows && (
             <p className="text-sm text-text-secondary">현재 대기 중인 신청이 없습니다.</p>
           )}
 
-          {state === "ready" && hasRows && (
+          {!isLoading && !error && hasRows && (
             <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-text-secondary">
