@@ -172,16 +172,24 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {/* 능력 개요 */}
       {(character.abilityName || character.abilities.length > 0) && (
         <div className="space-y-3">
-          <h4 className="hud-label text-text-secondary mb-2">
-            {character.abilityName ? `ABILITY — ${character.abilityName}` : "ABILITIES"}
+          <h4 className="hud-label text-text-secondary mb-2 [font-size:1rem] font-bold">
+            {character.abilityName
+              ? `ABILITY — ${character.abilityName}`
+              : "ABILITIES"}
           </h4>
           {character.abilityDescription && (
-            <p className="text-sm text-text-secondary">{character.abilityDescription}</p>
+            <p className="text-sm text-text-secondary">
+              {character.abilityDescription}
+            </p>
           )}
           {character.abilityWeakness && (
             <div>
-              <span className="text-xs text-text-secondary/60 uppercase tracking-wider">제약/약점</span>
-              <p className="text-sm text-accent mt-0.5">{character.abilityWeakness}</p>
+              <span className="text-xs text-text-secondary/60 uppercase tracking-wider">
+                제약/약점
+              </span>
+              <p className="text-sm text-text-secondary mt-0.5">
+                {character.abilityWeakness}
+              </p>
             </div>
           )}
           {character.abilities.length > 0 && (
@@ -196,7 +204,9 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {/* 성격 */}
       {character.personality && (
         <div>
-          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">성격</h4>
+          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">
+            성격
+          </h4>
           <PreLines text={character.personality} />
         </div>
       )}
@@ -204,7 +214,9 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {/* 외형 */}
       {character.appearance && (
         <div>
-          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">외형</h4>
+          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">
+            외형
+          </h4>
           <PreLines text={character.appearance} />
         </div>
       )}
@@ -212,7 +224,9 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {/* 배경 서사 */}
       {character.backstory && (
         <div>
-          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">배경</h4>
+          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">
+            배경
+          </h4>
           <PreLines text={character.backstory} />
         </div>
       )}
@@ -220,7 +234,9 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
       {/* 기타 */}
       {character.notes && (
         <div>
-          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">기타</h4>
+          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">
+            기타
+          </h4>
           <PreLines text={character.notes} />
         </div>
       )}
@@ -234,7 +250,9 @@ function PreLines({ text }: { text: string }) {
   return (
     <div className="flex flex-col gap-2 text-sm text-text-secondary leading-relaxed">
       {paragraphs.map((para, i) => (
-        <p key={i} className="whitespace-pre-line">{para}</p>
+        <p key={i} className="whitespace-pre-line">
+          {para}
+        </p>
       ))}
     </div>
   );
