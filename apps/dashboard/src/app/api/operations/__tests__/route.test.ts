@@ -347,6 +347,26 @@ describe("POST /api/operations", () => {
     expect(body).toEqual({ error: "INVALID_TITLE" });
   });
 
+  it("summary가 2000자를 초과하면 400을 반환한다", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+
+    const { POST } = await import("../route");
+    const response = await POST(
+      new Request("http://localhost/api/operations", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "operation",
+          title: "요약 길이 테스트",
+          summary: "x".repeat(2001),
+        }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: "INVALID_SUMMARY" });
+  });
+
   it("승인 캐릭터 없는 유저가 downtime 생성 시 403을 반환한다", async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
     mockCharacterMaybeSingle.mockResolvedValue({

@@ -4,6 +4,8 @@ import { getServiceClient } from "@/lib/supabase/service";
 import { mapOperationListItem, type DbOperationRow, type DbParticipantRow } from "@/lib/operations/dto";
 import { nanoid } from "nanoid";
 
+const MAX_SUMMARY_LENGTH = 2000;
+
 /**
  * GET /api/operations
  *
@@ -141,6 +143,10 @@ export async function POST(request: Request) {
 
     if (!title || title.length < 1 || title.length > 100) {
       return NextResponse.json({ error: "INVALID_TITLE" }, { status: 400 });
+    }
+
+    if (summary.length > MAX_SUMMARY_LENGTH) {
+      return NextResponse.json({ error: "INVALID_SUMMARY" }, { status: 400 });
     }
 
     const id = `op_${nanoid(12)}`;
