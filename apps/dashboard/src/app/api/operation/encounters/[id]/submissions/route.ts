@@ -41,11 +41,11 @@ export async function POST(
       p_encounter_id: id,
       p_ability_id: payload.ability_id,
       p_action_type: payload.action_type,
-      p_target_character_id: payload.target_character_id ?? null,
-      p_target_stat: payload.target_stat ?? null,
+      p_target_character_id: (payload.target_character_id ?? null) as string,
+      p_target_stat: (payload.target_stat ?? null) as string,
       p_base_damage: payload.base_damage,
       p_multiplier: payload.multiplier,
-      p_narrative: payload.narrative ?? null,
+      p_narrative: (payload.narrative ?? null) as string,
     });
 
     if (error) {

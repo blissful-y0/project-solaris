@@ -1,6 +1,7 @@
 "use server";
 
 import { nanoid } from "nanoid";
+import type { Json } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 import { getUserFriendlyError } from "@/lib/supabase/helpers";
 
@@ -30,7 +31,7 @@ export async function createNotification(
     type: params.type,
     title: params.title,
     body: params.body,
-    payload: params.payload ?? {},
+    payload: (params.payload ?? {}) as Json,
     channel: params.channel,
     delivery_status: deliveryStatus,
     delivery_attempts: 0,

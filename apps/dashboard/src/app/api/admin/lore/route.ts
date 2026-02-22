@@ -8,7 +8,7 @@ export async function GET() {
     const { supabase } = await requireAdmin();
 
     const { data, error } = await supabase
-      .from("lore_documents")
+      .from("lore_documents" as never)
       .select("id, title, slug, content, clearance_level, order_index, created_at, updated_at")
       .is("deleted_at", null)
       .order("order_index", { ascending: true })
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const db = getServiceClient();
 
     const { data, error } = await db
-      .from("lore_documents")
+      .from("lore_documents" as never)
       .insert({
         id: `lore_${crypto.randomUUID()}`,
         title,

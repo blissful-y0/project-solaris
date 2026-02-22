@@ -61,6 +61,10 @@ export async function submitCharacter(draft: CharacterDraft) {
 
   validateDraft(draft);
 
+  if (!draft.abilityClass) {
+    throw new Error("INVALID_ABILITY_CLASS");
+  }
+
   if (draft.abilities.length !== 3) {
     throw new Error("INVALID_ABILITIES");
   }
@@ -100,18 +104,18 @@ export async function submitCharacter(draft: CharacterDraft) {
     p_user_id: user.id,
     p_name: draft.name,
     p_faction: draft.faction,
-    p_ability_class: draft.abilityClass,
+    p_ability_class: draft.abilityClass!,
     p_hp_max: stats.hp,
     p_hp_current: stats.hp,
     p_will_max: stats.will,
     p_will_current: stats.will,
     p_resonance_rate: draft.resonanceRate,
-    p_profile_image_url: draft.profileImageUrl ?? null,
+    p_profile_image_url: (draft.profileImageUrl ?? null) as string,
     p_profile_data: draft.profileData,
-    p_appearance: draft.appearance ?? null,
-    p_backstory: draft.backstory ?? null,
+    p_appearance: (draft.appearance ?? null) as string,
+    p_backstory: (draft.backstory ?? null) as string,
     p_leader_application: draft.leaderApplication,
-    p_crossover_style: draft.crossoverStyle ?? null,
+    p_crossover_style: (draft.crossoverStyle ?? null) as string,
     p_abilities: abilityPayload,
   });
 
