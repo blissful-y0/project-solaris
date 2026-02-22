@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import type { RefObject } from "react";
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -23,7 +24,7 @@ export function AvatarCropModal({
   onCancel,
   onConfirm,
 }: AvatarCropModalProps) {
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -47,6 +48,7 @@ export function AvatarCropModal({
           <Button size="sm" onClick={onConfirm}>확정</Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
