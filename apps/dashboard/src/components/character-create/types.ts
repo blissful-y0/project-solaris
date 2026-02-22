@@ -8,7 +8,7 @@ export interface SkillTier {
 
 /** 캐릭터 생성 위자드 5단계 폼 데이터 */
 export interface CharacterDraft {
-  // Step 1: 팩션 선택
+  // Step 1: 팩션 선택 (캐릭터 생성 시 bureau/static만 선택 가능)
   faction: "bureau" | "static" | null;
   // Step 2: 능력 계열 선택
   abilityClass: "field" | "empathy" | "shift" | "compute" | null;
@@ -17,9 +17,7 @@ export interface CharacterDraft {
   abilityName: string;
   /** 능력 전체 설명 */
   abilityDescription: string;
-  /** 능력 제약/한계 */
-  abilityConstraint: string;
-  /** 능력 약점/부작용 */
+  /** 제약 사항 및 약점 */
   abilityWeakness: string;
   /** 티어별 스킬 (각각 이름, 설명, HP/WILL 코스트) */
   skills: {
@@ -38,6 +36,8 @@ export interface CharacterDraft {
   appearance: string;
   personality: string;
   backstory: string;
+  /** 기타 (선택사항) */
+  notes: string;
   // Step 5: 확인 및 제출
   leaderApplication: boolean;
 }
@@ -62,7 +62,6 @@ export const EMPTY_DRAFT: CharacterDraft = {
   abilityClass: null,
   abilityName: "",
   abilityDescription: "",
-  abilityConstraint: "",
   abilityWeakness: "",
   skills: {
     basic: { ...EMPTY_SKILL },
@@ -77,8 +76,8 @@ export const EMPTY_DRAFT: CharacterDraft = {
   appearance: "",
   personality: "",
   backstory: "",
+  notes: "",
   leaderApplication: false,
 };
 
-export type Faction = NonNullable<CharacterDraft["faction"]>;
-export type AbilityClass = NonNullable<CharacterDraft["abilityClass"]>;
+export type { Faction, AbilityClass } from "@/lib/supabase/types";

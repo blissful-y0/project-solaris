@@ -24,7 +24,7 @@ const textareaClass = cn(inputClass, "min-h-[80px] resize-none");
 /** 팩션별 공명율 범위 */
 const RESONANCE_RANGE = {
   bureau: { min: 80, max: 100, label: "80~100" },
-  static: { min: 0, max: 15, label: "0~15" },
+  static: { min: 0, max: 14, label: "0~14" },
 } as const;
 
 export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }: StepProfileProps) {
@@ -37,12 +37,12 @@ export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }:
     <div className="space-y-5">
       <p className="hud-label mb-6">// 캐릭터 프로필을 입력하세요</p>
 
-      {/* 상단: 이미지 (좌) + 기본 정보 (우) — 이력서 스타일 */}
-      <div className="flex items-stretch gap-5">
-        {/* 좌측: 프로필 이미지 — 우측 입력 영역 높이에 맞춤 */}
-        <div className="w-32 shrink-0 flex flex-col">
+      {/* 상단: 이미지 + 기본 정보 — 모바일 세로 / sm+ 가로 */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4 sm:gap-5">
+        {/* 프로필 이미지 — 4:5 비율 고정 */}
+        <div className="w-36 sm:w-48 shrink-0">
           <p className={labelClass}>프로필 이미지</p>
-          <div className="flex-1">
+          <div className="aspect-[4/5]">
             <ImageCropper
               previewUrl={imagePreviewUrl}
               onImageChange={onImageChange}
@@ -52,7 +52,7 @@ export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }:
         </div>
 
         {/* 우측: 이름 / 성별 / 나이 / 공명율 */}
-        <div className="flex-1 min-w-0 space-y-3">
+        <div className="flex-1 min-w-0 space-y-3 flex flex-col justify-center">
           <div>
             <label htmlFor="charName" className={labelClass}>캐릭터 이름</label>
             <input
@@ -85,7 +85,7 @@ export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }:
                 id="age"
                 type="number"
                 min={15}
-                max={999}
+                max={9999}
                 value={draft.age}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -93,12 +93,12 @@ export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }:
                     onChange({ age: val });
                   }
                 }}
-                placeholder="15~999"
+                placeholder="15세 이상"
                 className={numInputClass}
               />
-              {draft.age !== "" && Number(draft.age) < 15 && (
-                <p className="text-xs text-accent mt-1">최소 15세</p>
-              )}
+              <p className="text-xs text-accent mt-1 h-4">
+                {draft.age !== "" && Number(draft.age) < 15 ? "최소 15세" : ""}
+              </p>
             </div>
           </div>
 
@@ -126,11 +126,11 @@ export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }:
                   rrOutOfRange && "border-accent/60 focus:ring-accent/50",
                 )}
               />
-              {rrOutOfRange && (
-                <p className="text-xs text-accent mt-1">
-                  {draft.faction === "bureau" ? "보안국" : "스태틱"} 범위: {range.label}%
-                </p>
-              )}
+              <p className="text-xs text-accent mt-1 h-4">
+                {rrOutOfRange
+                  ? `${draft.faction === "bureau" ? "보안국" : "스태틱"} 범위: ${range.label}%`
+                  : ""}
+              </p>
             </div>
           )}
         </div>
@@ -139,40 +139,83 @@ export function StepProfile({ draft, onChange, onImageChange, imagePreviewUrl }:
       {/* 외형 묘사 */}
       <div>
         <label htmlFor="appearance" className={labelClass}>외형 묘사</label>
-        <textarea
-          id="appearance"
-          maxLength={500}
-          value={draft.appearance}
-          onChange={(e) => onChange({ appearance: e.target.value })}
-          placeholder="캐릭터의 외모를 묘사하세요"
-          className={textareaClass}
-        />
+        <div className="relative">
+          <textarea
+            id="appearance"
+            maxLength={500}
+            value={draft.appearance}
+            onChange={(e) => onChange({ appearance: e.target.value })}
+            placeholder="캐릭터의 외모를 묘사하세요"
+            className={textareaClass}
+          />
+          {draft.appearance.length > 0 && (
+            <span className="absolute bottom-2 right-2 text-[0.625rem] tabular-nums pointer-events-none text-text-secondary/40">
+              {draft.appearance.length}/500
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 성격 */}
       <div>
         <label htmlFor="personality" className={labelClass}>성격</label>
-        <textarea
-          id="personality"
-          maxLength={500}
-          value={draft.personality}
-          onChange={(e) => onChange({ personality: e.target.value })}
-          placeholder="캐릭터의 성격을 묘사하세요"
-          className={textareaClass}
-        />
+        <div className="relative">
+          <textarea
+            id="personality"
+            maxLength={500}
+            value={draft.personality}
+            onChange={(e) => onChange({ personality: e.target.value })}
+            placeholder="캐릭터의 성격을 묘사하세요"
+            className={textareaClass}
+          />
+          {draft.personality.length > 0 && (
+            <span className="absolute bottom-2 right-2 text-[0.625rem] tabular-nums pointer-events-none text-text-secondary/40">
+              {draft.personality.length}/500
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 배경 스토리 */}
       <div>
         <label htmlFor="backstory" className={labelClass}>배경 스토리</label>
-        <textarea
-          id="backstory"
-          maxLength={1000}
-          value={draft.backstory}
-          onChange={(e) => onChange({ backstory: e.target.value })}
-          placeholder="캐릭터의 배경 이야기를 작성하세요"
-          className={cn(textareaClass, "min-h-[120px]")}
-        />
+        <div className="relative">
+          <textarea
+            id="backstory"
+            maxLength={1000}
+            value={draft.backstory}
+            onChange={(e) => onChange({ backstory: e.target.value })}
+            placeholder="캐릭터의 배경 이야기를 작성하세요"
+            className={cn(textareaClass, "min-h-[120px]")}
+          />
+          {draft.backstory.length > 0 && (
+            <span className="absolute bottom-2 right-2 text-[0.625rem] tabular-nums pointer-events-none text-text-secondary/40">
+              {draft.backstory.length}/1000
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 기타 (선택사항) */}
+      <div>
+        <label htmlFor="notes" className={labelClass}>
+          기타 <span className="text-text-secondary/40 normal-case tracking-normal">(선택사항)</span>
+        </label>
+        <div className="relative">
+          <textarea
+            id="notes"
+            maxLength={1000}
+            value={draft.notes}
+            onChange={(e) => onChange({ notes: e.target.value })}
+            placeholder="추가로 전달하고 싶은 내용이 있다면 자유롭게 작성하세요"
+            className={cn(textareaClass, "min-h-[120px]")}
+          />
+          {draft.notes.length > 0 && (
+            <span className="absolute bottom-2 right-2 text-[0.625rem] tabular-nums pointer-events-none text-text-secondary/40">
+              {draft.notes.length}/1000
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

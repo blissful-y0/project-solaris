@@ -5,20 +5,18 @@ import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui";
+import type { Faction } from "@/lib/supabase/types";
 
 /* ─── 타입 ─── */
 export type Ability = {
   tier: "basic" | "mid" | "advanced";
   name: string;
   description: string;
-  weakness: string;
   costHp?: number;
   costWill?: number;
   costAmount?: number;
   costType?: "will" | "hp";
 };
-
-type Faction = "bureau" | "static" | "defector";
 
 type AbilityAccordionProps = {
   abilities: Ability[];
@@ -131,11 +129,6 @@ export function AbilityAccordion({
                 <p className="text-sm text-text-secondary pt-3">
                   {ability.description}
                 </p>
-
-                {/* 약점 */}
-                <div className="text-xs text-accent">
-                  {ability.weakness}
-                </div>
 
                 {/* 코스트 */}
                 <div className="flex justify-end">

@@ -3,7 +3,6 @@ export type AdminAbility = {
   tier: "basic" | "mid" | "advanced";
   name: string;
   description: string;
-  weakness: string | null;
   cost_hp: number;
   cost_will: number;
 };
@@ -31,6 +30,9 @@ export type AdminCharacter = {
   will_max: number;
   will_current: number;
   crossover_style: string | null;
+  ability_name: string | null;
+  ability_description: string | null;
+  ability_weakness: string | null;
   created_at?: string;
   abilities: AdminAbility[];
 };

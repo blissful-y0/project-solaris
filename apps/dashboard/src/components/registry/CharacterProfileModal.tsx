@@ -169,46 +169,73 @@ function CharacterDetail({ character }: { character: RegistryCharacter }) {
         </div>
       </div>
 
-      {/* 능력 아코디언 */}
-      {character.abilities.length > 0 && (
-        <div>
-          <h4 className="hud-label text-text-secondary mb-2">ABILITIES</h4>
-          <AbilityAccordion
-            abilities={character.abilities}
-            faction={character.faction}
-          />
+      {/* 능력 개요 */}
+      {(character.abilityName || character.abilities.length > 0) && (
+        <div className="space-y-3">
+          <h4 className="hud-label text-text-secondary mb-2">
+            {character.abilityName ? `ABILITY — ${character.abilityName}` : "ABILITIES"}
+          </h4>
+          {character.abilityDescription && (
+            <p className="text-sm text-text-secondary">{character.abilityDescription}</p>
+          )}
+          {character.abilityWeakness && (
+            <div>
+              <span className="text-xs text-text-secondary/60 uppercase tracking-wider">제약/약점</span>
+              <p className="text-sm text-accent mt-0.5">{character.abilityWeakness}</p>
+            </div>
+          )}
+          {character.abilities.length > 0 && (
+            <AbilityAccordion
+              abilities={character.abilities}
+              faction={character.faction}
+            />
+          )}
         </div>
       )}
 
       {/* 성격 */}
       {character.personality && (
         <div>
-          <h4 className="hud-label text-text-secondary mb-1">성격</h4>
-          <p className="text-sm text-text-secondary leading-relaxed">
-            {character.personality}
-          </p>
+          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">성격</h4>
+          <PreLines text={character.personality} />
         </div>
       )}
 
       {/* 외형 */}
       {character.appearance && (
         <div>
-          <h4 className="hud-label text-text-secondary mb-1">외형</h4>
-          <p className="text-sm text-text-secondary leading-relaxed">
-            {character.appearance}
-          </p>
+          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">외형</h4>
+          <PreLines text={character.appearance} />
         </div>
       )}
 
       {/* 배경 서사 */}
       {character.backstory && (
         <div>
-          <h4 className="hud-label text-text-secondary mb-1">배경</h4>
-          <p className="text-sm text-text-secondary leading-relaxed">
-            {character.backstory}
-          </p>
+          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">배경</h4>
+          <PreLines text={character.backstory} />
         </div>
       )}
+
+      {/* 기타 */}
+      {character.notes && (
+        <div>
+          <h4 className="hud-label text-xs font-semibold mb-1.5 [color:color-mix(in_oklab,var(--color-primary)_80%,transparent)]">기타</h4>
+          <PreLines text={character.notes} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 줄바꿈 보존 텍스트 — \n\n 문단 간격을 본문 행간보다 좁게 */
+function PreLines({ text }: { text: string }) {
+  const paragraphs = text.split(/\n\n+/);
+  return (
+    <div className="flex flex-col gap-2 text-sm text-text-secondary leading-relaxed">
+      {paragraphs.map((para, i) => (
+        <p key={i} className="whitespace-pre-line">{para}</p>
+      ))}
     </div>
   );
 }

@@ -30,7 +30,7 @@ export function isResonanceRateValidForFaction(
   resonanceRate: number,
 ) {
   if (faction === "bureau") return resonanceRate >= 80 && resonanceRate <= 100;
-  if (faction === "static") return resonanceRate >= 0 && resonanceRate <= 15;
+  if (faction === "static") return resonanceRate >= 0 && resonanceRate <= 14;
   return true;
 }
 
@@ -62,8 +62,7 @@ function isStepValid(step: number, draft: CharacterDraft): boolean {
       // 능력 설계
       return (
         draft.abilityName.trim() !== "" &&
-        draft.abilityDescription.trim() !== "" &&
-        draft.abilityConstraint.trim() !== ""
+        draft.abilityDescription.trim() !== ""
       );
     case 4:
       return true;
@@ -76,7 +75,7 @@ export function WizardShell() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<CharacterDraft>(() => EMPTY_DRAFT);
-  const { isSaved, restored, clear } = useDraftSave(draft);
+  const { saveStatus, restored, clear } = useDraftSave(draft);
   const [submitting, setSubmitting] = useState(false);
 
   /* 이미지 — File 객체는 localStorage 직렬화 불가이므로 별도 state */
@@ -135,6 +134,9 @@ export function WizardShell() {
         faction: draft.faction,
         abilityClass: draft.abilityClass,
         resonanceRate: Number(draft.resonanceRate) || 0,
+        abilityName: draft.abilityName || undefined,
+        abilityDescription: draft.abilityDescription || undefined,
+        abilityWeakness: draft.abilityWeakness || undefined,
         profileData: {
           age: draft.age || undefined,
           gender: draft.gender || undefined,
@@ -143,13 +145,13 @@ export function WizardShell() {
         profileImageUrl: undefined as string | undefined,
         appearance: draft.appearance || undefined,
         backstory: draft.backstory || undefined,
+        notes: draft.notes || undefined,
         leaderApplication: draft.leaderApplication,
         crossoverStyle: draft.crossoverStyle,
         abilities: (["basic", "mid", "advanced"] as const).map((tier) => ({
           tier,
           name: draft.skills[tier].name,
           description: draft.skills[tier].description,
-          weakness: draft.abilityWeakness,
           costHp: Number(draft.skills[tier].costHp) || 0,
           costWill: Number(draft.skills[tier].costWill) || 0,
         })),
@@ -212,29 +214,9 @@ export function WizardShell() {
   const canNext = isStepValid(step, draft);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      {/* 임시 저장 복원 확인 */}
-      {restoreState === "ask" && (
-        <div className="mb-8 rounded-lg border border-primary/30 bg-primary/5 p-5">
-          <p className="text-sm text-text mb-1">
-            이전에 작성 중이던 캐릭터가 있습니다.
-          </p>
-          <p className="text-xs text-text-secondary mb-4">
-            이어서 작성하시겠습니까?
-          </p>
-          <div className="flex gap-3">
-            <Button size="sm" onClick={handleRestoreAccept}>
-              불러오기
-            </Button>
-            <Button size="sm" variant="ghost" onClick={handleRestoreDecline}>
-              새로 시작
-            </Button>
-          </div>
-        </div>
-      )}
-
+    <div className="max-w-3xl mx-auto px-4 py-6">
       {/* 스텝 인디케이터 */}
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <span className="hud-label">{STEP_LABELS[step]}</span>
           <span className="text-sm text-text-secondary font-mono">{step + 1} / {TOTAL_STEPS}</span>
@@ -246,10 +228,11 @@ export function WizardShell() {
             style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
           />
         </div>
-        {/* 임시 저장 표시 */}
-        {isSaved && (
-          <p className="hud-label mt-2 text-right">임시 저장됨</p>
-        )}
+        {/* 임시 저장 표시 — 고정 높이로 레이아웃 시프트 방지 */}
+        <p className="hud-label mt-2 text-right h-4">
+          {saveStatus === "saving" && <span className="animate-pulse">저장 중...</span>}
+          {saveStatus === "saved" && <span>저장됨</span>}
+        </p>
       </div>
 
       {/* 스텝 콘텐츠 */}
@@ -304,6 +287,26 @@ export function WizardShell() {
           </Button>
         )}
       </div>
+
+      {/* 임시 저장 복원 — 하단 고정 배너 */}
+      {restoreState === "ask" && (
+        <div className="fixed bottom-20 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[calc(100%-2rem)] rounded-lg border border-primary/30 bg-bg-secondary/95 backdrop-blur-sm p-4 shadow-lg">
+          <p className="text-sm text-text mb-1">
+            이전에 작성 중이던 캐릭터가 있습니다.
+          </p>
+          <p className="text-xs text-text-secondary mb-3">
+            이어서 작성하시겠습니까?
+          </p>
+          <div className="flex gap-3">
+            <Button size="sm" onClick={handleRestoreAccept}>
+              불러오기
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleRestoreDecline}>
+              새로 시작
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

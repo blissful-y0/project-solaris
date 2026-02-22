@@ -232,6 +232,21 @@ export default function AdminCharacterDetailPage() {
               <p className="sm:col-span-2">배경: {character.backstory ?? "-"}</p>
             </div>
 
+            {/* 능력 개요 */}
+            {(character.ability_name || character.ability_description || character.ability_weakness) && (
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-text">
+                  능력{character.ability_name ? ` — ${character.ability_name}` : ""}
+                </p>
+                {character.ability_description && (
+                  <p className="text-sm text-text-secondary">{character.ability_description}</p>
+                )}
+                {character.ability_weakness && (
+                  <p className="text-sm text-text-secondary">제약/약점: {character.ability_weakness}</p>
+                )}
+              </div>
+            )}
+
             {/* 스킬 목록 */}
             <div className="space-y-2">
               <p className="text-sm font-semibold text-text">스킬</p>
@@ -241,9 +256,6 @@ export default function AdminCharacterDetailPage() {
                     [{tierLabel(ability.tier)}] {ability.name}
                   </p>
                   <p className="text-text-secondary mt-1">{ability.description}</p>
-                  {ability.weakness && (
-                    <p className="text-text-secondary mt-1">약점: {ability.weakness}</p>
-                  )}
                   <p className="text-text-secondary mt-1">
                     코스트 HP {ability.cost_hp} / WILL {ability.cost_will}
                   </p>

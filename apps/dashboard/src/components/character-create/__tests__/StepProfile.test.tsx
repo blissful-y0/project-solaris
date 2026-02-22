@@ -38,7 +38,7 @@ describe("StepProfile", () => {
 
     expect(ageInput).toHaveAttribute("type", "number");
     expect(ageInput).toHaveAttribute("min", "15");
-    expect(ageInput).toHaveAttribute("max", "999");
+    expect(ageInput).toHaveAttribute("max", "9999");
   });
 
   it("기존 값을 표시한다", () => {

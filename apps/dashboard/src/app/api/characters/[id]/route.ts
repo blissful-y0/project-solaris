@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-
-const VALID_ID = /^[a-zA-Z0-9_-]{1,24}$/;
+import { isValidId } from "@/lib/api/validate-id";
 
 /** 캐릭터 상세 조회 — abilities 포함 전체 데이터 */
 export async function GET(
@@ -10,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    if (!VALID_ID.test(id)) {
+    if (!isValidId(id)) {
       return NextResponse.json({ error: "INVALID_ID" }, { status: 400 });
     }
     const supabase = await createClient();
@@ -28,9 +27,10 @@ export async function GET(
       .select(`
         id, name, faction, ability_class,
         hp_max, hp_current, will_max, will_current,
-        appearance, backstory, profile_image_url,
+        appearance, backstory, notes, profile_image_url,
         is_leader, resonance_rate, profile_data,
-        abilities(id, tier, name, description, weakness, cost_hp, cost_will)
+        ability_name, ability_description, ability_weakness,
+        abilities(id, tier, name, description, cost_hp, cost_will)
       `)
       .eq("id", id)
       .eq("status", "approved")

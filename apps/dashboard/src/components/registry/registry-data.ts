@@ -23,9 +23,13 @@ export interface RegistryCharacter extends RegistryCharacterSummary {
   appearance: string;
   backstory: string;
   resonanceRate: number;
+  abilityName?: string;
+  abilityDescription?: string;
+  abilityWeakness?: string;
   age?: number;
   gender?: string;
   personality?: string;
+  notes?: string;
 }
 
 /* ─── 필터 옵션 ─── */
@@ -150,15 +154,18 @@ export function toRegistryCharacter(row: {
   will_current: number;
   appearance: string | null;
   backstory: string | null;
+  notes?: string | null;
   profile_image_url: string | null;
   is_leader: boolean;
   resonance_rate: number;
   profile_data?: string | Record<string, string> | null;
+  ability_name?: string | null;
+  ability_description?: string | null;
+  ability_weakness?: string | null;
   abilities: {
     tier: "basic" | "mid" | "advanced";
     name: string;
     description: string;
-    weakness: string;
     cost_hp: number;
     cost_will: number;
   }[];
@@ -178,14 +185,17 @@ export function toRegistryCharacter(row: {
     appearance: row.appearance ?? "",
     backstory: row.backstory ?? "",
     resonanceRate: row.resonance_rate,
+    abilityName: row.ability_name ?? undefined,
+    abilityDescription: row.ability_description ?? undefined,
+    abilityWeakness: row.ability_weakness ?? undefined,
     age: parseProfileAge(row.profile_data),
     gender: parseProfileField(row.profile_data, "gender"),
     personality: parseProfileField(row.profile_data, "personality"),
+    notes: row.notes ?? undefined,
     abilities: (row.abilities ?? []).map((a) => ({
       tier: a.tier,
       name: a.name,
       description: a.description,
-      weakness: a.weakness,
       costHp: a.cost_hp,
       costWill: a.cost_will,
     })),
