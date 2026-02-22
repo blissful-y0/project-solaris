@@ -4,6 +4,9 @@ import { nanoid } from "nanoid";
 import { createClient } from "@/lib/supabase/server";
 import { FACTION_STATS, type AbilityClass, type CharacterWithAbilities, type Faction } from "@/lib/supabase/types";
 import { getUserFriendlyError } from "@/lib/supabase/helpers";
+import { getServiceClient } from "@/lib/supabase/service";
+import { createNotification } from "@/app/actions/notification";
+import { escapeDiscordMentions } from "@/lib/discord/mentions";
 
 interface CharacterDraft {
   name: string;
@@ -114,6 +117,59 @@ export async function submitCharacter(draft: CharacterDraft) {
 
   if (error) {
     throw new Error(getUserFriendlyError(error));
+  }
+
+  // 어드민 웹훅 알림 (실패해도 캐릭터 생성은 성공으로 처리)
+  try {
+    const { data: userRow } = await supabase
+      .from("users")
+      .select("discord_username")
+      .eq("id", user.id)
+      .single();
+
+    const factionLabel: Record<string, string> = {
+      bureau: "보안국",
+      static: "The Static",
+      defector: "전향자",
+    };
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+    const adminUrl = `${appUrl}/admin/characters/${characterId}`;
+
+    await createNotification({
+      userId: null,
+      scope: "broadcast",
+      type: "character_pending",
+      title: "[캐릭터 신청] 새 신청서 접수",
+      body: [
+        `이름: **${escapeDiscordMentions(draft.name)}** | 진영: ${factionLabel[draft.faction] ?? draft.faction}`,
+        `신청자: @${escapeDiscordMentions(userRow?.discord_username ?? "unknown")}`,
+        adminUrl ? `심사: ${adminUrl}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      channel: "discord_webhook",
+    }, getServiceClient());
+  } catch (notifError) {
+    console.error("[submitCharacter] 어드민 웹훅 알림 실패 (캐릭터 생성 완료):", notifError);
+  }
+
+  // 신청자 본인에게 DM 알림 (실패해도 캐릭터 생성은 성공으로 처리)
+  try {
+    await createNotification(
+      {
+        userId: user.id,
+        scope: "user",
+        type: "character_submitted",
+        channel: "discord_dm",
+        title: "[SOLARIS] 캐릭터 신청 완료",
+        body: `캐릭터 **${draft.name}** 신청이 접수되었습니다.\n심사 후 결과를 알려드리겠습니다.`,
+        payload: { characterId },
+      },
+      getServiceClient(),
+    );
+  } catch (dmError) {
+    console.error("[submitCharacter] 신청자 DM 알림 실패 (캐릭터 생성 완료):", dmError);
   }
 
   return { characterId: (data as string | null) ?? characterId };

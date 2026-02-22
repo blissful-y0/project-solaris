@@ -6,6 +6,8 @@ const {
   mockRpc,
   mockFrom,
   mockNanoid,
+  mockCreateNotification,
+  mockGetServiceClient,
   mockCharacterSingle,
   mockCharacterDeleteEq,
   mockCharactersDelete,
@@ -15,6 +17,8 @@ const {
   mockRpc: vi.fn(),
   mockFrom: vi.fn(),
   mockNanoid: vi.fn(),
+  mockCreateNotification: vi.fn(),
+  mockGetServiceClient: vi.fn(),
   mockCharacterSingle: vi.fn(),
   mockCharacterDeleteEq: vi.fn(),
   mockCharactersDelete: vi.fn(),
@@ -26,6 +30,14 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("nanoid", () => ({
   nanoid: mockNanoid,
+}));
+
+vi.mock("@/app/actions/notification", () => ({
+  createNotification: mockCreateNotification,
+}));
+
+vi.mock("@/lib/supabase/service", () => ({
+  getServiceClient: mockGetServiceClient,
 }));
 
 function createCharactersSelectChain() {
@@ -62,6 +74,12 @@ describe("character actions", () => {
       rpc: mockRpc,
       from: mockFrom,
     });
+    mockCreateNotification.mockResolvedValue(undefined);
+    mockGetServiceClient.mockReturnValue({
+      from: vi.fn(() => ({
+        insert: vi.fn().mockResolvedValue({ error: null }),
+      })),
+    });
     mockCharactersDelete.mockReturnValue(createCharactersDeleteChain());
 
     mockFrom.mockImplementation((table: string) => {
@@ -69,6 +87,19 @@ describe("character actions", () => {
         return {
           select: vi.fn(() => createCharactersSelectChain()),
           delete: mockCharactersDelete,
+        };
+      }
+
+      if (table === "users") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: { discord_username: "safe-user" },
+                error: null,
+              }),
+            })),
+          })),
         };
       }
 
@@ -148,6 +179,105 @@ describe("character actions", () => {
         p_resonance_rate: 80,
         p_profile_image_url: "https://cdn.example.com/profile.png",
       }),
+    );
+  });
+
+  it("submitCharacter는 웹훅 본문에서 멘션 문자를 이스케이프한다", async () => {
+    const { submitCharacter } = await import("../character");
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "1ab4a2b5-15e7-49ef-9108-ecc2ad850a08" } },
+    });
+    mockNanoid
+      .mockReturnValueOnce("char_001")
+      .mockReturnValueOnce("ab_001")
+      .mockReturnValueOnce("ab_002")
+      .mockReturnValueOnce("ab_003");
+    mockRpc.mockResolvedValue({ data: "char_001", error: null });
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "characters") {
+        return {
+          select: vi.fn(() => createCharactersSelectChain()),
+          delete: mockCharactersDelete,
+        };
+      }
+
+      if (table === "users") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: { discord_username: "@everyone" },
+                error: null,
+              }),
+            })),
+          })),
+        };
+      }
+
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            is: vi.fn(() => ({
+              single: vi.fn(),
+            })),
+          })),
+        })),
+      };
+    });
+
+    await submitCharacter({
+      name: "@here 테스터",
+      faction: "bureau",
+      abilityClass: "field",
+      resonanceRate: 80,
+      profileData: { age: "24", gender: "M", personality: "침착" },
+      profileImageUrl: "https://cdn.example.com/profile.png",
+      appearance: "검은 코트",
+      backstory: "테스트 배경",
+      leaderApplication: true,
+      abilities: [
+        {
+          tier: "basic",
+          name: "기본",
+          description: "기본 설명",
+          weakness: "약점",
+          costHp: 0,
+          costWill: 10,
+        },
+        {
+          tier: "mid",
+          name: "중급",
+          description: "중급 설명",
+          weakness: "약점",
+          costHp: 0,
+          costWill: 20,
+        },
+        {
+          tier: "advanced",
+          name: "고급",
+          description: "고급 설명",
+          weakness: "약점",
+          costHp: 0,
+          costWill: 30,
+        },
+      ],
+    });
+
+    expect(mockCreateNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "discord_webhook",
+        body: expect.stringContaining("이름: **＠here 테스터**"),
+      }),
+      expect.anything(),
+    );
+    expect(mockCreateNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "discord_webhook",
+        body: expect.stringContaining("신청자: @＠everyone"),
+      }),
+      expect.anything(),
     );
   });
 

@@ -90,7 +90,7 @@ describe("OperationPage", () => {
     render(<OperationPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("HELIOS SYSTEM")).toBeInTheDocument();
+      expect(screen.getByText("HELIOS SYSTEM // ACCESS RESTRICTED")).toBeInTheDocument();
     });
     expect(screen.getByText(/작전 참여 자격이 필요합니다/)).toBeInTheDocument();
   });
@@ -106,7 +106,7 @@ describe("OperationPage", () => {
     render(<OperationPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("HELIOS SYSTEM")).toBeInTheDocument();
+      expect(screen.getByText("HELIOS SYSTEM // ACCESS RESTRICTED")).toBeInTheDocument();
     });
   });
 
@@ -116,7 +116,7 @@ describe("OperationPage", () => {
     render(<OperationPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("HELIOS SYSTEM")).toBeInTheDocument();
+      expect(screen.getByText("HELIOS SYSTEM // ACCESS RESTRICTED")).toBeInTheDocument();
     });
   });
 

@@ -66,6 +66,10 @@ function getWebhookUrl(notification: NotificationRow): string | null {
     return Deno.env.get("DISCORD_WEBHOOK_NOTICE") ?? null;
   }
 
+  if (notification.type.startsWith("character_")) {
+    return Deno.env.get("DISCORD_WEBHOOK_ADMIN") ?? null;
+  }
+
   return Deno.env.get("DISCORD_WEBHOOK_DEFAULT") ?? null;
 }
 

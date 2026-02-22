@@ -96,6 +96,7 @@ describe("LoginPage", () => {
       provider: "discord",
       options: {
         redirectTo: expect.stringContaining("/api/auth/callback"),
+        scopes: "guilds.join",
       },
     });
   });

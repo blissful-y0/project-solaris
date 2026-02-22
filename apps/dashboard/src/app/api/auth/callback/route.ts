@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { envServer } from "@/lib/env.server";
+import { getServiceClient } from "@/lib/supabase/service";
+import { createNotification } from "@/app/actions/notification";
+import { escapeDiscordMentions } from "@/lib/discord/mentions";
 
 function isSafeInternalPath(path: string) {
   return path.startsWith("/") && !path.startsWith("//");
@@ -33,7 +36,7 @@ export async function GET(request: Request) {
       },
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       const {
         data: { user },
@@ -66,6 +69,12 @@ export async function GET(request: Request) {
         user.email ??
         `user-${user.id.slice(0, 8)}`;
 
+      // 신규 회원 여부 확인: auth.users의 created_at 기준
+      // (public.users는 auth 트리거가 먼저 생성하므로 테이블 조회로는 판별 불가)
+      const isNewUser = user.created_at
+        ? Date.now() - new Date(user.created_at).getTime() < 60_000
+        : false;
+
       const { error: upsertError } = await supabase.from("users").upsert(
         {
           id: user.id,
@@ -78,6 +87,54 @@ export async function GET(request: Request) {
 
       if (upsertError) {
         return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+      }
+
+      // 신규 회원 가입 시 어드민 웹훅 알림 (실패해도 로그인 차단 안 함)
+      if (isNewUser) {
+        try {
+          await createNotification(
+            {
+              userId: null,
+              scope: "broadcast",
+              type: "character_new_member",
+              channel: "discord_webhook",
+              title: "[신규 가입] 새 회원 등록",
+              body: `Discord: ${escapeDiscordMentions(`@${discordUsername}`)}`,
+            },
+            getServiceClient(),
+          );
+        } catch (notifError) {
+          console.error("[auth/callback] 신규 회원 웹훅 알림 실패:", notifError);
+        }
+      }
+
+      // Discord 서버 자동 가입 (실패해도 로그인 차단 안 함)
+      const guildId = process.env.DISCORD_GUILD_ID;
+      const botToken = process.env.DISCORD_BOT_TOKEN;
+      const providerToken = session?.provider_token;
+
+      if (guildId && botToken && providerToken && discordId) {
+        try {
+          const guildRes = await fetch(
+            `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}`,
+            {
+              method: "PUT",
+              headers: {
+                "content-type": "application/json",
+                authorization: `Bot ${botToken}`,
+              },
+              body: JSON.stringify({ access_token: providerToken }),
+            },
+          );
+          // 201: 추가됨, 204: 이미 멤버 — 둘 다 정상
+          if (!guildRes.ok && guildRes.status !== 204) {
+            console.error(
+              `[auth/callback] Discord 길드 가입 실패: ${guildRes.status}`,
+            );
+          }
+        } catch (guildError) {
+          console.error("[auth/callback] Discord 길드 가입 오류:", guildError);
+        }
       }
 
       return NextResponse.redirect(`${origin}${next}`);
