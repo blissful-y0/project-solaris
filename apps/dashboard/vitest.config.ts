@@ -12,6 +12,11 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3001",
+    },
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     coverage: {

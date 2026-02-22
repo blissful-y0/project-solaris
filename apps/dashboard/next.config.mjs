@@ -1,10 +1,16 @@
+import { readFileSync } from "node:fs";
+
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV === "development";
+const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf-8"));
 
 const nextConfig = {
-  // TODO: supabase gen types 재생성 후 제거
-  typescript: {
-    ignoreBuildErrors: true,
+  env: {
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
+  },
+  // ESLint는 별도 lint 스크립트로 실행 (flat config 사용)
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   images: {
     remotePatterns: [

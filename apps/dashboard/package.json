@@ -1,11 +1,13 @@
 {
   "name": "@solaris/dashboard",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",
+    "dev:prd": "cp .env.prd .env.local && next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "echo 'no lint configured'",
+    "lint": "eslint src/",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -33,6 +35,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
     "@solaris/config": "workspace:*",
     "@tailwindcss/postcss": "^4",
@@ -42,9 +45,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.4",
+    "eslint": "^10.0.1",
     "jsdom": "^28.1.0",
     "supabase": "^2.76.9",
     "typescript": "^5",
+    "typescript-eslint": "^8.56.0",
     "vitest": "^4.0.18"
   }
 }

@@ -32,5 +32,5 @@ test("채팅 전송 네트워크 확인", async ({ page }) => {
   console.log("전송 후 입력창 값:", JSON.stringify(afterValue));
   console.log("POST 요청:", JSON.stringify(postRequests, null, 2));
 
-  await page.screenshot({ path: "e2e/screenshots/chat-send-result.png" });
+  await page.screenshot({ path: "tests/e2e/screenshots/chat-send-result.png" });
 });

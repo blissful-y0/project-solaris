@@ -4,6 +4,19 @@ import remarkHtml from "remark-html";
 
 import type { LoreDocumentHtml, LoreDocumentMeta } from "./types";
 
+/** lore_documents 테이블 행 타입 (생성된 타입에 미포함) */
+type LoreDocumentRow = {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  clearance_level: number;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+};
+
 /** [REDACTED] 마커를 검열 HTML span으로 치환 */
 export function replaceRedactedMarkers(html: string): string {
   return html.replace(
@@ -28,7 +41,8 @@ export async function loadAllLoreContents(): Promise<LoreDocumentHtml[]> {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- lore_documents 테이블이 생성된 타입에 미포함
+  const { data, error }: { data: LoreDocumentRow[] | null; error: unknown } = await (supabase as any)
     .from("lore_documents")
     .select("id, title, slug, content, clearance_level, order_index, created_at, updated_at")
     .is("deleted_at", null)
@@ -58,7 +72,8 @@ export async function loadLoreDocumentBySlug(slug: string): Promise<LoreDocument
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- lore_documents 테이블이 생성된 타입에 미포함
+  const { data, error }: { data: LoreDocumentRow | null; error: unknown } = await (supabase as any)
     .from("lore_documents")
     .select("id, title, slug, content, clearance_level, order_index, created_at, updated_at")
     .eq("slug", slug)
@@ -84,7 +99,8 @@ export async function loadLoreDocumentsMeta(): Promise<LoreDocumentMeta[]> {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- lore_documents 테이블이 생성된 타입에 미포함
+  const { data, error }: { data: Omit<LoreDocumentRow, "content" | "deleted_at">[] | null; error: unknown } = await (supabase as any)
     .from("lore_documents")
     .select("id, title, slug, clearance_level, order_index, created_at, updated_at")
     .is("deleted_at", null)
