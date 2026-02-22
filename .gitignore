@@ -44,5 +44,10 @@ test-results/
 # Worktrees
 .worktrees/
 
+# Vercel 통합 빌드 (랜딩 정적 출력 → 대시보드 public/)
+apps/dashboard/public/_landing.html
+apps/dashboard/public/_astro/
+
 # Serena
 .serena/
+.vercel

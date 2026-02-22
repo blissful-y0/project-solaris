@@ -1,9 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-import type { User } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabase";
-
-type AuthState = "loading" | "loggedOut" | "loggedIn";
-
 const DiscordIcon = () => (
   <svg
     width="18"
@@ -16,150 +10,15 @@ const DiscordIcon = () => (
   </svg>
 );
 
-function getDiscordAvatarUrl(user: User): string | null {
-  const meta = user.user_metadata;
-  if (meta?.avatar_url) return meta.avatar_url;
-  const discordId = meta?.provider_id ?? meta?.sub;
-  const avatarHash = meta?.avatar;
-  if (discordId && avatarHash) {
-    return `https://cdn.discordapp.com/avatars/${discordId}/${avatarHash}.png?size=64`;
-  }
-  return null;
-}
-
-function getDisplayName(user: User): string {
-  const meta = user.user_metadata;
-  return `@${meta?.full_name ?? meta?.name ?? meta?.user_name ?? "User"}`;
-}
-
+/**
+ * 랜딩 헤더 로그인 버튼.
+ * Vercel 통합 배포에서는 대시보드 /login으로 이동한다.
+ * (Supabase implicit flow 제거 — 대시보드 PKCE flow 사용)
+ */
 export default function AuthButton() {
-  const [authState, setAuthState] = useState<AuthState>("loading");
-  const [user, setUser] = useState<User | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!supabase) {
-      setAuthState("loggedOut");
-      return;
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        setAuthState("loggedIn");
-      } else {
-        setAuthState("loggedOut");
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        setAuthState("loggedIn");
-      } else {
-        setUser(null);
-        setAuthState("loggedOut");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // 바깥 클릭 시 메뉴 닫기
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(e.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [menuOpen]);
-
-  const handleLogin = async () => {
-    if (!supabase) return;
-    await supabase.auth.signInWithOAuth({
-      provider: "discord",
-      options: { redirectTo: window.location.origin },
-    });
-  };
-
-  const handleLogout = async () => {
-    if (!supabase) return;
-    setMenuOpen(false);
-    await supabase.auth.signOut();
-  };
-
-  const avatarUrl = user ? getDiscordAvatarUrl(user) : null;
-
-  if (authState === "loading") {
-    return (
-      <div className="header-discord" aria-label="로그인 확인 중">
-        <DiscordIcon />
-      </div>
-    );
-  }
-
-  if (authState === "loggedOut") {
-    return (
-      <button
-        className="header-discord"
-        onClick={handleLogin}
-        aria-label="Discord로 로그인"
-        type="button"
-      >
-        <DiscordIcon />
-      </button>
-    );
-  }
-
   return (
-    <div ref={wrapperRef} style={{ position: "relative" }}>
-      <button
-        className="header-discord"
-        onClick={() => setMenuOpen((prev) => !prev)}
-        aria-label="유저 메뉴"
-        aria-expanded={menuOpen}
-        type="button"
-        style={{ padding: 0, overflow: "hidden" }}
-      >
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt="프로필"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              borderRadius: "0.5rem",
-            }}
-          />
-        ) : (
-          <DiscordIcon />
-        )}
-      </button>
-
-      {menuOpen && (
-        <div className="auth-dropdown">
-          <span className="auth-dropdown-name">
-            {user ? getDisplayName(user) : ""}
-          </span>
-          <button
-            className="auth-dropdown-logout"
-            onClick={handleLogout}
-            type="button"
-          >
-            로그아웃
-          </button>
-        </div>
-      )}
-    </div>
+    <a className="header-discord" href="/login" aria-label="Discord로 로그인">
+      <DiscordIcon />
+    </a>
   );
 }
